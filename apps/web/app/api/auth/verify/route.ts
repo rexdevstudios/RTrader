@@ -35,13 +35,32 @@ export async function POST(req: NextRequest) {
       primaryWallet: body.walletAddress,
     };
 
-    const response: ApiResponse<UserProfileResponse> = {
+    // Generate stateless session token (base64 encoded, validated by Edge Middleware)
+    // Format: base64(<userId>:<walletAddress>:<issuedAt>:<nonce>)
+    const userId = `usr-${body.walletAddress.slice(0, 10).toLowerCase()}`;
+    const issuedAt = Date.now().toString();
+    const rawToken = `${userId}:${body.walletAddress}:${issuedAt}:${body.nonce}`;
+    const sessionToken = Buffer.from(rawToken).toString('base64');
+
+    const response: ApiResponse<UserProfileResponse & { sessionToken: string }> = {
       success: true,
-      data,
+      data: { ...data, sessionToken },
       timestamp: new Date().toISOString(),
     };
 
-    return NextResponse.json(response, { status: 200 });
+    const nextResponse = NextResponse.json(response, { status: 200 });
+
+    // Set HttpOnly session cookie for Edge Middleware to pick up on subsequent requests
+    nextResponse.cookies.set('rtrader_session', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 8, // 8 hours
+      path: '/',
+    });
+
+    return nextResponse;
+
   } catch (err) {
     const response: ApiResponse<null> = {
       success: false,

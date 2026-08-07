@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AgentProposalEngine, ProposalDbAdapter } from '../../../../../../../packages/agent/proposal-engine';
 import { FeatureEngine } from '../../../../../../../packages/intelligence/feature-engine';
 import { intelligenceCache } from '../../../../../../../packages/intelligence/market-data-cache';
+import { fetchDefiLlamaMacroSignal } from '../../../../../../../packages/intelligence/defillama-client';
 import { ApiResponse } from '../../../../../../../packages/shared/contracts/api-contracts';
-
-
 
 const mockProposalDb: ProposalDbAdapter = {
   createProposal: async () => `prop-${Date.now()}`,
@@ -22,8 +21,12 @@ export async function POST(req: NextRequest) {
     const userId = body.userId || 'usr-trader';
     const agentId = body.agentId || 'agent-alpha';
 
-    // Compute Intelligence Signal
-    const signal = FeatureEngine.computeSignal(symbol, intelligenceCache, null, null);
+    // Fetch DefiLlama macro signal in parallel (non-blocking enrichment)
+    const macroResult = await Promise.allSettled([fetchDefiLlamaMacroSignal()]);
+    const macroSignal = macroResult[0].status === 'fulfilled' ? macroResult[0].value : null;
+
+    // Compute Intelligence Signal (with macro enrichment)
+    const signal = FeatureEngine.computeSignal(symbol, intelligenceCache, null, null, macroSignal);
 
     const proposal = await AgentProposalEngine.generateProposalWithIntelligence(
       {
@@ -53,3 +56,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response, { status: 400 });
   }
 }
+
