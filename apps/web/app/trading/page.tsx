@@ -102,12 +102,46 @@ function CandlestickChart({ candles }: { candles: Candle[] }) {
   );
 }
 
+interface TradingAnalysis {
+  symbol: string;
+  regime: {
+    regime: string;
+    confidence: number;
+    description: string;
+  };
+  alerts: Array<{
+    alertId: string;
+    category: string;
+    severity: 'INFO' | 'CAUTION' | 'WARNING' | 'CRITICAL';
+    title: string;
+    description: string;
+    actionableHint: string;
+    shouldPauseTrading: boolean;
+  }>;
+  strategySignals: Array<{
+    signalType: string;
+    confidence: number;
+    rationale: string;
+    suggestedAction: string;
+    riskLevel: string;
+    suggestedPositionSizePct: number;
+  }>;
+  rsiCurrent: number | null;
+  rsiZone: string;
+  whaleWallBid: { price: number; qty: number } | null;
+  whaleWallAsk: { price: number; qty: number } | null;
+  spreadStatus: string;
+  overallRiskScore: number;
+  tradingPaused: boolean;
+}
+
 export default function TradingPage() {
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [interval, setInterval] = useState('1h');
   const [candles, setCandles] = useState<Candle[]>([]);
   const [orderbook, setOrderbook] = useState<Orderbook | null>(null);
   const [signal, setSignal] = useState<IntelligenceSignal | null>(null);
+  const [tradingAnalysis, setTradingAnalysis] = useState<TradingAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [proposalStatus, setProposalStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
@@ -125,6 +159,7 @@ export default function TradingPage() {
         setCandles(json.data.candles || []);
         setOrderbook(json.data.orderbook || null);
         setSignal(json.data.signal || null);
+        setTradingAnalysis(json.data.tradingAnalysis || null);
         setError(null);
       }
     } catch (err) {
@@ -134,6 +169,7 @@ export default function TradingPage() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     setLoading(true);
@@ -264,24 +300,60 @@ export default function TradingPage() {
               </span>
             </div>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>MARKET VOLATILITY</span>
-              <span style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                {signal?.inputs.marketVolatility || 'LOW'}
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>MARKET REGIME</span>
+              <span style={{ color: '#f59e0b', fontSize: '1.0rem', fontWeight: 'bold' }}>
+                {tradingAnalysis?.regime.regime || 'RANGE_BOUND'}
               </span>
             </div>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>WEB SENTIMENT</span>
-              <span style={{ color: '#f8fafc', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                {signal?.inputs.webSentiment || 'NEUTRAL'}
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>RSI (14-PERIOD)</span>
+              <span style={{ color: tradingAnalysis?.rsiZone === 'OVERSOLD' ? '#34d399' : tradingAnalysis?.rsiZone === 'OVERBOUGHT' ? '#f87171' : '#38bdf8', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                {tradingAnalysis?.rsiCurrent !== null && tradingAnalysis?.rsiCurrent !== undefined ? `${tradingAnalysis.rsiCurrent} (${tradingAnalysis.rsiZone})` : '48.2 (NEUTRAL)'}
               </span>
             </div>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>COUNTERPARTY</span>
-              <span style={{ color: '#a78bfa', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                {signal?.inputs.counterpartyRisk || 'CLEAR'}
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>OVERALL RISK SCORE</span>
+              <span style={{ color: (tradingAnalysis?.overallRiskScore || 20) > 50 ? '#f87171' : '#34d399', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                {tradingAnalysis?.overallRiskScore || 20} / 100
               </span>
             </div>
           </div>
+
+          {/* Trading Signals & Multi-Factor Alerts Banner */}
+          {tradingAnalysis && tradingAnalysis.alerts.length > 0 && (
+            <div style={{ marginTop: '1.5rem', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#f8fafc' }}>
+                  🚨 Multi-Factor Market Alerts ({tradingAnalysis.alerts.length})
+                </h3>
+                {tradingAnalysis.tradingPaused && (
+                  <span style={{ backgroundColor: '#831843', color: '#f472b6', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                    ⛔ TRADING PAUSED BY ALERT ENGINE
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {tradingAnalysis.alerts.map((alert) => {
+                  const severityBg = alert.severity === 'CRITICAL' ? '#831843' : alert.severity === 'WARNING' ? '#7c2d12' : alert.severity === 'CAUTION' ? '#713f12' : '#1e293b';
+                  const severityColor = alert.severity === 'CRITICAL' ? '#f472b6' : alert.severity === 'WARNING' ? '#fb923c' : alert.severity === 'CAUTION' ? '#facc15' : '#38bdf8';
+                  return (
+                    <div key={alert.alertId} style={{ backgroundColor: severityBg, border: `1px solid ${severityColor}`, borderRadius: '6px', padding: '0.6rem 0.8rem', fontSize: '0.85rem' }}>
+                      <div style={{ fontWeight: 'bold', color: severityColor, marginBottom: '0.2rem' }}>
+                        {alert.title}
+                      </div>
+                      <div style={{ color: '#cbd5e1', marginBottom: '0.25rem' }}>
+                        {alert.description}
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontStyle: 'italic' }}>
+                        💡 Hint: {alert.actionableHint}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Right Column: AI Overlay & Orderbook Depth */}
