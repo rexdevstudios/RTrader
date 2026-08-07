@@ -11,6 +11,7 @@ import { KillSwitchManager } from '../admin/kill-switch-manager';
 import { ComplianceEngine } from '../compliance/compliance-engine';
 import { SubscriptionsEngine } from '../billing/subscriptions-engine';
 import { upstashRedis } from './redis-client';
+import { TelemetryLogger } from './telemetry';
 import {
   TradeIntentInput,
   UserRiskLimits,
@@ -29,11 +30,14 @@ export class SystemOrchestrator {
    * System-Wide Health Check & Operational Overview
    */
   async getSystemOverview(): Promise<Record<string, unknown>> {
+    const metricsCount = TelemetryLogger.getMetricsBuffer().length;
+
     return {
       status: 'OPERATIONAL',
       controlPlane: 'Vercel / Next.js',
       operationalSsot: 'PostgreSQL SSOT (Neon)',
       ephemeralSidecar: upstashRedis.isConfigured() ? 'UPSTASH_REDIS_ACTIVE' : 'IN_MEMORY_FALLBACK',
+      telemetryObservability: `ACTIVE (Buffer: ${metricsCount} events)`,
       executionPlaneWorkers: ['BinanceOrderWorker', 'LaunchpadIndexerWorker', 'DaytonaSandboxRunner', 'BinanceStreamListener'],
       primaryRpcProvider: 'dRPC',
       fallbackRpcProvider: 'Ankr / Alchemy',

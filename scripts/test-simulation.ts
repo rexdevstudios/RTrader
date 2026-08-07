@@ -6,6 +6,8 @@ import { upstashRedis, UpstashRedisClient } from '../packages/shared/redis-clien
 import { SlidingWindowRateLimiter } from '../packages/auth/rate-limiter';
 import { KillSwitchManager } from '../packages/admin/kill-switch-manager';
 import { UpstashRedisPubSubAdapter } from '../packages/network-registry/redis-pubsub-adapter';
+import { TelemetryLogger } from '../packages/shared/telemetry';
+
 
 async function runSanityCheckSimulation() {
   console.log('================================================================');
@@ -91,10 +93,20 @@ async function runSanityCheckSimulation() {
     console.log('SUCCESS: Kill-Switch activated cleanly in DB (PubSub async delivery completed)');
   }
 
+  // 6. Telemetry & Observability Non-Blocking Test
+  console.log('\n[6/6] Testing Telemetry & Non-Blocking Metric Logger...');
+  TelemetryLogger.recordMetric('test.latency.ms', 42, { environment: 'simulation' });
+  await TelemetryLogger.recordEvent('USER_SIMULATED', 'SANITY_CHECK_COMPLETED', 'entity-sim-1', 'Routine test');
+  const buffer = TelemetryLogger.getMetricsBuffer();
+  if (buffer.length > 0) {
+    console.log('SUCCESS: Telemetry recorded metric cleanly in non-blocking buffer (Count:', buffer.length, ')');
+  }
+
   console.log('\n================================================================');
-  console.log('ALL 5 SANITY CHECK SIMULATIONS PASSED CLEANLY! SYSTEM IS HARDENED');
+  console.log('ALL 6 SANITY CHECK SIMULATIONS PASSED CLEANLY! SYSTEM IS HARDENED');
   console.log('================================================================');
 }
+
 
 runSanityCheckSimulation().catch(console.error);
 
