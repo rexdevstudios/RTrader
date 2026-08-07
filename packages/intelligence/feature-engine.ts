@@ -18,6 +18,7 @@
 
 import { ArkhamCounterpartyProfile } from '../shared/types/domain';
 import { IntelligenceCache, OhlcvCandle } from './market-data-cache';
+import { DefiLlamaMacroSignal } from './defillama-client';
 
 // ---------------------------------------------------------------------------
 // Input Types
@@ -54,6 +55,12 @@ export interface IntelligenceSignal {
     counterpartyRisk: 'CLEAR' | 'CAUTION' | 'BLOCKED' | 'UNKNOWN';
     marketVolatility: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
     volumeAnomaly: boolean;
+    macroSentiment: 'BULLISH' | 'NEUTRAL' | 'BEARISH' | 'UNAVAILABLE'; // DefiLlama TVL signal
+  };
+  macroContext?: {
+    totalDefiTvlUsd: number;
+    topChain: string;
+    topChainTvlUsd: number;
   };
   computedAt: string;
 }
@@ -74,6 +81,7 @@ export class FeatureEngine {
     cache: IntelligenceCache,
     counterpartyProfile?: ArkhamCounterpartyProfile | null,
     firecrawlSignal?: FirecrawlSignal | null,
+    macroSignal?: DefiLlamaMacroSignal | null,
   ): IntelligenceSignal {
     const riskFlags: string[] = [];
     const rationaleParts: string[] = [];
@@ -182,7 +190,38 @@ export class FeatureEngine {
     }
 
     // -----------------------------------------------------------------------
-    // 4. Clamp confidence score to [0.0, 1.0]
+    // 4. Macro Context (DefiLlama — optional TVL & chain sentiment)
+    // -----------------------------------------------------------------------
+    let macroSentiment: IntelligenceSignal['inputs']['macroSentiment'] = 'UNAVAILABLE';
+    let macroContext: IntelligenceSignal['macroContext'] | undefined;
+
+    if (macroSignal && macroSignal.macroSentiment !== 'UNAVAILABLE') {
+      macroSentiment = macroSignal.macroSentiment;
+      if (macroSignal.macroSentiment === 'BULLISH') {
+        confidenceScore += 0.05;
+        rationaleParts.push(`Macro DeFi TVL sentiment BULLISH (Total TVL: $${(macroSignal.totalDefiTvlUsd / 1e9).toFixed(1)}B)`);
+      } else if (macroSignal.macroSentiment === 'BEARISH') {
+        confidenceScore -= 0.05;
+        riskFlags.push('BEARISH_MACRO_TVL');
+        rationaleParts.push(`Macro DeFi TVL sentiment BEARISH (Total TVL: $${(macroSignal.totalDefiTvlUsd / 1e9).toFixed(1)}B)`);
+      } else {
+        rationaleParts.push(`Macro DeFi TVL sentiment NEUTRAL (Total TVL: $${(macroSignal.totalDefiTvlUsd / 1e9).toFixed(1)}B)`);
+      }
+
+      if (macroSignal.topChains.length > 0) {
+        const top = macroSignal.topChains[0];
+        macroContext = {
+          totalDefiTvlUsd: macroSignal.totalDefiTvlUsd,
+          topChain: top.chainName,
+          topChainTvlUsd: top.tvlUsd,
+        };
+      }
+    } else {
+      rationaleParts.push('Macro TVL context unavailable (DefiLlama offline or not fetched)');
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. Clamp confidence score to [0.0, 1.0]
     // -----------------------------------------------------------------------
     const finalScore = Math.max(0.0, Math.min(1.0, Math.round(confidenceScore * 100) / 100));
 
@@ -196,7 +235,9 @@ export class FeatureEngine {
         counterpartyRisk,
         marketVolatility,
         volumeAnomaly: isVolumeSpike,
+        macroSentiment,
       },
+      macroContext,
       computedAt: new Date().toISOString(),
     };
   }

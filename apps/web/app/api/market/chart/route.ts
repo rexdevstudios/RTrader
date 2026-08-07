@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { StrategyBacktester, BinanceKlineInterval } from '../../../../../../packages/agent/backtester';
 import { intelligenceCache, OrderbookSnapshot } from '../../../../../../packages/intelligence/market-data-cache';
 import { FeatureEngine } from '../../../../../../packages/intelligence/feature-engine';
+import { fetchDefiLlamaMacroSignal } from '../../../../../../packages/intelligence/defillama-client';
 import { ApiResponse } from '../../../../../../packages/shared/contracts/api-contracts';
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,9 +12,15 @@ export async function GET(req: NextRequest) {
     const symbol = (searchParams.get('symbol') || 'BTCUSDT').toUpperCase();
     const interval = (searchParams.get('interval') || '1h') as BinanceKlineInterval;
 
-    // 1. Fetch Historical OHLCV (Fallback gracefully to empty if offline)
-    let candles = await StrategyBacktester.fetchHistoricalCandles(symbol, interval, 30);
-    
+    // 1. Fetch Historical OHLCV & DefiLlama macro signal in parallel (non-blocking)
+    const [candlesResult, macroResult] = await Promise.allSettled([
+      StrategyBacktester.fetchHistoricalCandles(symbol, interval, 30),
+      fetchDefiLlamaMacroSignal(),
+    ]);
+
+    let candles = candlesResult.status === 'fulfilled' ? candlesResult.value : [];
+    const macroSignal = macroResult.status === 'fulfilled' ? macroResult.value : null;
+
     // Fallback mock candles if Binance REST is unreachable
     if (candles.length === 0) {
       const now = Date.now();
@@ -41,12 +49,12 @@ export async function GET(req: NextRequest) {
         bids: [
           [bestBid, 1.5],
           [bestBid * 0.998, 4.2],
-          [bestBid * 0.995, 12.8], // Whale wall bid
+          [bestBid * 0.995, 12.8],
         ],
         asks: [
           [bestAsk, 1.2],
           [bestAsk * 1.002, 3.8],
-          [bestAsk * 1.005, 15.0], // Whale wall ask
+          [bestAsk * 1.005, 15.0],
         ],
         bestBid,
         bestAsk,
@@ -55,8 +63,8 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // 3. Compute Intelligence Signal
-    const signal = FeatureEngine.computeSignal(symbol, intelligenceCache, null, null);
+    // 3. Compute Intelligence Signal (includes optional DefiLlama macro context)
+    const signal = FeatureEngine.computeSignal(symbol, intelligenceCache, null, null, macroSignal);
 
     const data = {
       symbol,
@@ -64,6 +72,7 @@ export async function GET(req: NextRequest) {
       candles,
       orderbook,
       signal,
+      macroContext: signal.macroContext ?? null,
     };
 
     const response: ApiResponse<typeof data> = {
@@ -73,6 +82,7 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(response, { status: 200 });
+
   } catch (err) {
     const response: ApiResponse<null> = {
       success: false,
