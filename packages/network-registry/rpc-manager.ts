@@ -78,7 +78,7 @@ export class ModularRpcManager extends EventEmitter {
    * Mengambil URL RPC aktif berdasarkan network dan domain (misal: LAUNCHPAD, TRADING).
    * Mendukung otomatisasi fallback dari Primary (dRPC) ke Fallback (Ankr/Alchemy).
    */
-  async getActiveHttpRpc(networkId: string, domain: 'LAUNCHPAD' | 'INTELLIGENCE' | 'TRADING' | 'AGENT'): Promise<string> {
+  async getActiveHttpRpc(networkId: string, domain: 'LAUNCHPAD' | 'INTELLIGENCE' | 'TRADING' | 'AGENT' | 'BILLING'): Promise<string> {
     const domainKey = `${domain}:${networkId}`;
     let domainCfg = this.domainConfigs.get(domainKey);
 

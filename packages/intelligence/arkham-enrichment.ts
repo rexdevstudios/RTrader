@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Uses native global fetch (Node 18+ & Next.js native)
 
 export interface ArkhamEntityProfile {
   walletAddress: string;

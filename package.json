@@ -11,7 +11,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:seed": "psql $DATABASE_URL -f db/schema.sql -f db/seeds/initial_seed.sql",
+    "db:seed": "npx tsx scripts/seed-db.ts",
     "test": "jest"
   },
   "dependencies": {
@@ -19,12 +19,15 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "ethers": "^6.13.2",
-    "events": "^3.3.0"
+    "events": "^3.3.0",
+    "pg": "^8.12.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",
+    "@types/pg": "^8.11.6",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "tsx": "^4.16.5",
     "typescript": "^5.5.4"
   }
 }
