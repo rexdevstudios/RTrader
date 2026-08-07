@@ -96,6 +96,37 @@ Responsibilities:
 - run scrape job
 - normalize labels
 - store derived signals
+- fetch macro TVL snapshot (DefiLlama)
+- compute market regime
+- generate trading alerts and strategy signals
+
+## Implemented Route Registry (as of Phase N)
+
+### Auth Routes (Public)
+- `POST /api/auth/challenge` — Generate SIWE nonce challenge
+- `POST /api/auth/verify` — Verify SIWE signature → returns session token + sets `rtrader_session` HttpOnly cookie (8h TTL)
+
+### System Routes (Public)
+- `GET /api/system/overview` — Platform health, telemetry buffer, Redis/Postgres status
+
+### Market Routes (Public, CDN-cacheable)
+- `GET /api/market/chart?symbol=&interval=` — OHLCV candles + orderbook + IntelligenceSignal + macroContext + tradingAnalysis (regime, alerts, strategySignals, RSI, whale walls)
+- `GET /api/market/macro` — DefiLlama chain TVL snapshot + macroSentiment (`s-maxage=60`)
+
+### Trading Routes (Protected — requires session token)
+- `POST /api/trade-intents` — Create trade intent, evaluated by TradingRiskGate
+
+### Agent Routes (Protected — requires session token)
+- `POST /api/agent/proposals/intelligence` — Generate AI proposal with IntelligenceSignal + DefiLlama macro enrichment
+
+### Billing Routes (Public read / Protected write)
+- `GET /api/billing/plans` — List available subscription plans
+- `POST /api/billing/subscribe` — Subscribe user to plan (protected)
+
+## Security Layer (Edge Middleware)
+- All `/api/*` routes (except PUBLIC_API_PATHS whitelist) require `rtrader_session` cookie or `Authorization: Bearer <token>` header
+- 6 security headers applied universally: `X-Frame-Options: DENY`, `HSTS`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`
+- Middleware is 100% stateless (Edge Runtime) — no DB/Redis calls
 
 ## Suggested API Contract Shape
 

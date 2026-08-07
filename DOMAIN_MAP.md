@@ -93,9 +93,13 @@ Primary data:
 Owns:
 - onchain data ingestion
 - wallet labeling & risk profiling (Arkham API)
-- market data aggregation
+- market data aggregation (OHLCV, orderbook snapshots)
 - web scraping enrichment (Firecrawl)
+- macro TVL data enrichment (DefiLlama — out-of-band, zero-key)
 - event normalization
+- multi-factor signal aggregation (TradingSignalEngine)
+- market regime detection
+- structured trading alert generation
 
 Primary data:
 - chain events
@@ -104,6 +108,15 @@ Primary data:
 - scraped documents
 - derived signals
 - arkham_intelligence_profiles
+- defillama_macro_snapshots (ephemeral, not persisted to DB)
+
+Modules (packages/intelligence/):
+- `market-data-cache.ts` — OHLCV + orderbook ephemeral cache
+- `feature-engine.ts` — IntelligenceSignal computation (confidence score, risk flags)
+- `defillama-client.ts` — DefiLlama macro TVL sidecar (fault-isolated, no API key)
+- `trading-signal-engine.ts` — MarketRegime, TradingAlert[], StrategySignal[] aggregator (presentation layer only)
+- `arkham-intelligence.ts` — Counterparty wallet risk profiling
+- `firecrawl-client.ts` — Web intelligence scraping
 
 ### 7. Risk Domain
 Owns:
@@ -156,6 +169,8 @@ Primary data:
 - Trading can execute approved orders, but not modify launch rules.
 - Agents can propose, but not self-approve live money movement.
 - Intelligence can enrich data, but not become settlement truth.
+- Intelligence's TradingSignalEngine is PRESENTATION LAYER ONLY — output is advisory, never a Risk Gate decision.
+- DefiLlama macro data is OUT-OF-BAND enrichment — never a source of truth, always degradable to UNAVAILABLE.
 - Risk can block and require review, but should not rewrite user intent.
 - Admin can operate the platform, but must leave a complete audit trail.
 

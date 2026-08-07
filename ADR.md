@@ -1,7 +1,7 @@
 # ADR: Degen Launchpad, Trading Terminal, and AI Agent Platform
 
 ## Status
-Proposed
+Active (Updated: Phase N — 2026-08-07)
 
 ## Context
 We are designing a crypto platform inspired by pump.fun-style launchpads and bankr-style agent-driven workflows. The product includes:
@@ -161,6 +161,48 @@ Rationale:
 Consequences:
 - Arkham API runs strictly out-of-band / asynchronously
 - Arkham API failure must never block live trade execution or settlement
+
+### ADR-013: TradingSignalEngine as Presentation-Layer Intelligence Aggregator
+We will add `TradingSignalEngine` in `packages/intelligence/trading-signal-engine.ts` as a stateless, synchronous aggregator that computes `MarketRegime`, `TradingAlert[]`, and `StrategySignal[]` from already-available data (OHLCV candles, orderbook snapshot, `IntelligenceSignal`).
+
+Rationale:
+- traders need structured, actionable alerts derived from multi-factor analysis (RSI, whale walls, spread, macro sentiment, counterparty risk, volatility)
+- a single aggregator prevents logic duplication across dashboard and proposal routes
+- all computation uses pre-fetched/cached data — no new blocking I/O in this layer
+
+Consequences:
+- `TradingSignalEngine` is NEVER called inside the critical execution path (Risk Gate → Order Worker)
+- output is strictly advisory/informational — never a settlement decision
+- `shouldPauseTrading` and `shouldRejectProposal` flags are UI hints only; Risk Gate remains the authoritative final decision
+- AI Proposal Engine remains proposal-only; `StrategySignal` is input to proposal generation, not direct execution
+
+### ADR-014: DefiLlama as Zero-Key Macro Intelligence Sidecar
+We will integrate DefiLlama public REST API (`api.llama.fi/v2/chains`) as a zero-dependency, zero-API-key macro enrichment layer inside `packages/intelligence/defillama-client.ts`.
+
+Rationale:
+- provides free, public, continuously updated DeFi TVL data across 100+ chains
+- enables macro regime detection (BULLISH/NEUTRAL/BEARISH) without any new paid dependency
+- 5-second AbortController timeout + complete try/catch ensures zero impact on critical path
+
+Consequences:
+- DefiLlama data is OUT-OF-BAND enrichment only — never source of truth
+- `macroSentiment: UNAVAILABLE` is always a valid graceful fallback state
+- DefiLlama is fetched in parallel via `Promise.allSettled()` alongside OHLCV so it never blocks chart response
+- `GET /api/market/macro` provides a standalone CDN-cacheable public endpoint (`s-maxage=60`)
+
+### ADR-015: Next.js Edge Middleware for Stateless Auth Protection and Security Headers
+We will use Next.js Edge Middleware (`middleware.ts` at project root) to enforce stateless session token validation on all non-public `/api/*` routes and inject security headers on every HTTP response.
+
+Rationale:
+- Edge Middleware runs before any API Route Handler — first-line defense with zero DB calls
+- security headers (`X-Frame-Options`, `HSTS`, `X-Content-Type-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`) must be applied universally
+- stateless session token format (`base64(userId:wallet:issuedAt:nonce)`) enables Edge Runtime compatibility without server state
+
+Consequences:
+- `POST /api/auth/verify` must set the `rtrader_session` HttpOnly cookie on successful SIWE verification
+- public routes (`/api/auth/*`, `/api/billing/plans`, `/api/system/overview`, `/api/market/*`) are explicitly whitelisted in `PUBLIC_API_PATHS`
+- full cryptographic RBAC verification remains in individual API Route Handlers — middleware only validates format/presence
+- middleware is 100% stateless and must never call Redis, PostgreSQL, or any external service
 
 ## Assumptions
 - The initial launch targets a web product first, not native mobile.

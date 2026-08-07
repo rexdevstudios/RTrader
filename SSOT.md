@@ -12,6 +12,8 @@ The platform includes:
 - Binance integration for live and test trading
 - AI agent for analysis, alerting, and assisted execution
 - web intelligence and onchain intelligence enrichment
+- macro market intelligence enrichment (DefiLlama TVL, out-of-band)
+- multi-factor trading signal aggregation (market regime, alerts, strategy signals)
 - admin, moderation, billing, and compliance operations
 
 ## Product Principles
@@ -320,3 +322,52 @@ input data -> feature assembly -> strategy model -> proposal -> risk engine -> e
 - The team wants a bootstrap path using free tiers where possible.
 - Compliance requirements can increase over time without a re-architecture.
 
+## Platform Component Registry (as of Phase N — 2026-08-07)
+
+### Control Plane (apps/web — Next.js 14 on Vercel)
+- Edge Middleware: stateless auth + security headers (middleware.ts)
+- API Routes: auth, market, trading, agent, billing, system
+- UI Pages: Overview Dashboard, SIWE Login, Trading Terminal
+
+### Intelligence Layer (packages/intelligence/ — non-blocking, non-SSOT)
+| Module | Role | Fault Isolation |
+|---|---|---|
+| `market-data-cache.ts` | OHLCV + orderbook ephemeral cache | In-memory fallback |
+| `feature-engine.ts` | IntelligenceSignal (confidence score, risk flags, macro sentiment) | Graceful degradation on null inputs |
+| `defillama-client.ts` | DefiLlama macro TVL sidecar | 5s timeout, UNAVAILABLE fallback |
+| `trading-signal-engine.ts` | MarketRegime + TradingAlert[] + StrategySignal[] | Presentation layer only, never in critical path |
+| `arkham-intelligence.ts` | Counterparty wallet risk profiling | Out-of-band, fail-open |
+| `firecrawl-client.ts` | Web intelligence scraping | Optional, non-blocking |
+
+### Execution Layer (packages/trading/ — CRITICAL PATH — LOCKED)
+| Module | Role | Constraint |
+|---|---|---|
+| `binance-vault.ts` | AES-256-GCM API key vault | WITHDRAWAL KEYS REJECTED at vault level |
+| `risk-gate.ts` | Deterministic risk gate | Final authority on trade approval — never bypassed |
+
+### Auth Layer (packages/auth/ — LOCKED)
+| Module | Role |
+|---|---|
+| `siwe.ts` | EIP-4361 SIWE signature verification |
+| `rbac-middleware.ts` | Role-based access control matrix |
+| `rate-limiter.ts` | Upstash Redis rate limiter with fail-open fallback |
+
+### Agent Layer (packages/agent/)
+| Module | Role |
+|---|---|
+| `proposal-engine.ts` | AI proposal generation — PROPOSAL-ONLY, never executor |
+| `backtester.ts` | RSI (Wilder's SMM) + Sharpe ratio + historical OHLCV via Binance REST |
+
+### Shared Packages (packages/shared/)
+| Module | Role |
+|---|---|
+| `orchestrator.ts` | SystemOrchestrator: Redis + DB + kill-switch lifecycle |
+| `telemetry.ts` | Non-blocking ring-buffer TelemetryLogger (audit + metrics) |
+| `contracts/api-contracts.ts` | Shared ApiResponse<T>, domain request/response types |
+| `types/domain.ts` | Canonical domain entity types |
+
+### Database (db/ — LOCKED)
+- `schema.sql`: 28-table PostgreSQL schema — Operational SSOT — DO NOT MODIFY without review
+
+### Smart Contracts (contracts/ — LOCKED)
+- `BondingCurveLaunchpad.sol`: Onchain bonding curve launchpad — deployed, immutable
