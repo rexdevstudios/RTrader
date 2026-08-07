@@ -30,6 +30,7 @@ export interface WalletVerifyRequest {
   chainType: 'EVM' | 'SOLANA';
   signature: string;
   nonce: string;
+  message?: string;
 }
 
 export interface UserProfileResponse {

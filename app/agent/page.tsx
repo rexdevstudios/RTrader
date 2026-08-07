@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export default function AgentPage() {
+  const { isConnected, userRole, connectMetaMask, isConnecting } = useAuth();
+  const [connectError, setConnectError] = useState<string | null>(null);
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [action, setAction] = useState<'BUY' | 'SELL'>('BUY');
   const [qty, setQty] = useState(100);
@@ -10,7 +13,18 @@ export default function AgentPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Admin weights
+  const [arkhamWeight, setArkhamWeight] = useState(0.35);
+  const [firecrawlWeight, setFirecrawlWeight] = useState(0.25);
+  const [ohlcvWeight, setOhlcvWeight] = useState(0.25);
+  const [defillamaWeight, setDefillamaWeight] = useState(0.15);
+
   const handleGenerateProposal = async () => {
+    if (!isConnected) {
+      setError('🔒 Wallet connection required to trigger AI strategy proposals.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -48,12 +62,19 @@ export default function AgentPage() {
             🤖 AI Agent Intelligence & Proposal Sandbox
           </h1>
           <p style={{ color: '#64748B', margin: '2px 0 0 0', fontSize: '11px' }}>
-            Proposal-only AI strategy engine with feature fusion (Arkham, Firecrawl, Binance OHLCV, DefiLlama Macro TVL).
+            Proposal-only AI strategy engine with multi-factor fusion (Arkham, Firecrawl, Binance OHLCV, DefiLlama Macro TVL).
           </p>
         </div>
-        <span style={{ backgroundColor: '#1C0D2E', color: '#D500F9', border: '1px solid #3B1566', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
-          PROPOSAL-ONLY GUARANTEED
-        </span>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {userRole === 'SYSTEM_ADMIN' && (
+            <span style={{ backgroundColor: '#261704', color: '#FFD600', border: '1px solid #FF9100', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+              👑 FEATURE WEIGHT ADMIN ACTIVE
+            </span>
+          )}
+          <span style={{ backgroundColor: '#1C0D2E', color: '#D500F9', border: '1px solid #3B1566', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+            PROPOSAL-ONLY GUARANTEED
+          </span>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -103,23 +124,61 @@ export default function AgentPage() {
               </div>
             </div>
 
-            <button
-              onClick={handleGenerateProposal}
-              disabled={loading}
-              style={{
-                backgroundColor: loading ? '#141A26' : '#7C4DFF',
-                color: '#FFFFFF',
-                border: 'none',
-                padding: '10px',
-                borderRadius: '4px',
-                fontWeight: 900,
-                fontSize: '12px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                marginTop: '4px',
-              }}
-            >
-              {loading ? 'Generating Proposal via Feature Engine...' : '🚀 Generate Intelligence Proposal'}
-            </button>
+            {!isConnected ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setConnectError(null);
+                    const res = await connectMetaMask();
+                    if (!res.success && res.error) {
+                      setConnectError(res.error);
+                    }
+                  }}
+                  disabled={isConnecting}
+                  style={{
+                    width: '100%',
+                    backgroundColor: isConnecting ? '#141A26' : '#00E5FF',
+                    color: isConnecting ? '#64748B' : '#000000',
+                    border: 'none',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontWeight: 900,
+                    fontSize: '12px',
+                    cursor: isConnecting ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {isConnecting ? '🦊 Connecting MetaMask...' : '🦊 Connect MetaMask to Generate AI Proposals'}
+                </button>
+                {connectError && (
+                  <div style={{ color: '#FF5252', fontSize: '11px' }}>
+                    ⚠️ {connectError}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleGenerateProposal}
+                disabled={loading}
+                style={{
+                  backgroundColor: loading ? '#141A26' : '#7C4DFF',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  marginTop: '4px',
+                }}
+              >
+                {loading ? 'Generating Proposal via Feature Engine...' : '🚀 Generate Intelligence Proposal'}
+              </button>
+            )}
 
             {error && (
               <div style={{ backgroundColor: '#2A0413', color: '#FF5252', border: '1px solid #FF1744', padding: '8px', borderRadius: '4px', fontSize: '11px' }}>
@@ -168,6 +227,38 @@ export default function AgentPage() {
           )}
         </div>
       </div>
+
+      {/* Admin Feature Weight Inspector (Exclusive to SYSTEM_ADMIN) */}
+      {(userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN') && (
+        <div style={{ backgroundColor: '#06080E', border: '1px solid #FF9100', borderRadius: '6px', padding: '16px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#FFD600', margin: '0 0 10px 0' }}>
+            👑 System Admin: Multi-Factor Intelligence Engine Weights
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', fontSize: '11px' }}>
+            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#00E5FF', fontWeight: 800 }}>Arkham Intelligence</div>
+              <div style={{ fontSize: '16px', fontWeight: 900, color: '#F8FAFC', margin: '4px 0' }}>{(arkhamWeight * 100).toFixed(0)}%</div>
+              <div style={{ color: '#64748B' }}>Counterparty & Sanctions Risk</div>
+            </div>
+            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#D500F9', fontWeight: 800 }}>Firecrawl Sentiment</div>
+              <div style={{ fontSize: '16px', fontWeight: 900, color: '#F8FAFC', margin: '4px 0' }}>{(firecrawlWeight * 100).toFixed(0)}%</div>
+              <div style={{ color: '#64748B' }}>Web News & Social Buzz</div>
+            </div>
+            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#00E676', fontWeight: 800 }}>Binance OHLCV & RSI</div>
+              <div style={{ fontSize: '16px', fontWeight: 900, color: '#F8FAFC', margin: '4px 0' }}>{(ohlcvWeight * 100).toFixed(0)}%</div>
+              <div style={{ color: '#64748B' }}>Technical Momentum Indicators</div>
+            </div>
+            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
+              <div style={{ color: '#FFC400', fontWeight: 800 }}>DefiLlama Macro TVL</div>
+              <div style={{ fontSize: '16px', fontWeight: 900, color: '#F8FAFC', margin: '4px 0' }}>{(defillamaWeight * 100).toFixed(0)}%</div>
+              <div style={{ color: '#64748B' }}>Chain Liquidity Inflow</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

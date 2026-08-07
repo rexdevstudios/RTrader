@@ -135,7 +135,11 @@ function CandlestickChart({ candles }: { candles: Candle[] }) {
   );
 }
 
+import { useAuth } from '../context/AuthContext';
+
 export default function TradingPage() {
+  const { isConnected, userRole, connectMetaMask, isConnecting } = useAuth();
+  const [connectError, setConnectError] = useState<string | null>(null);
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [interval, setInterval] = useState('1h');
   const [candles, setCandles] = useState<Candle[]>([]);
@@ -177,6 +181,11 @@ export default function TradingPage() {
   }, [symbol, interval]);
 
   const handleApproveProposal = async () => {
+    if (!isConnected) {
+      setActionFeedback('🔒 SIWE Session Required: Please connect your wallet to approve trade intents.');
+      return;
+    }
+
     setIsSubmitting(true);
     setActionFeedback(null);
     try {
@@ -455,10 +464,18 @@ export default function TradingPage() {
           </div>
 
           {/* Proposal-Only Action Gate */}
-          <div style={{ backgroundColor: '#06080E', border: '1px solid #00E5FF', borderRadius: '6px', padding: '12px' }}>
-            <h3 style={{ fontSize: '12px', fontWeight: 800, margin: '0 0 4px 0', color: '#00E5FF' }}>
-              🛡️ Proposal Execution Gate
-            </h3>
+          <div style={{ backgroundColor: '#06080E', border: userRole === 'SYSTEM_ADMIN' ? '1px solid #FF9100' : '1px solid #00E5FF', borderRadius: '6px', padding: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <h3 style={{ fontSize: '12px', fontWeight: 800, margin: 0, color: userRole === 'SYSTEM_ADMIN' ? '#FFD600' : '#00E5FF' }}>
+                🛡️ Proposal Execution Gate
+              </h3>
+              {userRole === 'SYSTEM_ADMIN' && (
+                <span style={{ backgroundColor: '#261704', color: '#FFD600', border: '1px solid #FF9100', padding: '2px 6px', borderRadius: '3px', fontSize: '9px', fontWeight: 800 }}>
+                  ADMIN OVERRIDE READY
+                </span>
+              )}
+            </div>
+
             <p style={{ fontSize: '11px', color: '#64748B', margin: '0 0 8px 0' }}>
               Status: <strong style={{ color: '#F8FAFC' }}>{proposalStatus}</strong>
             </p>
@@ -472,53 +489,94 @@ export default function TradingPage() {
                   fontSize: '11px',
                   marginBottom: '8px',
                   border: '1px solid #141A26',
-                  color: actionFeedback.includes('✅') ? '#00E676' : actionFeedback.includes('❌') ? '#FF1744' : '#E2E8F0',
+                  color: actionFeedback.includes('✅') ? '#00E676' : actionFeedback.includes('❌') ? '#FF1744' : actionFeedback.includes('🔒') ? '#FFC400' : '#E2E8F0',
                 }}
               >
                 {actionFeedback}
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                onClick={handleApproveProposal}
-                disabled={isSubmitting || proposalStatus === 'APPROVED'}
-                style={{
-                  flex: 1,
-                  backgroundColor: proposalStatus === 'APPROVED' ? '#141A26' : '#00E676',
-                  color: proposalStatus === 'APPROVED' ? '#64748B' : '#000000',
-                  border: 'none',
-                  padding: '6px',
-                  borderRadius: '4px',
-                  fontWeight: 900,
-                  fontSize: '11px',
-                  cursor: isSubmitting || proposalStatus === 'APPROVED' ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isSubmitting ? 'Processing...' : proposalStatus === 'APPROVED' ? 'Approved' : 'Approve Proposal'}
-              </button>
+            {!isConnected ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ color: '#94A3B8', fontSize: '11px', textAlign: 'center', padding: '4px 0' }}>
+                  🔒 Wallet connection required to execute trade intents.
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setConnectError(null);
+                    const res = await connectMetaMask();
+                    if (!res.success && res.error) {
+                      setConnectError(res.error);
+                    }
+                  }}
+                  disabled={isConnecting}
+                  style={{
+                    backgroundColor: isConnecting ? '#141A26' : '#00E5FF',
+                    color: isConnecting ? '#64748B' : '#000000',
+                    border: 'none',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    fontWeight: 900,
+                    fontSize: '11px',
+                    cursor: isConnecting ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {isConnecting ? '🦊 Connecting MetaMask...' : '🦊 Connect MetaMask to Trade'}
+                </button>
+                {connectError && (
+                  <div style={{ color: '#FF5252', fontSize: '11px', textAlign: 'center' }}>
+                    ⚠️ {connectError}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={handleApproveProposal}
+                  disabled={isSubmitting || proposalStatus === 'APPROVED'}
+                  style={{
+                    flex: 1,
+                    backgroundColor: proposalStatus === 'APPROVED' ? '#141A26' : '#00E676',
+                    color: proposalStatus === 'APPROVED' ? '#64748B' : '#000000',
+                    border: 'none',
+                    padding: '6px',
+                    borderRadius: '4px',
+                    fontWeight: 900,
+                    fontSize: '11px',
+                    cursor: isSubmitting || proposalStatus === 'APPROVED' ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {isSubmitting ? 'Processing...' : proposalStatus === 'APPROVED' ? 'Approved' : 'Approve Proposal'}
+                </button>
 
-              <button
-                onClick={handleRejectProposal}
-                disabled={isSubmitting || proposalStatus === 'REJECTED'}
-                style={{
-                  flex: 1,
-                  backgroundColor: proposalStatus === 'REJECTED' ? '#141A26' : '#FF1744',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '6px',
-                  borderRadius: '4px',
-                  fontWeight: 900,
-                  fontSize: '11px',
-                  cursor: isSubmitting || proposalStatus === 'REJECTED' ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {proposalStatus === 'REJECTED' ? 'Rejected' : 'Reject'}
-              </button>
-            </div>
+                <button
+                  onClick={handleRejectProposal}
+                  disabled={isSubmitting || proposalStatus === 'REJECTED'}
+                  style={{
+                    flex: 1,
+                    backgroundColor: proposalStatus === 'REJECTED' ? '#141A26' : '#FF1744',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '6px',
+                    borderRadius: '4px',
+                    fontWeight: 900,
+                    fontSize: '11px',
+                    cursor: isSubmitting || proposalStatus === 'REJECTED' ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {proposalStatus === 'REJECTED' ? 'Rejected' : 'Reject'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

@@ -1,4 +1,5 @@
 import HeaderNav from './components/HeaderNav';
+import { AuthProvider } from './context/AuthContext';
 
 export const metadata = {
   title: 'RTrader | Degen Launchpad, Trading Terminal & AI Agent Platform',
@@ -13,13 +14,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ margin: 0, fontFamily: 'Inter, system-ui, sans-serif', backgroundColor: '#000000', color: '#E2E8F0', minHeight: '100vh' }}>
-        <HeaderNav />
-        <main style={{ padding: '16px', maxWidth: '1600px', margin: '0 auto' }}>
-          {children}
-        </main>
+        <AuthProvider>
+          <HeaderNav />
+          <main style={{ padding: '16px', maxWidth: '1600px', margin: '0 auto' }}>
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
 
 
