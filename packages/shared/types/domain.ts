@@ -1,0 +1,188 @@
+// ============================================================================
+// SHARED DOMAIN TYPES, GUARDRAILS, & DETERMINISTIC ENGINE RULES
+// ============================================================================
+
+export type Role =
+  | 'SUPER_ADMIN'
+  | 'SYSTEM_ADMIN'
+  | 'RISK_ADMIN'
+  | 'LAUNCH_ADMIN'
+  | 'BILLING_ADMIN'
+  | 'MODERATOR'
+  | 'TRADER'
+  | 'CREATOR';
+
+export type LaunchMode =
+  | 'FAIR_LAUNCH'
+  | 'BONDING_CURVE'
+  | 'FIXED_PRICE'
+  | 'WHITELIST_PRIVATE'
+  | 'COMMUNITY_PRELAUNCH';
+
+export type TradeStage = 'PAPER' | 'TESTNET' | 'LIVE';
+export type OrderSide = 'BUY' | 'SELL';
+export type OrderType = 'LIMIT' | 'MARKET' | 'STOP_LOSS' | 'TAKE_PROFIT';
+
+export interface BinanceKeyPermissions {
+  read: boolean;
+  trade: boolean;
+  withdraw: boolean;
+}
+
+export interface TradeIntentInput {
+  userId: string;
+  stage: TradeStage;
+  symbol: string;
+  side: OrderSide;
+  type: OrderType;
+  quantity: number;
+  price?: number;
+  maxSlippagePct: number;
+  idempotencyKey: string;
+}
+
+export interface UserRiskLimits {
+  maxOrderValueUsd: number;
+  maxDailyLossUsd: number;
+  currentDailyLossUsd: number;
+  maxOpenPositions: number;
+  currentOpenPositions: number;
+}
+
+export interface KillSwitch {
+  scope: 'GLOBAL' | 'USER' | 'AGENT' | 'TOKEN';
+  targetId?: string;
+  isActive: boolean;
+  reason: string;
+}
+
+export interface RiskDecision {
+  isApproved: boolean;
+  score: number;
+  reason?: string;
+  riskFactors: string[];
+}
+
+// ----------------------------------------------------------------------------
+// 1. BINANCE KEY SECURITY GUARDRAIL
+// ----------------------------------------------------------------------------
+export function validateBinancePermissions(perms: BinanceKeyPermissions): void {
+  if (perms.withdraw) {
+    throw new Error(
+      'SECURITY_REJECT_WITHDRAWAL_KEY: Binance API Keys with withdrawal permissions (enableWithdrawals) are strictly prohibited for platform security!'
+    );
+  }
+  if (!perms.read || !perms.trade) {
+    throw new Error(
+      'INVALID_KEY_PERMISSIONS: Binance API Key must have both READ and TRADE permissions enabled.'
+    );
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 2. DETERMINISTIC RISK ENGINE EVALUATOR
+// ----------------------------------------------------------------------------
+export function evaluateTradeRisk(
+  intent: TradeIntentInput,
+  userLimits: UserRiskLimits,
+  activeKillSwitches: KillSwitch[]
+): RiskDecision {
+  const riskFactors: string[] = [];
+
+  // A. Check Global & Target Kill Switches
+  for (const ks of activeKillSwitches) {
+    if (!ks.isActive) continue;
+    if (ks.scope === 'GLOBAL') {
+      return {
+        isApproved: false,
+        score: 100,
+        reason: `GLOBAL_KILL_SWITCH_ACTIVE: ${ks.reason}`,
+        riskFactors: ['GLOBAL_KILL_SWITCH'],
+      };
+    }
+    if (ks.scope === 'USER' && ks.targetId === intent.userId) {
+      return {
+        isApproved: false,
+        score: 100,
+        reason: `USER_KILL_SWITCH_ACTIVE: ${ks.reason}`,
+        riskFactors: ['USER_SUSPENDED'],
+      };
+    }
+  }
+
+  // B. Max Slippage Guardrail (Max 3%)
+  if (intent.maxSlippagePct > 3.0) {
+    return {
+      isApproved: false,
+      score: 85,
+      reason: `SLIPPAGE_EXCEEDED: Requested slippage ${intent.maxSlippagePct}% exceeds maximum allowed (3.0%)`,
+      riskFactors: ['HIGH_SLIPPAGE'],
+    };
+  }
+
+  // C. Max Single Order Value Guardrail
+  const estimatedOrderValueUsd = intent.quantity * (intent.price || 1.0);
+  if (estimatedOrderValueUsd > userLimits.maxOrderValueUsd) {
+    return {
+      isApproved: false,
+      score: 90,
+      reason: `MAX_ORDER_LIMIT_EXCEEDED: Order value $${estimatedOrderValueUsd.toFixed(2)} exceeds limit $${userLimits.maxOrderValueUsd}`,
+      riskFactors: ['EXCESSIVE_ORDER_SIZE'],
+    };
+  }
+
+  // D. Daily Loss Limit Guardrail
+  if (userLimits.currentDailyLossUsd >= userLimits.maxDailyLossUsd) {
+    return {
+      isApproved: false,
+      score: 95,
+      reason: `DAILY_LOSS_LIMIT_REACHED: Current loss $${userLimits.currentDailyLossUsd.toFixed(2)} reached cap $${userLimits.maxDailyLossUsd}`,
+      riskFactors: ['DAILY_LOSS_CAP_REACHED'],
+    };
+  }
+
+  // Approved
+  return {
+    isApproved: true,
+    score: 10,
+    riskFactors: [],
+  };
+}
+
+// ----------------------------------------------------------------------------
+// 3. FAIR LAUNCH & BONDING CURVE RULES EVALUATOR
+// ----------------------------------------------------------------------------
+export interface FairLaunchConfig {
+  totalSupply: bigint;
+  maxPerWalletPct: number; // e.g. 1.0 = 1%
+  initialPriceWei: bigint;
+  graduationThresholdWei: bigint;
+  raisedAmountWei: bigint;
+}
+
+export function calculateBondingCurvePrice(
+  currentSupply: bigint,
+  amountToBuy: bigint,
+  config: FairLaunchConfig
+): bigint {
+  // Constant product / linear polynomial curve: P = P0 + k * S
+  // Return total cost in wei
+  const priceMultiplier = BigInt(100);
+  const cost = (amountToBuy * config.initialPriceWei) + (currentSupply * amountToBuy / priceMultiplier);
+  return cost;
+}
+
+export function validateFairLaunchPurchase(
+  buyerWallet: string,
+  buyerCurrentBalance: bigint,
+  buyAmount: bigint,
+  config: FairLaunchConfig
+): void {
+  const maxAllowedPerWallet = (config.totalSupply * BigInt(Math.floor(config.maxPerWalletPct * 100))) / BigInt(10000);
+  
+  if (buyerCurrentBalance + buyAmount > maxAllowedPerWallet) {
+    throw new Error(
+      `FAIR_LAUNCH_ANTI_SNIPE: Purchase would exceed max per-wallet limit of ${config.maxPerWalletPct}% (${maxAllowedPerWallet.toString()} tokens)`
+    );
+  }
+}

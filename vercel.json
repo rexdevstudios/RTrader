@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "name": "rtrader-degen-platform",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "MASTER_VAULT_KEY": "@master_vault_key",
+    "DRPC_API_KEY": "@drpc_api_key",
+    "ARKHAM_API_KEY": "@arkham_api_key",
+    "FIRECRAWL_API_KEY": "@firecrawl_api_key",
+    "DAYTONA_API_URL": "@daytona_api_url",
+    "DAYTONA_API_KEY": "@daytona_api_key",
+    "DAYTONA_TARGET": "@daytona_target"
+  }
+}

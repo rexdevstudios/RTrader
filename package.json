@@ -1,0 +1,21 @@
+{
+  "name": "degen-launchpad-trading-agent-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Decision-complete execution workspace for Degen Launchpad, Trading Terminal, & AI Agent Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "db:seed": "psql $DATABASE_URL -f db/schema.sql -f db/seeds/initial_seed.sql",
+    "build": "tsc --build",
+    "test": "jest"
+  },
+  "dependencies": {
+    "events": "^3.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
