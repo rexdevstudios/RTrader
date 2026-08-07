@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StrategyBacktester, BinanceKlineInterval } from '../../../../../../packages/agent/backtester';
+import { StrategyBacktester, BinanceKlineInterval, PriceCandle } from '../../../../../../packages/agent/backtester';
 import { intelligenceCache, OrderbookSnapshot } from '../../../../../../packages/intelligence/market-data-cache';
 import { FeatureEngine } from '../../../../../../packages/intelligence/feature-engine';
 import { fetchDefiLlamaMacroSignal } from '../../../../../../packages/intelligence/defillama-client';
+import { TradingSignalEngine } from '../../../../../../packages/intelligence/trading-signal-engine';
 import { ApiResponse } from '../../../../../../packages/shared/contracts/api-contracts';
 
 
@@ -66,6 +67,14 @@ export async function GET(req: NextRequest) {
     // 3. Compute Intelligence Signal (includes optional DefiLlama macro context)
     const signal = FeatureEngine.computeSignal(symbol, intelligenceCache, null, null, macroSignal);
 
+    // 4. Run Trading Signal Engine — generates alerts, regime, strategy signals (non-blocking)
+    const tradingAnalysis = TradingSignalEngine.analyze(
+      symbol,
+      candles as PriceCandle[],
+      orderbook as OrderbookSnapshot,
+      signal,
+    );
+
     const data = {
       symbol,
       interval,
@@ -73,6 +82,7 @@ export async function GET(req: NextRequest) {
       orderbook,
       signal,
       macroContext: signal.macroContext ?? null,
+      tradingAnalysis,
     };
 
     const response: ApiResponse<typeof data> = {
