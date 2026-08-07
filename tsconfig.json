@@ -3,18 +3,48 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "esModuleInterop": true,
     "strict": false,
     "noImplicitAny": false,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@packages/*": [
+        "packages/*"
+      ],
+      "@apps/*": [
+        "apps/*"
+      ],
+      "@/*": [
+        "*"
+      ]
+    },
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true
+    "noEmit": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "apps/**/*",
     "packages/**/*",
-    "scripts/**/*"
+    "scripts/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }
