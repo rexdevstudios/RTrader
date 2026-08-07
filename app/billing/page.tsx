@@ -42,7 +42,6 @@ export default function BillingPage() {
     setIsProcessing(true);
     setPaymentFeedback(null);
 
-    // Simulate dRPC Onchain Crypto Payment Rail Intent
     setTimeout(() => {
       setActivePlanId(plan.id);
       setPaymentFeedback(`✅ Payment Intent Created! Subscribed to ${plan.name} ($${plan.priceUsd}/mo) via dRPC Onchain Settlement.`);
@@ -60,70 +59,72 @@ export default function BillingPage() {
   const displayPlans = plans.length > 0 ? plans : defaultPlans;
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif', backgroundColor: '#0f172a', color: '#f8fafc', minHeight: '80vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#000000', color: '#E2E8F0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      {/* Top Banner */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#06080E', padding: '12px 16px', borderRadius: '6px', border: '1px solid #141A26' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', margin: 0, color: '#fbbf24' }}>💳 Billing & Payment Rails</h1>
-          <p style={{ color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#FFC400', letterSpacing: '-0.5px' }}>
+            💳 Billing & Payment Rails
+          </h1>
+          <p style={{ color: '#64748B', margin: '2px 0 0 0', fontSize: '11px' }}>
             Multi-channel payment billing engine with automated dRPC onchain verifier & wallet credit ledger.
           </p>
         </div>
-        <span style={{ backgroundColor: '#065f46', color: '#34d399', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
-          {loading ? '● Loading API Plans...' : '● dRPC Onchain Settlement Active'}
+        <span style={{ backgroundColor: '#041E15', color: '#00E676', border: '1px solid #00E676', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+          {loading ? '● LOADING API PLANS...' : '● dRPC ONCHAIN RAIL ACTIVE'}
         </span>
       </div>
 
       {paymentFeedback && (
-        <div style={{ backgroundColor: '#065f46', border: '1px solid #34d399', color: '#34d399', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontWeight: 'bold' }}>
+        <div style={{ backgroundColor: '#041E15', border: '1px solid #00E676', color: '#00E676', padding: '10px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 800 }}>
           {paymentFeedback}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
         {displayPlans.map((plan) => {
           const isActive = plan.id === activePlanId;
           return (
             <div
               key={plan.id}
               style={{
-                backgroundColor: '#1e293b',
-                border: isActive ? '2px solid #fbbf24' : '1px solid #334155',
-                borderRadius: '12px',
-                padding: '1.5rem',
+                backgroundColor: '#06080E',
+                border: isActive ? '2px solid #FFC400' : '1px solid #141A26',
+                borderRadius: '6px',
+                padding: '16px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 position: 'relative',
-
               }}
             >
               {isActive && (
-                <span style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: '#fbbf24', color: '#0f172a', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                <span style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#FFC400', color: '#000000', padding: '2px 6px', borderRadius: '3px', fontSize: '10px', fontWeight: 900 }}>
                   ACTIVE PLAN
                 </span>
               )}
 
               <div>
-                <h3 style={{ color: '#e2e8f0', marginTop: 0, fontSize: '1.25rem' }}>{plan.name}</h3>
-                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#38bdf8', marginBottom: '1rem' }}>
-                  ${plan.priceUsd} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>/ month</span>
+                <h3 style={{ color: '#F8FAFC', marginTop: 0, fontSize: '14px', fontWeight: 800 }}>{plan.name}</h3>
+                <div style={{ fontSize: '20px', fontWeight: 900, color: '#00E5FF', marginBottom: '12px', fontVariantNumeric: 'tabular-nums' }}>
+                  ${plan.priceUsd} <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 500 }}>/ month</span>
                 </div>
 
-                <div style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '1rem', lineHeight: '1.5' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <span style={{ color: '#34d399' }}>✓</span> {plan.monthlyCredits.toLocaleString()} Monthly Credits
+                <div style={{ fontSize: '11px', color: '#CBD5E1', marginBottom: '12px', lineHeight: '1.6' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ color: '#00E676', fontWeight: 800 }}>✓</span> {plan.monthlyCredits.toLocaleString()} Monthly Credits
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <span style={{ color: plan.hasLiveTrading ? '#34d399' : '#64748b' }}>{plan.hasLiveTrading ? '✓' : '✕'}</span>
-                    <span style={{ color: plan.hasLiveTrading ? '#f8fafc' : '#64748b' }}>Binance Live Trading</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: plan.hasLiveTrading ? '#00E676' : '#475569', fontWeight: 800 }}>{plan.hasLiveTrading ? '✓' : '✕'}</span>
+                    <span style={{ color: plan.hasLiveTrading ? '#E2E8F0' : '#475569' }}>Binance Live Trading</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <span style={{ color: plan.hasAgentAccess ? '#34d399' : '#64748b' }}>{plan.hasAgentAccess ? '✓' : '✕'}</span>
-                    <span style={{ color: plan.hasAgentAccess ? '#f8fafc' : '#64748b' }}>AI Proposal Engine</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: plan.hasAgentAccess ? '#00E676' : '#475569', fontWeight: 800 }}>{plan.hasAgentAccess ? '✓' : '✕'}</span>
+                    <span style={{ color: plan.hasAgentAccess ? '#E2E8F0' : '#475569' }}>AI Proposal Engine</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: plan.hasPriorityScrape ? '#34d399' : '#64748b' }}>{plan.hasPriorityScrape ? '✓' : '✕'}</span>
-                    <span style={{ color: plan.hasPriorityScrape ? '#f8fafc' : '#64748b' }}>Firecrawl Scrape Priority</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: plan.hasPriorityScrape ? '#00E676' : '#475569', fontWeight: 800 }}>{plan.hasPriorityScrape ? '✓' : '✕'}</span>
+                    <span style={{ color: plan.hasPriorityScrape ? '#E2E8F0' : '#475569' }}>Firecrawl Scrape Priority</span>
                   </div>
                 </div>
               </div>
@@ -132,14 +133,15 @@ export default function BillingPage() {
                 onClick={() => handleSubscribe(plan)}
                 disabled={isProcessing || isActive}
                 style={{
-                  backgroundColor: isActive ? '#334155' : '#0284c7',
-                  color: '#ffffff',
+                  backgroundColor: isActive ? '#141A26' : '#00E5FF',
+                  color: isActive ? '#64748B' : '#000000',
                   border: 'none',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  fontWeight: 'bold',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  fontWeight: 900,
+                  fontSize: '11px',
                   cursor: isProcessing || isActive ? 'not-allowed' : 'pointer',
-                  marginTop: '1rem',
+                  marginTop: '12px',
                   width: '100%',
                 }}
               >

@@ -9,7 +9,6 @@ export default function HeaderNav() {
   const [credits, setCredits] = useState(15000);
 
   useEffect(() => {
-    // Check if session token cookie exists
     const cookies = document.cookie.split(';');
     const sessionCookie = cookies.find((c) => c.trim().startsWith('rtrader_session='));
     if (sessionCookie) {
@@ -22,56 +21,117 @@ export default function HeaderNav() {
           setWalletAddress(parts[1]);
         }
       } catch {
-        // Fallback demo address
         setWalletAddress('0x1234...7890');
       }
     } else {
-      // Default demo connected state for smooth UI preview
       setIsLoggedIn(true);
       setWalletAddress('0x71C7...890A');
     }
   }, []);
 
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: '#131822', borderBottom: '1px solid #1E2638' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <header style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+
+      padding: '10px 20px',
+      backgroundColor: '#05070B',
+      borderBottom: '1px solid #161D2A',
+      fontFamily: 'Inter, system-ui, sans-serif',
+    }}>
+      {/* Brand & Infrastructure Status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <a href="/" style={{ textDecoration: 'none' }}>
-          <span style={{ fontWeight: 800, fontSize: '20px', background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            RTRADER PLATFORM
+          <span style={{
+            fontWeight: 900,
+            fontSize: '18px',
+            letterSpacing: '-0.5px',
+            background: 'linear-gradient(90deg, #00E5FF, #7C4DFF)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>
+            RTRADER
           </span>
         </a>
-        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#1E293B', color: '#94A3B8', border: '1px solid #334155' }}>
-          100% Native dRPC
+        <span style={{
+          fontSize: '10px',
+          fontWeight: 700,
+          padding: '2px 6px',
+          borderRadius: '3px',
+          backgroundColor: '#0C1017',
+          color: '#00E5FF',
+          border: '1px solid #162232',
+          letterSpacing: '0.5px',
+        }}>
+          OLED DENSE v2.5
         </span>
-        {/* Active Role Badge */}
-        <span style={{ fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#581c87', color: '#c084fc', border: '1px solid #7e22ce' }}>
+        <span style={{
+          fontSize: '10px',
+          fontWeight: 800,
+          padding: '2px 6px',
+          borderRadius: '3px',
+          backgroundColor: '#1C0D2E',
+          color: '#D500F9',
+          border: '1px solid #3B1566',
+        }}>
           ROLE: {userRole}
         </span>
       </div>
 
-      <nav style={{ display: 'flex', gap: '20px', fontSize: '14px', fontWeight: 500 }}>
-        <a href="/" style={{ color: '#94A3B8', textDecoration: 'none' }}>Dashboard</a>
-        <a href="/launchpad" style={{ color: '#94A3B8', textDecoration: 'none' }}>Launchpad</a>
-        <a href="/trading" style={{ color: '#94A3B8', textDecoration: 'none' }}>Trading Terminal</a>
-        <a href="/agent" style={{ color: '#94A3B8', textDecoration: 'none' }}>AI Proposals</a>
-        <a href="/billing" style={{ color: '#94A3B8', textDecoration: 'none' }}>Billing & Credits</a>
+      {/* High Density Navigation Links */}
+      <nav style={{ display: 'flex', gap: '16px', fontSize: '12px', fontWeight: 600 }}>
+        <a href="/" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Dashboard</a>
+        <a href="/launchpad" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Launchpad</a>
+        <a href="/trading" style={{ color: '#00E5FF', textDecoration: 'none', fontWeight: 700 }}>Trading Terminal</a>
+        <a href="/agent" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>AI Proposals</a>
+        <a href="/billing" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s' }}>Billing Rails</a>
       </nav>
 
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        {/* Live Credit Meter */}
-        <div style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '6px', backgroundColor: '#0F172A', border: '1px solid #1E293B', color: '#38BDF8' }}>
+      {/* Account & Session Controls */}
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {/* Compact Credit Meter */}
+        <div style={{
+          fontSize: '11px',
+          fontVariantNumeric: 'tabular-nums',
+          padding: '4px 10px',
+          borderRadius: '4px',
+          backgroundColor: '#090D14',
+          border: '1px solid #1A2436',
+          color: '#00E5FF',
+        }}>
           Credits: <strong>{credits.toLocaleString()} / 15,000</strong>
         </div>
 
-        {/* SIWE Wallet Badge / Login Link */}
+        {/* SIWE Badge */}
         {isLoggedIn ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 12px', borderRadius: '6px', backgroundColor: '#065f46', border: '1px solid #047857', color: '#34d399', fontWeight: 'bold' }}>
-            <span>● SIWE ACTIVE</span>
-            <span style={{ color: '#a7f3d0' }}>({walletAddress || '0x71C...890A'})</span>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '11px',
+            padding: '4px 10px',
+            borderRadius: '4px',
+            backgroundColor: '#041E15',
+            border: '1px solid #00E676',
+            color: '#00E676',
+            fontWeight: 700,
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#00E676' }}></span>
+            <span>SIWE ACTIVE</span>
+            <span style={{ color: '#B9F6CA' }}>({walletAddress || '0x71C...890A'})</span>
           </div>
         ) : (
-          <a href="/auth/login" style={{ fontSize: '13px', fontWeight: 600, padding: '8px 16px', borderRadius: '6px', backgroundColor: '#2563EB', color: '#FFF', textDecoration: 'none' }}>
-            Connect Wallet (SIWE)
+          <a href="/auth/login" style={{
+            fontSize: '12px',
+            fontWeight: 700,
+            padding: '6px 12px',
+            borderRadius: '4px',
+            backgroundColor: '#00E5FF',
+            color: '#000000',
+            textDecoration: 'none',
+          }}>
+            Connect Wallet
           </a>
         )}
       </div>

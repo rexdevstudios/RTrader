@@ -40,27 +40,37 @@ export default function AgentPage() {
   };
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif', backgroundColor: '#0f172a', color: '#f8fafc', minHeight: '80vh' }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#a78bfa' }}>🤖 AI Agent Intelligence & Proposal Sandbox</h1>
-      <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>
-        Proposal-only AI strategy engine with feature fusion (Arkham, Firecrawl, Binance OHLCV, DefiLlama Macro TVL).
-      </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#000000', color: '#E2E8F0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      {/* Top Banner */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#06080E', padding: '12px 16px', borderRadius: '6px', border: '1px solid #141A26' }}>
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#D500F9', letterSpacing: '-0.5px' }}>
+            🤖 AI Agent Intelligence & Proposal Sandbox
+          </h1>
+          <p style={{ color: '#64748B', margin: '2px 0 0 0', fontSize: '11px' }}>
+            Proposal-only AI strategy engine with feature fusion (Arkham, Firecrawl, Binance OHLCV, DefiLlama Macro TVL).
+          </p>
+        </div>
+        <span style={{ backgroundColor: '#1C0D2E', color: '#D500F9', border: '1px solid #3B1566', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+          PROPOSAL-ONLY GUARANTEED
+        </span>
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         {/* Left Card: Interactive Proposal Generator */}
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '1.5rem' }}>
-          <h2 style={{ color: '#f8fafc', marginTop: 0, fontSize: '1.2rem' }}>⚡ Live Proposal Test Generator</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+        <div style={{ backgroundColor: '#06080E', border: '1px solid #141A26', borderRadius: '6px', padding: '16px' }}>
+          <h2 style={{ color: '#F8FAFC', marginTop: 0, fontSize: '14px', fontWeight: 800 }}>⚡ Live Proposal Test Generator</h2>
+          <p style={{ color: '#64748B', fontSize: '11px', marginBottom: '14px' }}>
             Generate a real-time AI trade proposal backed by multi-source intelligence scoring.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Target Symbol</label>
+              <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Target Symbol</label>
               <select
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                style={{ width: '100%', backgroundColor: '#0f172a', color: '#f8fafc', border: '1px solid #334155', padding: '0.6rem', borderRadius: '6px' }}
+                style={{ width: '100%', backgroundColor: '#0C1017', color: '#00E5FF', border: '1px solid #162232', padding: '8px', borderRadius: '4px', fontWeight: 800, fontSize: '12px', fontVariantNumeric: 'tabular-nums' }}
               >
                 <option value="BTCUSDT">BTC / USDT</option>
                 <option value="ETHUSDT">ETH / USDT</option>
@@ -69,13 +79,13 @@ export default function AgentPage() {
               </select>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Action</label>
+                <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Action</label>
                 <select
                   value={action}
                   onChange={(e) => setAction(e.target.value as 'BUY' | 'SELL')}
-                  style={{ width: '100%', backgroundColor: '#0f172a', color: '#f8fafc', border: '1px solid #334155', padding: '0.6rem', borderRadius: '6px' }}
+                  style={{ width: '100%', backgroundColor: '#0C1017', color: '#E2E8F0', border: '1px solid #162232', padding: '8px', borderRadius: '4px', fontWeight: 800, fontSize: '12px' }}
                 >
                   <option value="BUY">BUY</option>
                   <option value="SELL">SELL</option>
@@ -83,12 +93,12 @@ export default function AgentPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Quantity</label>
+                <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Quantity</label>
                 <input
                   type="number"
                   value={qty}
                   onChange={(e) => setQty(parseFloat(e.target.value) || 1)}
-                  style={{ width: '100%', backgroundColor: '#0f172a', color: '#f8fafc', border: '1px solid #334155', padding: '0.6rem', borderRadius: '6px' }}
+                  style={{ width: '100%', backgroundColor: '#0C1017', color: '#E2E8F0', border: '1px solid #162232', padding: '8px', borderRadius: '4px', fontWeight: 800, fontSize: '12px', fontVariantNumeric: 'tabular-nums' }}
                 />
               </div>
             </div>
@@ -97,21 +107,22 @@ export default function AgentPage() {
               onClick={handleGenerateProposal}
               disabled={loading}
               style={{
-                backgroundColor: loading ? '#334155' : '#7c3aed',
-                color: '#ffffff',
+                backgroundColor: loading ? '#141A26' : '#7C4DFF',
+                color: '#FFFFFF',
                 border: 'none',
-                padding: '0.75rem',
-                borderRadius: '6px',
-                fontWeight: 'bold',
+                padding: '10px',
+                borderRadius: '4px',
+                fontWeight: 900,
+                fontSize: '12px',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                marginTop: '0.5rem',
+                marginTop: '4px',
               }}
             >
               {loading ? 'Generating Proposal via Feature Engine...' : '🚀 Generate Intelligence Proposal'}
             </button>
 
             {error && (
-              <div style={{ backgroundColor: '#831843', color: '#f472b6', padding: '0.6rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+              <div style={{ backgroundColor: '#2A0413', color: '#FF5252', border: '1px solid #FF1744', padding: '8px', borderRadius: '4px', fontSize: '11px' }}>
                 ❌ {error}
               </div>
             )}
@@ -119,39 +130,39 @@ export default function AgentPage() {
         </div>
 
         {/* Right Card: Generated Proposal Payload Display */}
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '1.5rem' }}>
-          <h2 style={{ color: '#f8fafc', marginTop: 0, fontSize: '1.2rem' }}>📄 Proposal Output Inspector</h2>
+        <div style={{ backgroundColor: '#06080E', border: '1px solid #141A26', borderRadius: '6px', padding: '16px' }}>
+          <h2 style={{ color: '#F8FAFC', marginTop: 0, fontSize: '14px', fontWeight: 800 }}>📄 Proposal Output Inspector</h2>
 
           {proposal ? (
-            <div style={{ backgroundColor: '#0f172a', padding: '1rem', borderRadius: '8px', border: '1px solid #334155', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <span style={{ color: '#94a3b8' }}>Proposal ID:</span>
-                <span style={{ color: '#c084fc', fontWeight: 'bold' }}>{proposal.proposalId || proposal.id}</span>
+            <div style={{ backgroundColor: '#090D14', padding: '12px', borderRadius: '4px', border: '1px solid #141A26', fontSize: '11px', fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#64748B' }}>Proposal ID:</span>
+                <span style={{ color: '#D500F9', fontWeight: 800 }}>{proposal.proposalId || proposal.id}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <span style={{ color: '#94a3b8' }}>Confidence Score:</span>
-                <span style={{ color: '#34d399', fontWeight: 'bold' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#64748B' }}>Confidence Score:</span>
+                <span style={{ color: '#00E676', fontWeight: 900 }}>
                   {proposal.intelligenceSignal ? `${(proposal.intelligenceSignal.computedConfidenceScore * 100).toFixed(1)}%` : '85.0%'}
                 </span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <span style={{ color: '#94a3b8' }}>Macro Sentiment:</span>
-                <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#64748B' }}>Macro Sentiment:</span>
+                <span style={{ color: '#00E5FF', fontWeight: 800 }}>
                   {proposal.intelligenceSignal?.inputs?.macroSentiment || 'UNAVAILABLE'}
                 </span>
               </div>
-              <div style={{ marginBottom: '0.75rem' }}>
-                <span style={{ color: '#94a3b8', display: 'block', marginBottom: '0.25rem' }}>Signal Rationale:</span>
-                <div style={{ color: '#cbd5e1', backgroundColor: '#1e293b', padding: '0.5rem', borderRadius: '4px' }}>
+              <div style={{ marginBottom: '8px' }}>
+                <span style={{ color: '#64748B', display: 'block', marginBottom: '4px' }}>Signal Rationale:</span>
+                <div style={{ color: '#E2E8F0', backgroundColor: '#0C1018', padding: '6px', borderRadius: '3px', border: '1px solid #162030' }}>
                   {proposal.intelligenceSignal?.rationale || 'N/A'}
                 </div>
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              <div style={{ fontSize: '10px', color: '#475569', fontWeight: 700 }}>
                 Status: PROPOSAL_ONLY • Approval Required: YES
               </div>
             </div>
           ) : (
-            <div style={{ backgroundColor: '#0f172a', padding: '2rem', textAlign: 'center', color: '#64748b', borderRadius: '8px', border: '1px dashed #334155' }}>
+            <div style={{ backgroundColor: '#090D14', padding: '2rem', textAlign: 'center', color: '#475569', borderRadius: '4px', border: '1px dashed #141A26', fontSize: '12px' }}>
               Click "Generate Intelligence Proposal" to view live engine payload.
             </div>
           )}
