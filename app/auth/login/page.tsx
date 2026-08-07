@@ -40,8 +40,6 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      // In production, signature comes from window.ethereum.request({ method: 'personal_sign' })
-      // For simulation check, pass a mock signature
       const mockSignature = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1b';
       
       const res = await fetch('/api/auth/verify', {
@@ -68,58 +66,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ maxWidth: '520px', margin: '40px auto', padding: '32px', backgroundColor: '#131822', borderRadius: '12px', border: '1px solid #1E2638', textAlign: 'center', fontFamily: 'sans-serif' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px 0', color: '#F8FAFC' }}>
-        🔐 SIWE Wallet Authentication
-      </h2>
-      <p style={{ color: '#94A3B8', fontSize: '14px', marginBottom: '24px' }}>
-        Sign-In with Ethereum (EIP-4361) with Rate Limiter protection and RBAC session generation.
-      </p>
+    <div style={{ maxWidth: '480px', margin: '40px auto', padding: '24px', backgroundColor: '#06080E', borderRadius: '8px', border: '1px solid #141A26', textAlign: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: '#E2E8F0' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 900, margin: '0 0 4px 0', color: '#00E5FF', letterSpacing: '-0.5px' }}>
+          🔐 SIWE Wallet Authentication
+        </h2>
+        <p style={{ color: '#64748B', fontSize: '11px', margin: 0 }}>
+          Sign-In with Ethereum (EIP-4361) • Stateless Token Cookie (`rtrader_session`)
+        </p>
+      </div>
 
       {/* Wallet Input */}
       <div style={{ marginBottom: '16px', textAlign: 'left' }}>
-        <label style={{ color: '#94A3B8', fontSize: '12px', display: 'block', marginBottom: '4px' }}>
-          WALLET ADDRESS
+        <label style={{ color: '#94A3B8', fontSize: '10px', fontWeight: 700, display: 'block', marginBottom: '4px', letterSpacing: '0.5px' }}>
+          EVM WALLET ADDRESS
         </label>
         <input
           type="text"
           value={walletAddress}
           onChange={(e) => setWalletAddress(e.target.value)}
-          style={{ width: '100%', padding: '10px', backgroundColor: '#0B0E14', color: '#F8FAFC', border: '1px solid #1E293B', borderRadius: '6px', fontFamily: 'monospace', fontSize: '13px' }}
+          style={{ width: '100%', padding: '8px 10px', backgroundColor: '#0C1017', color: '#00E5FF', border: '1px solid #162232', borderRadius: '4px', fontFamily: 'monospace', fontSize: '12px', fontVariantNumeric: 'tabular-nums', boxSizing: 'border-box' }}
         />
       </div>
 
       {error && (
-        <div style={{ backgroundColor: '#831843', color: '#F472B6', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', textAlign: 'left' }}>
+        <div style={{ backgroundColor: '#2A0413', border: '1px solid #FF1744', color: '#FF5252', padding: '8px 10px', borderRadius: '4px', fontSize: '11px', marginBottom: '16px', textAlign: 'left' }}>
           ⚠️ {error}
         </div>
       )}
 
       {session ? (
-        <div style={{ backgroundColor: '#065F46', color: '#34D399', padding: '16px', borderRadius: '8px', textAlign: 'left', fontSize: '13px' }}>
-          <div><strong>✅ SIWE Session Active!</strong></div>
-          <div>User ID: {session.userId}</div>
-          <div>Roles: {session.roles?.join(', ')}</div>
-          <div>Status: {session.status}</div>
+        <div style={{ backgroundColor: '#041E15', border: '1px solid #00E676', color: '#00E676', padding: '14px', borderRadius: '6px', textAlign: 'left', fontSize: '11px', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontWeight: 900, fontSize: '13px', marginBottom: '6px', color: '#00E676' }}>✅ SIWE Session Active!</div>
+          <div>User ID: <strong>{session.userId}</strong></div>
+          <div>Roles: <strong>{session.roles?.join(', ')}</strong></div>
+          <div>Status: <strong>{session.status}</strong></div>
+          <div style={{ marginTop: '8px', color: '#B9F6CA', fontSize: '10px' }}>Cookie: `rtrader_session` set on client</div>
         </div>
       ) : challengeMessage ? (
         <div style={{ textAlign: 'left' }}>
-          <div style={{ padding: '12px', backgroundColor: '#0B0E14', borderRadius: '6px', border: '1px solid #1E293B', marginBottom: '16px', fontSize: '12px', fontFamily: 'monospace', color: '#38BDF8', whiteSpace: 'pre-wrap' }}>
+          <div style={{ color: '#64748B', fontSize: '10px', fontWeight: 700, marginBottom: '4px' }}>CHALLENGE MESSAGE TO SIGN</div>
+          <div style={{ padding: '8px 10px', backgroundColor: '#0C1017', borderRadius: '4px', border: '1px solid #162232', marginBottom: '16px', fontSize: '11px', fontFamily: 'monospace', color: '#00E5FF', whiteSpace: 'pre-wrap', fontVariantNumeric: 'tabular-nums' }}>
             {challengeMessage}
           </div>
           <button
             onClick={handleVerifySignature}
             disabled={isSubmitting}
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', backgroundColor: '#16A34A', color: '#FFF', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '15px' }}
+            style={{ width: '100%', padding: '10px', borderRadius: '4px', backgroundColor: '#00E676', color: '#000000', fontWeight: 900, border: 'none', cursor: 'pointer', fontSize: '12px' }}
           >
-            {isSubmitting ? 'Verifying...' : 'Sign & Verify SIWE Signature'}
+            {isSubmitting ? 'Verifying Signature...' : 'Sign & Verify SIWE Signature'}
           </button>
         </div>
       ) : (
         <button
           onClick={handleRequestChallenge}
           disabled={isSubmitting}
-          style={{ width: '100%', padding: '12px', borderRadius: '8px', backgroundColor: '#2563EB', color: '#FFF', fontWeight: 600, border: 'none', cursor: 'pointer', fontSize: '15px' }}
+          style={{ width: '100%', padding: '10px', borderRadius: '4px', backgroundColor: '#00E5FF', color: '#000000', fontWeight: 900, border: 'none', cursor: 'pointer', fontSize: '12px' }}
         >
           {isSubmitting ? 'Generating Challenge...' : 'Request SIWE Challenge (EIP-4361)'}
         </button>
