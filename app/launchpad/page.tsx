@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet } from 'lucide-react';
 
 export default function LaunchpadPage() {
   const { isConnected, userRole, walletAddress, connectMetaMask, isConnecting } = useAuth();
@@ -40,108 +41,97 @@ export default function LaunchpadPage() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#000000', color: '#E2E8F0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="flex-col gap-lg">
       {/* Top Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#06080E', padding: '12px 16px', borderRadius: '6px', border: '1px solid #141A26' }}>
+      <div className="bg-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderRadius: '8px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#00E5FF', letterSpacing: '-0.5px' }}>
-            🚀 Degen Token Launchpad & Wizard
+          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '0 0 4px 0', color: '#00E5FF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Rocket size={20} /> Degen Token Launchpad & Wizard
           </h1>
-          <p style={{ color: '#64748B', margin: '2px 0 0 0', fontSize: '11px' }}>
+          <p className="text-muted" style={{ margin: 0, fontSize: '12px' }}>
             Create pump.fun style fair launches and bonding curve tokens backed by Arkham creator risk passports.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="flex-row gap-sm items-center">
           {userRole === 'SYSTEM_ADMIN' && (
-            <span style={{ backgroundColor: '#261704', color: '#FFD600', border: '1px solid #FF9100', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+            <span className="badge badge-admin">
               👑 LAUNCHPAD CONTROLLER ACTIVE
             </span>
           )}
-          <span style={{ backgroundColor: '#071A2E', color: '#00E5FF', border: '1px solid #00E5FF', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 800 }}>
+          <span className="badge badge-trader" style={{ border: '1px solid #00E5FF', color: '#00E5FF', backgroundColor: '#071A2E' }}>
             BONDING CURVE ACTIVE
           </span>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="grid-2">
         {/* Left Column: Interactive Token Launch Form */}
-        <div style={{ backgroundColor: '#06080E', border: '1px solid #141A26', borderRadius: '6px', padding: '16px' }}>
-          <h2 style={{ color: '#F8FAFC', marginTop: 0, fontSize: '14px', fontWeight: 800 }}>📝 Launch Token Draft Wizard</h2>
-          <form onSubmit={handleCreateDraft} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Token Name</label>
+        <div className="bg-panel" style={{ borderRadius: '8px', padding: '24px' }}>
+          <h2 style={{ color: 'var(--color-foreground)', marginTop: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <FileText size={18} /> Launch Token Draft Wizard
+          </h2>
+          <form onSubmit={handleCreateDraft} className="flex-col gap-md">
+            <div className="flex-col gap-xs">
+              <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Token Name</label>
               <input
                 type="text"
                 placeholder="e.g. Degen Moon Alpha"
                 value={tokenName}
                 onChange={(e) => setTokenName(e.target.value)}
-                style={{ width: '100%', backgroundColor: '#0C1017', color: '#F8FAFC', border: '1px solid #162232', padding: '8px', borderRadius: '4px', fontSize: '12px' }}
+                className="input"
+                style={{ padding: '12px' }}
                 required
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Token Symbol</label>
+            <div className="flex-col gap-xs">
+              <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Token Symbol</label>
               <input
                 type="text"
                 placeholder="e.g. MOON"
                 value={tokenSymbol}
                 onChange={(e) => setTokenSymbol(e.target.value)}
-                style={{ width: '100%', backgroundColor: '#0C1017', color: '#00E5FF', border: '1px solid #162232', padding: '8px', borderRadius: '4px', fontWeight: 800, fontSize: '12px', fontVariantNumeric: 'tabular-nums' }}
+                className="input"
+                style={{ padding: '12px', color: 'var(--color-accent)', fontWeight: 800, fontFamily: 'var(--font-mono)' }}
                 required
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Launch Model</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+            <div className="flex-col gap-xs">
+              <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Launch Model</label>
+              <div className="grid-2">
                 <button
                   type="button"
                   onClick={() => setMode('BONDING_CURVE')}
-                  style={{
-                    backgroundColor: mode === 'BONDING_CURVE' ? '#00E5FF' : '#0C1017',
-                    color: mode === 'BONDING_CURVE' ? '#000000' : '#94A3B8',
-                    border: '1px solid #162232',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                  }}
+                  className={mode === 'BONDING_CURVE' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '12px', justifyContent: 'center' }}
                 >
-                  📈 Bonding Curve
+                  <TrendingUp size={16} className="inline mr-1" /> Bonding Curve
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('FAIR_LAUNCH')}
-                  style={{
-                    backgroundColor: mode === 'FAIR_LAUNCH' ? '#00E676' : '#0C1017',
-                    color: mode === 'FAIR_LAUNCH' ? '#000000' : '#94A3B8',
-                    border: '1px solid #162232',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                  }}
+                  className={mode === 'FAIR_LAUNCH' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '12px', justifyContent: 'center' }}
                 >
-                  ⚖️ Fair Launch
+                  <Scale size={16} className="inline mr-1" /> Fair Launch
                 </button>
               </div>
             </div>
 
-            <div>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Creator Wallet Address</label>
+            <div className="flex-col gap-xs">
+              <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Creator Wallet Address</label>
               <input
                 type="text"
                 value={creatorWallet}
                 onChange={(e) => setCreatorWallet(e.target.value)}
-                style={{ width: '100%', backgroundColor: '#0C1017', color: '#E2E8F0', border: '1px solid #162232', padding: '8px', borderRadius: '4px', fontSize: '11px', fontVariantNumeric: 'tabular-nums' }}
+                className="input"
+                style={{ padding: '12px', fontFamily: 'var(--font-mono)' }}
               />
             </div>
 
             {!isConnected ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+              <div className="flex-col gap-xs" style={{ marginTop: '8px' }}>
                 <button
                   type="button"
                   onClick={async () => {
@@ -152,26 +142,15 @@ export default function LaunchpadPage() {
                     }
                   }}
                   disabled={isConnecting}
-                  style={{
-                    backgroundColor: isConnecting ? '#141A26' : '#00E5FF',
-                    color: isConnecting ? '#64748B' : '#000000',
-                    border: 'none',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    fontWeight: 900,
-                    fontSize: '12px',
-                    cursor: isConnecting ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                  }}
+                  className="btn-primary"
+                  style={{ padding: '14px', justifyContent: 'center' }}
                 >
-                  {isConnecting ? '🦊 Connecting MetaMask...' : '🦊 Connect MetaMask to Launch Token'}
+                  <Wallet size={16} />
+                  {isConnecting ? 'Connecting...' : 'Connect MetaMask to Launch Token'}
                 </button>
                 {connectError && (
-                  <div style={{ color: '#FF5252', fontSize: '11px' }}>
-                    ⚠️ {connectError}
+                  <div style={{ color: 'var(--color-destructive)', fontSize: '12px', textAlign: 'center' }}>
+                    {connectError}
                   </div>
                 )}
               </div>
@@ -179,17 +158,8 @@ export default function LaunchpadPage() {
               <button
                 type="submit"
                 disabled={isCreating}
-                style={{
-                  backgroundColor: isCreating ? '#141A26' : '#00E5FF',
-                  color: '#000000',
-                  border: 'none',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  fontWeight: 900,
-                  fontSize: '12px',
-                  cursor: isCreating ? 'not-allowed' : 'pointer',
-                  marginTop: '4px',
-                }}
+                className="btn-primary"
+                style={{ padding: '14px', justifyContent: 'center', marginTop: '8px' }}
               >
                 {isCreating ? 'Validating Risk Passport...' : '🚀 Create Launch Draft'}
               </button>
@@ -198,37 +168,40 @@ export default function LaunchpadPage() {
         </div>
 
         {/* Right Column: Draft & Risk Passport Inspector */}
-        <div style={{ backgroundColor: '#06080E', border: '1px solid #141A26', borderRadius: '6px', padding: '16px' }}>
-          <h2 style={{ color: '#F8FAFC', marginTop: 0, fontSize: '14px', fontWeight: 800 }}>🛡️ Risk Passport & Draft Summary</h2>
+        <div className="bg-panel" style={{ borderRadius: '8px', padding: '24px' }}>
+          <h2 style={{ color: 'var(--color-foreground)', marginTop: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <ShieldAlert size={18} /> Risk Passport & Draft Summary
+          </h2>
 
           {draftResult ? (
-            <div style={{ backgroundColor: '#090D14', padding: '12px', borderRadius: '4px', border: '1px solid #141A26', fontSize: '11px', fontVariantNumeric: 'tabular-nums' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#64748B' }}>Draft ID:</span>
+            <div className="bg-panel" style={{ padding: '16px', borderRadius: '6px', border: '1px solid var(--color-border)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Draft ID:</span>
                 <span style={{ color: '#00E5FF', fontWeight: 800 }}>{draftResult.draftId}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#64748B' }}>Token:</span>
-                <span style={{ color: '#00E676', fontWeight: 900 }}>{draftResult.name} (${draftResult.symbol})</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Token:</span>
+                <span style={{ color: 'var(--color-accent)', fontWeight: 900 }}>{draftResult.name} (${draftResult.symbol})</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#64748B' }}>Launch Mode:</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Launch Mode:</span>
                 <span style={{ color: '#D500F9', fontWeight: 800 }}>{draftResult.mode}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#64748B' }}>Creator Wallet:</span>
-                <span style={{ color: '#F8FAFC', fontWeight: 800 }}>{draftResult.creatorWallet.slice(0, 10)}...</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Creator Wallet:</span>
+                <span style={{ color: 'var(--color-foreground)', fontWeight: 800 }}>{draftResult.creatorWallet.slice(0, 10)}...</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: '#64748B' }}>Arkham Risk Passport:</span>
-                <span style={{ color: '#00E676', fontWeight: 900 }}>{draftResult.riskPassportScore} / 100 (LOW_RISK)</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Arkham Risk Passport:</span>
+                <span style={{ color: 'var(--color-accent)', fontWeight: 900 }}>{draftResult.riskPassportScore} / 100 (LOW_RISK)</span>
               </div>
-              <div style={{ backgroundColor: '#041E15', border: '1px solid #00E676', color: '#00E676', padding: '8px', borderRadius: '4px', textAlign: 'center', fontWeight: 800 }}>
-                ✓ Draft Ready for Onchain Graduation Test
+              <div style={{ backgroundColor: '#041E15', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '12px', borderRadius: '4px', textAlign: 'center', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <CheckCircle2 size={16} /> Draft Ready for Onchain Graduation Test
               </div>
             </div>
           ) : (
-            <div style={{ backgroundColor: '#090D14', padding: '2rem', textAlign: 'center', color: '#475569', borderRadius: '4px', border: '1px dashed #141A26', fontSize: '12px' }}>
+            <div className="bg-panel flex-col items-center justify-center" style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '6px', border: '1px dashed var(--color-border)', fontSize: '13px' }}>
+              <FileText size={32} style={{ marginBottom: '16px', opacity: 0.5 }} />
               Fill in token details and click "Create Launch Draft" to generate risk passport preview.
             </div>
           )}
@@ -237,25 +210,25 @@ export default function LaunchpadPage() {
 
       {/* Admin Launchpad Governance Console (SYSTEM_ADMIN Exclusive) */}
       {(userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN') && (
-        <div style={{ backgroundColor: '#06080E', border: '1px solid #FF9100', borderRadius: '6px', padding: '16px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 900, color: '#FFD600', margin: '0 0 10px 0' }}>
-            👑 System Admin: Launchpad Bonding Curve & Liquidity Governance
+        <div className="bg-panel" style={{ border: '1px solid #FF9100', borderRadius: '8px', padding: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 900, color: '#FFD600', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShieldAlert size={18} /> System Admin: Launchpad Bonding Curve & Liquidity Governance
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '11px' }}>
-            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
-              <div style={{ color: '#00E5FF', fontWeight: 800 }}>Graduation Target</div>
-              <div style={{ fontSize: '16px', fontWeight: 900, color: '#F8FAFC', margin: '4px 0' }}>$69,000 Market Cap</div>
-              <div style={{ color: '#64748B' }}>Auto-migrates to Uniswap v3 Pool</div>
+          <div className="grid-3">
+            <div className="bg-panel" style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '6px' }}>
+              <div style={{ color: '#00E5FF', fontWeight: 800, fontSize: '12px' }}>Graduation Target</div>
+              <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-foreground)', margin: '8px 0', fontFamily: 'var(--font-mono)' }}>$69,000 Market Cap</div>
+              <div className="text-muted" style={{ fontSize: '11px' }}>Auto-migrates to Uniswap v3 Pool</div>
             </div>
-            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
-              <div style={{ color: '#00E676', fontWeight: 800 }}>Protocol Fee Split</div>
-              <div style={{ fontSize: '16px', fontWeight: 900, color: '#F8FAFC', margin: '4px 0' }}>0.50% / 0.50%</div>
-              <div style={{ color: '#64748B' }}>50% Protocol Treasury / 50% Creator</div>
+            <div className="bg-panel" style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '6px' }}>
+              <div style={{ color: 'var(--color-accent)', fontWeight: 800, fontSize: '12px' }}>Protocol Fee Split</div>
+              <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-foreground)', margin: '8px 0', fontFamily: 'var(--font-mono)' }}>0.50% / 0.50%</div>
+              <div className="text-muted" style={{ fontSize: '11px' }}>50% Protocol Treasury / 50% Creator</div>
             </div>
-            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1E293B', padding: '10px', borderRadius: '4px' }}>
-              <div style={{ color: '#FF5252', fontWeight: 800 }}>Emergency Blacklist</div>
-              <div style={{ fontSize: '16px', fontWeight: 900, color: '#00E676', margin: '4px 0' }}>0 Blacklisted Contracts</div>
-              <div style={{ color: '#64748B' }}>Arkham OFAC Scanned Hourly</div>
+            <div className="bg-panel" style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '6px' }}>
+              <div style={{ color: 'var(--color-destructive)', fontWeight: 800, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={14} /> Emergency Blacklist</div>
+              <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-accent)', margin: '8px 0', fontFamily: 'var(--font-mono)' }}>0 Blacklisted Contracts</div>
+              <div className="text-muted" style={{ fontSize: '11px' }}>Arkham OFAC Scanned Hourly</div>
             </div>
           </div>
         </div>
@@ -263,4 +236,3 @@ export default function LaunchpadPage() {
     </div>
   );
 }
-

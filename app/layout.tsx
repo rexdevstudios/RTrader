@@ -1,3 +1,4 @@
+import './globals.css';
 import HeaderNav from './components/HeaderNav';
 import { AuthProvider } from './context/AuthContext';
 
@@ -13,10 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: 'Inter, system-ui, sans-serif', backgroundColor: '#000000', color: '#E2E8F0', minHeight: '100vh' }}>
+      <body>
         <AuthProvider>
           <HeaderNav />
-          <main style={{ padding: '16px', maxWidth: '1600px', margin: '0 auto' }}>
+          <main>
             {children}
           </main>
         </AuthProvider>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
+import { Activity, ShieldAlert, Zap, Rocket, Terminal, Database, Server, Cpu, Lock, Network, Wallet, BrainCircuit } from 'lucide-react';
 
 interface OverviewData {
   status: string;
@@ -17,7 +18,7 @@ interface OverviewData {
 }
 
 export default function OverviewPage() {
-  const { isConnected, userRole, walletAddress, connectMetaMask, isConnecting, switchRole } = useAuth();
+  const { isConnected, userRole, walletAddress, connectMetaMask, isConnecting } = useAuth();
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,10 +47,15 @@ export default function OverviewPage() {
   };
 
   useEffect(() => {
-    fetchOverview();
-    const timer = window.setInterval(fetchOverview, 5000);
-    return () => window.clearInterval(timer);
-  }, []);
+    // Only fetch telemetry if Admin
+    if (userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN') {
+      fetchOverview();
+      const timer = window.setInterval(fetchOverview, 5000);
+      return () => window.clearInterval(timer);
+    } else {
+      setLoading(false);
+    }
+  }, [userRole]);
 
   const handleToggleKillSwitch = () => {
     const newState = !killSwitchActive;
@@ -65,56 +71,22 @@ export default function OverviewPage() {
     setAdminFeedback('⚡ Non-blocking telemetry ring buffer flushed cleanly to PostgreSQL audit log (18 events recorded).');
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#000000', color: '#E2E8F0', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      {/* Top Status Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#06080E', padding: '12px 16px', borderRadius: '6px', border: '1px solid #141A26' }}>
-        <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: 0, color: '#F8FAFC', letterSpacing: '-0.5px' }}>
-            ⚡ System Overview & Telemetry Matrix
+  // -------------------------
+  // GUEST VIEW (Landing Page)
+  // -------------------------
+  if (!isConnected || userRole === 'GUEST') {
+    return (
+      <div className="flex-col gap-lg items-center" style={{ marginTop: 'var(--space-3xl)' }}>
+        <div className="flex-col items-center gap-md" style={{ textAlign: 'center', maxWidth: '800px' }}>
+          <Terminal size={64} className="text-accent" style={{ filter: 'drop-shadow(var(--shadow-neon))' }} />
+          <h1 className="terminal-text" style={{ fontSize: '48px', margin: 0, fontWeight: 900 }}>
+            RTRADER PROTOCOL
           </h1>
-          <p style={{ color: '#64748B', margin: '2px 0 0 0', fontSize: '11px', fontVariantNumeric: 'tabular-nums' }}>
-            Operational SSOT: PostgreSQL (28 Tables) • Ephemeral Tier: Upstash Redis REST Sidecar • Native dRPC Engine
+          <p className="text-muted" style={{ fontSize: '18px', lineHeight: 1.6 }}>
+            Decision-complete execution platform for crypto launchpads, Binance trading terminal, and proposal-only AI agents. Connect your wallet via secure SIWE to begin.
           </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '11px', color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>
-            Updated: {overview?.timestamp ? new Date(overview.timestamp).toLocaleTimeString() : 'LIVE'}
-          </span>
-          <span
-            style={{
-              backgroundColor: error ? '#2A0413' : '#041E15',
-              color: error ? '#FF5252' : '#00E676',
-              border: error ? '1px solid #FF1744' : '1px solid #00E676',
-              padding: '4px 10px',
-              borderRadius: '4px',
-              fontSize: '11px',
-              fontWeight: 800,
-              letterSpacing: '0.5px',
-            }}
-          >
-            {error ? '● CACHED / RETRYING' : `● ${overview?.status || 'OPERATIONAL'}`}
-          </span>
-        </div>
-      </div>
-
-      {/* Role-Specific Banner Alert */}
-      {!isConnected || userRole === 'GUEST' ? (
-        <div style={{ backgroundColor: '#090D14', border: '1px solid #1E293B', padding: '14px 16px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '13px', color: '#00E5FF', marginBottom: '2px' }}>
-              👋 You are viewing RTrader in Guest Mode (Public Read-Only)
-            </div>
-            <div style={{ color: '#94A3B8', fontSize: '11px' }}>
-              Connect your EVM wallet via dynamic EIP-4361 SIWE signature to unlock Binance trading execution, proposal gating, and Launchpad token creation.
-            </div>
-            {connectError && (
-              <div style={{ color: '#FF5252', fontSize: '11px', marginTop: '4px' }}>
-                ⚠️ {connectError}
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          
+          <div className="flex-row gap-md" style={{ marginTop: 'var(--space-md)' }}>
             <button
               onClick={async () => {
                 setConnectError(null);
@@ -124,251 +96,287 @@ export default function OverviewPage() {
                 }
               }}
               disabled={isConnecting}
-              style={{
-                backgroundColor: isConnecting ? '#141A26' : '#00E5FF',
-                color: isConnecting ? '#64748B' : '#000000',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                fontWeight: 900,
-                fontSize: '11px',
-                cursor: isConnecting ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
+              className="btn-primary"
+              style={{ fontSize: '16px', padding: '12px 24px' }}
             >
-              {isConnecting ? '🦊 Connecting MetaMask...' : '🦊 Connect MetaMask (SIWE)'}
+              <Wallet size={20} />
+              {isConnecting ? 'Signing SIWE...' : 'Connect MetaMask'}
             </button>
-            <a
-              href="/auth/login"
-              style={{
-                backgroundColor: '#0C1018',
-                color: '#94A3B8',
-                border: '1px solid #1E293B',
-                padding: '8px 12px',
-                borderRadius: '4px',
-                fontWeight: 700,
-                fontSize: '11px',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              🔐 Login Portal →
+            <a href="/auth/login" className="btn-secondary" style={{ fontSize: '16px', padding: '12px 24px', textDecoration: 'none' }}>
+              <Lock size={20} /> Login Portal
             </a>
           </div>
+          {connectError && (
+            <p className="text-destructive" style={{ marginTop: 'var(--space-sm)', fontWeight: 600 }}>
+              {connectError}
+            </p>
+          )}
         </div>
-      ) : userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN' ? (
-        <div style={{ backgroundColor: '#261704', border: '1px solid #FF9100', padding: '12px 16px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 0 12px rgba(255, 145, 0, 0.15)' }}>
+
+        <div className="grid-3" style={{ width: '100%', marginTop: 'var(--space-3xl)' }}>
+          <div className="card">
+            <Network size={32} className="text-accent" style={{ marginBottom: '16px' }} />
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>Binance Trading Terminal</h3>
+            <p className="text-muted" style={{ margin: 0, fontSize: '14px' }}>Direct AES-256 API connection for lightning fast execution with max slippage caps.</p>
+          </div>
+          <div className="card">
+            <Rocket size={32} className="text-accent" style={{ marginBottom: '16px' }} />
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>Degen Launchpad</h3>
+            <p className="text-muted" style={{ margin: 0, fontSize: '14px' }}>Create and launch EVM tokens instantly. Controlled strictly by role-based gating.</p>
+          </div>
+          <div className="card">
+            <BrainCircuit size={32} className="text-accent" style={{ marginBottom: '16px' }} />
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>AI Proposals</h3>
+            <p className="text-muted" style={{ margin: 0, fontSize: '14px' }}>AI Agent acts as an intelligence layer generating actionable trade and launch proposals.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------
+  // TRADER / CREATOR VIEW
+  // -------------------------
+  if (userRole === 'TRADER' || userRole === 'CREATOR') {
+    return (
+      <div className="flex-col gap-lg">
+        <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontWeight: 900, fontSize: '13px', color: '#FFD600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              👑 SYSTEM ADMINISTRATOR CONSOLE ACTIVE
-            </div>
-            <div style={{ color: '#FFE082', fontSize: '11px' }}>
-              Full Infrastructure Authority • Emergency Kill-Switch Enabled • Binance Vault Key Inspector Active
+            <h1 style={{ margin: '0 0 8px 0', fontSize: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              Welcome back, {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'User'}
+            </h1>
+            <p className="text-muted" style={{ margin: 0 }}>
+              You are authenticated as <strong className="text-accent">{userRole}</strong> via EIP-4361 SIWE.
+            </p>
+          </div>
+          <div className="flex-row gap-md">
+            <a href="/trading" className="btn-primary" style={{ textDecoration: 'none' }}>
+              <Network size={16} /> Open Trading Terminal
+            </a>
+            {userRole === 'CREATOR' && (
+              <a href="/launchpad" className="btn-secondary" style={{ textDecoration: 'none' }}>
+                <Rocket size={16} /> Token Launchpad
+              </a>
+            )}
+          </div>
+        </div>
+
+        <div className="grid-2">
+          <div className="card">
+            <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldAlert size={20} className="text-accent" /> Security Overview
+            </h3>
+            <ul style={{ paddingLeft: '20px', color: 'var(--color-foreground)', margin: 0 }} className="flex-col gap-sm">
+              <li>Session: <span className="text-accent">Active (HttpOnly Cookie)</span></li>
+              <li>Network: <span className="text-accent">Ethereum Mainnet</span></li>
+              <li>Max Order Size: <span>$10,000 (Risk Engine Enforced)</span></li>
+              <li>Max Slippage Cap: <span>3.0%</span></li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={20} className="text-accent" /> Recent Activity
+            </h3>
+            <div className="flex-col gap-sm text-muted">
+              <p style={{ margin: 0 }}>No recent trading activity detected for this session.</p>
+              <a href="/trading" className="text-accent" style={{ textDecoration: 'underline' }}>Start trading now</a>
             </div>
           </div>
-          <span style={{ backgroundColor: '#FFD600', color: '#000000', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 900 }}>
-            ADMIN PRIVILEGES UNLOCKED
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------
+  // SYSTEM ADMIN VIEW
+  // -------------------------
+  return (
+    <div className="flex-col gap-lg">
+      {/* Top Status Header */}
+      <div className="bg-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderRadius: '8px' }}>
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: 900, margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Activity className="text-accent" /> System Overview & Telemetry Matrix
+          </h1>
+          <p className="text-muted" style={{ margin: 0, fontSize: '12px' }}>
+            Operational SSOT: PostgreSQL (28 Tables) • Ephemeral Tier: Upstash Redis REST Sidecar • Native dRPC Engine
+          </p>
+        </div>
+        <div className="flex-row items-center gap-md">
+          <span className="text-muted" style={{ fontSize: '12px' }}>
+            Updated: {overview?.timestamp ? new Date(overview.timestamp).toLocaleTimeString() : 'LIVE'}
+          </span>
+          <span className={error ? 'badge badge-admin' : 'badge badge-trader'} style={{ fontSize: '12px' }}>
+            {error ? '● CACHED / RETRYING' : `● ${overview?.status || 'OPERATIONAL'}`}
           </span>
         </div>
-      ) : (
-        <div style={{ backgroundColor: '#041E15', border: '1px solid #00E676', padding: '12px 16px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '13px', color: '#00E676' }}>
-              👤 Authenticated Trader Session: {walletAddress ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-6)}` : '0x71C...890A'}
-            </div>
-            <div style={{ color: '#A7F3D0', fontSize: '11px' }}>
-              Risk Engine Guardrails: Max Order $10,000 • Max Slippage Cap 3.0% • AES-256 Binance Vault Connected
-            </div>
+      </div>
+
+      <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid var(--color-destructive)', padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontWeight: 900, fontSize: '16px', color: 'var(--color-destructive)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <ShieldAlert size={20} /> SYSTEM ADMINISTRATOR CONSOLE ACTIVE
           </div>
-          <a href="/trading" style={{ backgroundColor: '#00E676', color: '#000000', padding: '6px 12px', borderRadius: '4px', fontWeight: 900, fontSize: '11px', textDecoration: 'none' }}>
-            Go to Trading Terminal →
-          </a>
+          <div style={{ color: '#FCA5A5', fontSize: '12px' }}>
+            Full Infrastructure Authority • Emergency Kill-Switch Enabled • Binance Vault Key Inspector Active
+          </div>
         </div>
-      )}
+      </div>
 
       {/* OLED Data-Dense 4-Column Metric Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-        <div style={{ padding: '14px', backgroundColor: '#06080E', borderRadius: '6px', border: '1px solid #141A26' }}>
-          <div style={{ color: '#64748B', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '4px' }}>CONTROL PLANE & EDGE</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: '#00E5FF', fontVariantNumeric: 'tabular-nums' }}>
+      <div className="grid-2" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="bg-panel" style={{ padding: '16px', borderRadius: '8px' }}>
+          <div className="text-muted" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>CONTROL PLANE & EDGE</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: '#00E5FF' }}>
             {overview?.controlPlane || 'Vercel / Next.js 14'}
           </div>
-          <div style={{ color: '#475569', fontSize: '11px', marginTop: '4px' }}>Stateless Edge Middleware (6 Sec Headers)</div>
+          <div className="text-muted" style={{ fontSize: '11px', marginTop: '8px' }}>Stateless Edge Middleware (6 Sec Headers)</div>
         </div>
 
-        <div style={{ padding: '14px', backgroundColor: '#06080E', borderRadius: '6px', border: '1px solid #141A26' }}>
-          <div style={{ color: '#64748B', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '4px' }}>OPERATIONAL SSOT</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: '#00E676', fontVariantNumeric: 'tabular-nums' }}>
+        <div className="bg-panel" style={{ padding: '16px', borderRadius: '8px' }}>
+          <div className="text-muted" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>OPERATIONAL SSOT</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-accent)' }}>
             {overview?.operationalSsot || 'PostgreSQL SSOT (Neon)'}
           </div>
-          <div style={{ color: '#475569', fontSize: '11px', marginTop: '4px' }}>28 Relational Tables (Transactional Authority)</div>
+          <div className="text-muted" style={{ fontSize: '11px', marginTop: '8px' }}>28 Relational Tables (Transactional Authority)</div>
         </div>
 
-        <div style={{ padding: '14px', backgroundColor: '#06080E', borderRadius: '6px', border: '1px solid #141A26' }}>
-          <div style={{ color: '#64748B', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '4px' }}>EPHEMERAL SIDECAR</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: '#FFC400', fontVariantNumeric: 'tabular-nums' }}>
+        <div className="bg-panel" style={{ padding: '16px', borderRadius: '8px' }}>
+          <div className="text-muted" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>EPHEMERAL SIDECAR</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: '#FFD600' }}>
             {overview?.ephemeralSidecar || 'UPSTASH_REDIS_ACTIVE'}
           </div>
-          <div style={{ color: '#475569', fontSize: '11px', marginTop: '4px' }}>REST Sidecar • Zero-Blocking Fail-Open</div>
+          <div className="text-muted" style={{ fontSize: '11px', marginTop: '8px' }}>REST Sidecar • Zero-Blocking Fail-Open</div>
         </div>
 
-        <div style={{ padding: '14px', backgroundColor: '#06080E', borderRadius: '6px', border: '1px solid #141A26' }}>
-          <div style={{ color: '#64748B', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '4px' }}>TELEMETRY LOGGER</div>
-          <div style={{ fontSize: '16px', fontWeight: 800, color: '#D500F9', fontVariantNumeric: 'tabular-nums' }}>
+        <div className="bg-panel" style={{ padding: '16px', borderRadius: '8px' }}>
+          <div className="text-muted" style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>TELEMETRY LOGGER</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: '#D500F9' }}>
             {overview?.telemetryObservability || 'ACTIVE (Ring Buffer)'}
           </div>
-          <div style={{ color: '#475569', fontSize: '11px', marginTop: '4px' }}>Non-Blocking Metric & Audit Buffer</div>
+          <div className="text-muted" style={{ fontSize: '11px', marginTop: '8px' }}>Non-Blocking Metric & Audit Buffer</div>
         </div>
       </div>
 
       {/* SYSTEM ADMIN EXCLUSIVE CONTROL CONSOLE */}
-      {userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN' ? (
-        <div style={{ backgroundColor: '#06080E', border: '1px solid #FF9100', borderRadius: '6px', padding: '16px', boxShadow: '0 0 16px rgba(255, 145, 0, 0.1)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <h2 style={{ fontSize: '15px', fontWeight: 900, margin: 0, color: '#FFD600', letterSpacing: '0.5px' }}>
-              🚨 System Admin Operations & Emergency Master Console
-            </h2>
-            <span style={{ backgroundColor: '#261704', color: '#FFD600', border: '1px solid #FF9100', padding: '3px 8px', borderRadius: '3px', fontSize: '10px', fontWeight: 800 }}>
-              SUPERVISOR TIER
-            </span>
+      <div className="bg-panel" style={{ borderRadius: '8px', padding: '24px', border: '1px solid #FF9100' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 900, margin: 0, color: '#FFD600' }}>
+            Emergency Master Console
+          </h2>
+          <span className="badge badge-admin" style={{ border: '1px solid #FF9100', color: '#FFD600', backgroundColor: '#261704' }}>
+            SUPERVISOR TIER
+          </span>
+        </div>
+
+        {adminFeedback && (
+          <div className={adminFeedback.includes('🚨') ? 'badge badge-admin' : 'badge badge-trader'} style={{ display: 'block', padding: '12px', marginBottom: '24px', fontSize: '14px' }}>
+            {adminFeedback}
+          </div>
+        )}
+
+        <div className="grid-3" style={{ marginBottom: '24px' }}>
+          {/* 1. Global Kill Switch Panel */}
+          <div className="bg-panel" style={{ padding: '16px', borderRadius: '6px' }}>
+            <div style={{ color: 'var(--color-destructive)', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}><ShieldAlert size={14} className="inline mr-1" style={{display:'inline', marginRight:'4px', verticalAlign:'text-bottom'}}/> EMERGENCY KILL-SWITCH</div>
+            <div style={{ fontSize: '12px', color: 'var(--color-foreground)', marginBottom: '16px' }}>
+              Status: <strong style={{ color: killSwitchActive ? 'var(--color-destructive)' : 'var(--color-accent)' }}>{killSwitchActive ? 'ACTIVE (HALTED)' : 'NORMAL (ONLINE)'}</strong>
+            </div>
+            <input
+              type="text"
+              value={killSwitchReason}
+              onChange={(e) => setKillSwitchReason(e.target.value)}
+              placeholder="Kill switch reason..."
+              className="input"
+              style={{ padding: '8px', fontSize: '12px', marginBottom: '12px' }}
+            />
+            <button
+              onClick={handleToggleKillSwitch}
+              className={killSwitchActive ? 'btn-primary' : 'btn-destructive'}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {killSwitchActive ? 'Resume Trading Operations' : 'Trigger Global Kill Switch'}
+            </button>
           </div>
 
-          {adminFeedback && (
-            <div style={{ backgroundColor: adminFeedback.includes('🚨') ? '#2A0413' : '#041E15', border: adminFeedback.includes('🚨') ? '1px solid #FF1744' : '1px solid #00E676', color: adminFeedback.includes('🚨') ? '#FF5252' : '#00E676', padding: '8px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, marginBottom: '12px' }}>
-              {adminFeedback}
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
-            {/* 1. Global Kill Switch Panel */}
-            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1A2436', padding: '12px', borderRadius: '4px' }}>
-              <div style={{ color: '#FF5252', fontSize: '11px', fontWeight: 800, marginBottom: '4px' }}>🛑 EMERGENCY KILL-SWITCH</div>
-              <div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '8px' }}>
-                Status: <strong style={{ color: killSwitchActive ? '#FF1744' : '#00E676' }}>{killSwitchActive ? 'ACTIVE (HALTED)' : 'NORMAL (ONLINE)'}</strong>
-              </div>
-              <input
-                type="text"
-                value={killSwitchReason}
-                onChange={(e) => setKillSwitchReason(e.target.value)}
-                placeholder="Kill switch reason..."
-                style={{ width: '100%', backgroundColor: '#06080E', color: '#E2E8F0', border: '1px solid #1E293B', padding: '6px', borderRadius: '3px', fontSize: '10px', marginBottom: '8px', boxSizing: 'border-box' }}
-              />
-              <button
-                onClick={handleToggleKillSwitch}
-                style={{ width: '100%', backgroundColor: killSwitchActive ? '#00E676' : '#FF1744', color: killSwitchActive ? '#000000' : '#FFFFFF', border: 'none', padding: '6px', borderRadius: '3px', fontWeight: 900, fontSize: '11px', cursor: 'pointer' }}
-              >
-                {killSwitchActive ? 'Resume Trading Operations' : 'Trigger Global Kill Switch'}
-              </button>
-            </div>
-
-            {/* 2. Binance AES-256 Vault Status */}
-            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1A2436', padding: '12px', borderRadius: '4px' }}>
-              <div style={{ color: '#00E5FF', fontSize: '11px', fontWeight: 800, marginBottom: '4px' }}>🔐 BINANCE AES-256 VAULT</div>
-              <div style={{ fontSize: '11px', color: '#CBD5E1', lineHeight: '1.6' }}>
-                <div>Encryption: <strong style={{ color: '#00E676' }}>AES-256-GCM</strong></div>
-                <div>Withdrawal Check: <strong style={{ color: '#FF1744' }}>STRICTLY REJECTED</strong></div>
-                <div>Read / Trade: <strong style={{ color: '#00E676' }}>ACTIVE</strong></div>
-              </div>
-            </div>
-
-            {/* 3. Telemetry Flush & Redis Heartbeat */}
-            <div style={{ backgroundColor: '#0C1018', border: '1px solid #1A2436', padding: '12px', borderRadius: '4px' }}>
-              <div style={{ color: '#D500F9', fontSize: '11px', fontWeight: 800, marginBottom: '4px' }}>📊 TELEMETRY & REDIS SIDECAR</div>
-              <div style={{ fontSize: '11px', color: '#CBD5E1', lineHeight: '1.6', marginBottom: '8px' }}>
-                <div>Redis Sidecar: <strong style={{ color: '#00E676' }}>ONLINE (REST)</strong></div>
-                <div>Ring Buffer: <strong style={{ color: '#00E5FF' }}>18 Events Cached</strong></div>
-              </div>
-              <button
-                onClick={handleFlushTelemetry}
-                style={{ width: '100%', backgroundColor: '#7C4DFF', color: '#FFFFFF', border: 'none', padding: '6px', borderRadius: '3px', fontWeight: 900, fontSize: '11px', cursor: 'pointer' }}
-              >
-                Flush Telemetry Buffer
-              </button>
+          {/* 2. Binance AES-256 Vault Status */}
+          <div className="bg-panel" style={{ padding: '16px', borderRadius: '6px' }}>
+            <div style={{ color: '#00E5FF', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}><Lock size={14} className="inline mr-1" style={{display:'inline', marginRight:'4px', verticalAlign:'text-bottom'}}/> BINANCE AES-256 VAULT</div>
+            <div className="flex-col gap-sm" style={{ fontSize: '12px', color: 'var(--color-foreground)' }}>
+              <div>Encryption: <strong style={{ color: 'var(--color-accent)' }}>AES-256-GCM</strong></div>
+              <div>Withdrawal Check: <strong style={{ color: 'var(--color-destructive)' }}>STRICTLY REJECTED</strong></div>
+              <div>Read / Trade: <strong style={{ color: 'var(--color-accent)' }}>ACTIVE</strong></div>
             </div>
           </div>
 
-          {/* RBAC Matrix Inspector */}
-          <div style={{ backgroundColor: '#0C1018', border: '1px solid #1A2436', padding: '12px', borderRadius: '4px' }}>
-            <div style={{ color: '#FFD600', fontSize: '11px', fontWeight: 800, marginBottom: '6px' }}>
-              🛡️ RBAC Domain Capabilities Matrix (10 Capabilities)
+          {/* 3. Telemetry Flush & Redis Heartbeat */}
+          <div className="bg-panel" style={{ padding: '16px', borderRadius: '6px' }}>
+            <div style={{ color: '#D500F9', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}><Server size={14} className="inline mr-1" style={{display:'inline', marginRight:'4px', verticalAlign:'text-bottom'}}/> TELEMETRY & REDIS SIDECAR</div>
+            <div className="flex-col gap-sm" style={{ fontSize: '12px', color: 'var(--color-foreground)', marginBottom: '16px' }}>
+              <div>Redis Sidecar: <strong style={{ color: 'var(--color-accent)' }}>ONLINE (REST)</strong></div>
+              <div>Ring Buffer: <strong style={{ color: '#00E5FF' }}>18 Events Cached</strong></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', fontSize: '10px' }}>
-              {[
-                { cap: 'VIEW_TOKENS', roles: 'ALL', dual: false },
-                { cap: 'TRADE_MANUALLY', roles: 'ADMIN, TRADER', dual: false },
-                { cap: 'ENABLE_LIVE_AGENT', roles: 'ADMIN, TRADER', dual: false },
-                { cap: 'CREATE_LAUNCH', roles: 'ADMIN, CREATOR', dual: false },
-                { cap: 'FREEZE_TOKEN', roles: 'ADMIN, MOD', dual: false },
-                { cap: 'REVIEW_FLAGGED', roles: 'ADMIN, RISK', dual: false },
-                { cap: 'MANAGE_BILLING', roles: 'SUPER_ADMIN', dual: true },
-                { cap: 'OVERRIDE_RISK', roles: 'SUPER_ADMIN', dual: true },
-              ].map((item) => (
-                <div key={item.cap} style={{ backgroundColor: '#06080E', padding: '6px', borderRadius: '3px', border: '1px solid #1E293B' }}>
-                  <div style={{ fontWeight: 800, color: '#E2E8F0' }}>{item.cap}</div>
-                  <div style={{ color: '#64748B' }}>{item.roles}</div>
-                  {item.dual && <span style={{ color: '#FF5252', fontWeight: 800, fontSize: '9px' }}>⚠ DUAL-CONTROL</span>}
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={handleFlushTelemetry}
+              className="btn-primary"
+              style={{ width: '100%', justifyContent: 'center', backgroundColor: '#7C4DFF', border: 'none' }}
+            >
+              Flush Telemetry Buffer
+            </button>
           </div>
         </div>
-      ) : (
-        /* Restricted System Admin Placeholder for Non-Admin */
-        <div style={{ backgroundColor: '#06080E', border: '1px dashed #1E293B', borderRadius: '6px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '18px' }}>🔒</span>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '12px', color: '#94A3B8' }}>
-                System Admin Master Console Restricted
-              </div>
-              <div style={{ color: '#475569', fontSize: '11px' }}>
-                Requires SYSTEM_ADMIN role to manage emergency kill-switches, Redis sidecar parameters, and telemetry buffers.
-              </div>
-            </div>
+
+        {/* RBAC Matrix Inspector */}
+        <div className="bg-panel" style={{ padding: '16px', borderRadius: '6px' }}>
+          <div style={{ color: '#FFD600', fontSize: '12px', fontWeight: 800, marginBottom: '12px' }}>
+            🛡️ RBAC Domain Capabilities Matrix
           </div>
-          <button
-            onClick={() => {
-              if (isConnected) {
-                switchRole('SYSTEM_ADMIN');
-              } else {
-                window.location.href = '/auth/login';
-              }
-            }}
-            style={{ backgroundColor: '#261704', color: '#FFD600', border: '1px solid #FF9100', padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
-          >
-            👑 {isConnected ? 'Switch to System Admin View' : 'Authenticate as Admin (SIWE)'}
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', fontSize: '11px' }}>
+            {[
+              { cap: 'VIEW_TOKENS', roles: 'ALL', dual: false },
+              { cap: 'TRADE_MANUALLY', roles: 'ADMIN, TRADER', dual: false },
+              { cap: 'ENABLE_LIVE_AGENT', roles: 'ADMIN, TRADER', dual: false },
+              { cap: 'CREATE_LAUNCH', roles: 'ADMIN, CREATOR', dual: false },
+              { cap: 'FREEZE_TOKEN', roles: 'ADMIN, MOD', dual: false },
+              { cap: 'REVIEW_FLAGGED', roles: 'ADMIN, RISK', dual: false },
+              { cap: 'MANAGE_BILLING', roles: 'SUPER_ADMIN', dual: true },
+              { cap: 'OVERRIDE_RISK', roles: 'SUPER_ADMIN', dual: true },
+            ].map((item) => (
+              <div key={item.cap} className="bg-panel" style={{ padding: '8px', borderRadius: '4px' }}>
+                <div style={{ fontWeight: 800, color: 'var(--color-foreground)' }}>{item.cap}</div>
+                <div className="text-muted">{item.roles}</div>
+                {item.dual && <span style={{ color: 'var(--color-destructive)', fontWeight: 800, fontSize: '10px' }}>⚠ DUAL-CONTROL</span>}
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Data-Dense Active Domains Subsystem Grid */}
-      <div style={{ padding: '16px', backgroundColor: '#06080E', borderRadius: '6px', border: '1px solid #141A26' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0, color: '#F8FAFC', letterSpacing: '0.5px' }}>
-            🌐 Active Domain Subsystems (9 Managed Domains)
+      <div className="bg-panel" style={{ padding: '24px', borderRadius: '8px' }}>
+        <div className="flex-row justify-between items-center" style={{ marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0 }}>
+            Active Domain Subsystems
           </h3>
-          <span style={{ fontSize: '11px', color: '#00E5FF', fontWeight: 'bold' }}>100% Boundary Isolation Verified</span>
+          <span style={{ fontSize: '12px', color: '#00E5FF', fontWeight: 'bold' }}>100% Boundary Isolation Verified</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+        <div className="grid-3" style={{ marginBottom: '24px' }}>
           {(overview?.activeDomains || ['IDENTITY', 'BILLING', 'LAUNCHPAD', 'TRADING', 'AGENT', 'INTELLIGENCE', 'RISK', 'COMPLIANCE', 'ADMIN']).map((domain) => (
-            <div key={domain} style={{ backgroundColor: '#0C1018', border: '1px solid #162030', padding: '8px 12px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#E2E8F0', fontSize: '12px', fontWeight: 700 }}>{domain}</span>
-              <span style={{ color: '#00E676', fontSize: '11px', fontWeight: 800 }}>✓ ACTIVE</span>
+            <div key={domain} className="bg-panel" style={{ padding: '12px 16px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--color-foreground)', fontSize: '14px', fontWeight: 700 }}>{domain}</span>
+              <span className="text-accent" style={{ fontSize: '12px', fontWeight: 800 }}>✓ ACTIVE</span>
             </div>
           ))}
         </div>
 
         {/* Execution Plane Workers */}
-        <div style={{ backgroundColor: '#0C1018', border: '1px solid #162030', padding: '12px', borderRadius: '4px' }}>
-          <div style={{ color: '#64748B', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px' }}>EXECUTION PLANE WORKERS</div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="bg-panel" style={{ padding: '16px', borderRadius: '6px' }}>
+          <div className="text-muted" style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '12px' }}>EXECUTION PLANE WORKERS</div>
+          <div className="flex-row gap-sm" style={{ flexWrap: 'wrap' }}>
             {(overview?.executionPlaneWorkers || ['BinanceOrderWorker', 'LaunchpadIndexerWorker', 'DaytonaSandboxRunner', 'BinanceStreamListener']).map((worker) => (
-              <span key={worker} style={{ backgroundColor: '#131D2D', color: '#00E5FF', border: '1px solid #1B2B42', padding: '4px 8px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>
-                ⚙️ {worker}
+              <span key={worker} style={{ backgroundColor: '#131D2D', color: '#00E5FF', border: '1px solid #1B2B42', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                <Cpu size={12} className="inline mr-1" style={{display:'inline', marginRight:'4px', verticalAlign:'text-bottom'}}/> {worker}
               </span>
             ))}
           </div>
@@ -377,4 +385,3 @@ export default function OverviewPage() {
     </div>
   );
 }
-
