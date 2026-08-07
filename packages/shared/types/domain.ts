@@ -63,6 +63,17 @@ export interface RiskDecision {
   riskFactors: string[];
 }
 
+/**
+ * Subset dari ArkhamEntityProfile yang relevan untuk risk gate.
+ * Dikirim secara optional — kegagalan Arkham tidak memblok evaluasi.
+ */
+export interface ArkhamCounterpartyProfile {
+  walletAddress: string;
+  riskPassportScore: number; // 0–100 (0 = paling berisiko)
+  isCounterpartyBlocked: boolean;
+  arkhamEntityType: string;
+}
+
 // ----------------------------------------------------------------------------
 // 1. BINANCE KEY SECURITY GUARDRAIL
 // ----------------------------------------------------------------------------
@@ -85,9 +96,20 @@ export function validateBinancePermissions(perms: BinanceKeyPermissions): void {
 export function evaluateTradeRisk(
   intent: TradeIntentInput,
   userLimits: UserRiskLimits,
-  activeKillSwitches: KillSwitch[]
+  activeKillSwitches: KillSwitch[],
+  counterpartyProfile?: ArkhamCounterpartyProfile // optional — out-of-band Arkham enrichment
 ): RiskDecision {
   const riskFactors: string[] = [];
+
+  // A0. Arkham Counterparty Risk Block (out-of-band advisory — checked first as hard block)
+  if (counterpartyProfile?.isCounterpartyBlocked === true) {
+    return {
+      isApproved: false,
+      score: 100,
+      reason: `COUNTERPARTY_BLOCKED: Wallet ${counterpartyProfile.walletAddress} is flagged as blocked by Arkham Intelligence (Type: ${counterpartyProfile.arkhamEntityType}, Score: ${counterpartyProfile.riskPassportScore})`,
+      riskFactors: ['COUNTERPARTY_BLOCKED', 'ARKHAM_INTELLIGENCE_FLAG'],
+    };
+  }
 
   // A. Check Global & Target Kill Switches
   for (const ks of activeKillSwitches) {
