@@ -9,8 +9,9 @@
   ],
   "scripts": {
     "dev": "next dev apps/web",
-    "build": "next build apps/web",
+    "build": "next build apps/web && node -e \"require('fs').cpSync('apps/web/.next', '.next', {recursive: true})\"",
     "start": "next start apps/web",
+
 
     "db:seed": "npx tsx scripts/seed-db.ts",
     "test": "jest"
