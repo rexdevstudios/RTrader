@@ -178,9 +178,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { nonce, messageToSign } = challengeJson.data;
 
       // 3. Prompt MetaMask popup to sign challenge with user's private key
+      const { ethers } = await import('ethers');
+      const hexMessage = ethers.hexlify(ethers.toUtf8Bytes(messageToSign));
       const signature: string = await ethereum.request({
         method: 'personal_sign',
-        params: [messageToSign, activeAddress],
+        params: [hexMessage, activeAddress],
       });
 
       // 4. Verify cryptographic signature on backend

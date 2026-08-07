@@ -76,9 +76,11 @@ export default function LoginPage() {
 
       // If MetaMask is installed, request real personal_sign signature
       if (typeof window !== 'undefined' && (window as any).ethereum) {
+        const { ethers } = await import('ethers');
+        const hexMessage = ethers.hexlify(ethers.toUtf8Bytes(challengeMessage));
         signature = await (window as any).ethereum.request({
           method: 'personal_sign',
-          params: [challengeMessage, walletAddress],
+          params: [hexMessage, walletAddress],
         });
       } else {
         // Dev fallback mock signature
