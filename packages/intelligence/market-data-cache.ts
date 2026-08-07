@@ -150,13 +150,14 @@ export class IntelligenceCache {
    */
   evictExpired(): void {
     const now = Date.now();
-    for (const [key, entry] of this.ohlcv) {
+    this.ohlcv.forEach((entry, key) => {
       if (now - entry.cachedAt > entry.ttlMs) this.ohlcv.delete(key);
-    }
-    for (const [key, entry] of this.orderbook) {
+    });
+    this.orderbook.forEach((entry, key) => {
       if (now - entry.cachedAt > entry.ttlMs) this.orderbook.delete(key);
-    }
+    });
   }
+
 }
 
 // Singleton instance — shared across workers in same process

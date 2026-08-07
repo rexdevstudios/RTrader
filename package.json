@@ -8,9 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "next dev apps/web",
+    "build": "next build apps/web",
+    "start": "next start apps/web",
+
     "db:seed": "npx tsx scripts/seed-db.ts",
     "test": "jest"
   },
