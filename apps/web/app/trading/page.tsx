@@ -1,9 +1,45 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+
+interface Candle {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+interface Orderbook {
+  symbol: string;
+  timestamp: number;
+  bids: [number, number][];
+  asks: [number, number][];
+  bestBid: number;
+  bestAsk: number;
+  spread: number;
+  spreadPct: number;
+}
+
+interface IntelligenceSignal {
+  symbol: string;
+  computedConfidenceScore: number;
+  rationale: string;
+  riskFlags: string[];
+  inputs: {
+    webSentiment: string;
+    counterpartyRisk: string;
+    marketVolatility: string;
+    volumeAnomaly: boolean;
+  };
+  computedAt: string;
+}
 
 // Lightweight SVG Candlestick & Volume Chart Component
-function CandlestickChart({ candles }: { candles: Array<{ timestamp: number; open: number; high: number; low: number; close: number; volume: number }> }) {
+function CandlestickChart({ candles }: { candles: Candle[] }) {
   if (!candles || candles.length === 0) {
-    return <div style={{ color: '#64748b', padding: '2rem', textAlign: 'center' }}>No candle data available</div>;
+    return <div style={{ color: '#64748b', padding: '3rem', textAlign: 'center' }}>No chart data available</div>;
   }
 
   const width = 600;
@@ -13,9 +49,7 @@ function CandlestickChart({ candles }: { candles: Array<{ timestamp: number; ope
   const minPrice = Math.min(...candles.map((c) => c.low));
   const maxPrice = Math.max(...candles.map((c) => c.high));
   const priceRange = maxPrice - minPrice || 1;
-
   const maxVol = Math.max(...candles.map((c) => c.volume)) || 1;
-
   const candleWidth = (width - padding * 2) / candles.length;
 
   return (
@@ -29,7 +63,6 @@ function CandlestickChart({ candles }: { candles: Array<{ timestamp: number; ope
       {candles.map((c, i) => {
         const isBull = c.close >= c.open;
         const color = isBull ? '#34d399' : '#f87171';
-
         const x = padding + i * candleWidth + candleWidth / 2;
         const chartHeight = height - padding * 2 - 40;
 
@@ -40,16 +73,12 @@ function CandlestickChart({ candles }: { candles: Array<{ timestamp: number; ope
 
         const candleTop = Math.min(yOpen, yClose);
         const candleBodyHeight = Math.max(2, Math.abs(yClose - yOpen));
-
-        // Volume Bar (at bottom)
         const volHeight = (c.volume / maxVol) * 35;
         const yVol = height - padding - volHeight;
 
         return (
           <g key={i}>
-            {/* High/Low Wick Line */}
             <line x1={x} y1={yHigh} x2={x} y2={yLow} stroke={color} strokeWidth="1.5" />
-            {/* Candle Body */}
             <rect
               x={x - candleWidth * 0.35}
               y={candleTop}
@@ -58,7 +87,6 @@ function CandlestickChart({ candles }: { candles: Array<{ timestamp: number; ope
               fill={color}
               rx="1"
             />
-            {/* Volume Bar */}
             <rect
               x={x - candleWidth * 0.35}
               y={yVol}
@@ -75,30 +103,114 @@ function CandlestickChart({ candles }: { candles: Array<{ timestamp: number; ope
 }
 
 export default function TradingPage() {
-  const mockCandles = [
-    { timestamp: 1, open: 64100, high: 64500, low: 63900, close: 64400, volume: 1200 },
-    { timestamp: 2, open: 64400, high: 64600, low: 64200, close: 64300, volume: 950 },
-    { timestamp: 3, open: 64300, high: 64800, low: 64150, close: 64750, volume: 1540 },
-    { timestamp: 4, open: 64750, high: 64900, low: 64400, close: 64500, volume: 1100 },
-    { timestamp: 5, open: 64500, high: 65200, low: 64450, close: 65150, volume: 2100 },
-    { timestamp: 6, open: 65150, high: 65400, low: 64900, close: 65300, volume: 1800 },
-    { timestamp: 7, open: 65300, high: 65600, low: 65100, close: 65550, volume: 2300 },
-    { timestamp: 8, open: 65550, high: 65700, low: 65200, close: 65400, volume: 1400 },
-  ];
+  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [interval, setInterval] = useState('1h');
+  const [candles, setCandles] = useState<Candle[]>([]);
+  const [orderbook, setOrderbook] = useState<Orderbook | null>(null);
+  const [signal, setSignal] = useState<IntelligenceSignal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [proposalStatus, setProposalStatus] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch Chart & Market Data from API
+  const fetchMarketData = async () => {
+    try {
+      const res = await fetch(`/api/market/chart?symbol=${symbol}&interval=${interval}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      if (json.success && json.data) {
+        setCandles(json.data.candles || []);
+        setOrderbook(json.data.orderbook || null);
+        setSignal(json.data.signal || null);
+        setError(null);
+      }
+    } catch (err) {
+      console.warn('[Trading UI] API fetch error (using fallback state):', (err as Error).message);
+      setError('Live connection retrying... using cached visualization state');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchMarketData();
+    const timer = window.setInterval(() => {
+      fetchMarketData();
+    }, 5000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [symbol, interval]);
+
+
+
+  // Handle Proposal Approval
+  const handleApproveProposal = async () => {
+    setIsSubmitting(true);
+    setActionFeedback(null);
+    try {
+      const res = await fetch('/api/trade-intents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol,
+          side: 'BUY',
+          type: 'MARKET',
+          quantity: 0.1,
+          maxSlippagePct: 1.5,
+          stage: 'TESTNET',
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setProposalStatus('APPROVED');
+        setActionFeedback(`✅ Proposal APPROVED & Intent ${json.data?.tradeIntentId || ''} passed Risk Gate!`);
+      } else {
+        setActionFeedback(`❌ Risk Gate Rejected: ${json.error?.message || 'Policy violation'}`);
+      }
+    } catch (err) {
+      setActionFeedback(`⚠️ Connection error during approval: ${(err as Error).message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle Proposal Rejection
+  const handleRejectProposal = () => {
+    setProposalStatus('REJECTED');
+    setActionFeedback('⛔ Proposal REJECTED by user.');
+  };
+
+  const lastClose = candles.length > 0 ? candles[candles.length - 1].close : 65400;
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif', backgroundColor: '#0f172a', color: '#f8fafc', minHeight: '100vh' }}>
-      {/* Header */}
+      {/* Top Banner */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', margin: 0, color: '#38bdf8' }}>📈 Trading Terminal & Market Charting</h1>
+          <h1 style={{ fontSize: '2rem', margin: 0, color: '#38bdf8' }}>📈 Trading Terminal & Market Visualization</h1>
           <p style={{ color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
-            Live Market Visualization • Binance Stream Listener • AI Intelligence Signal Overlay
+            Live Stream Feed • Binance Orderbook & OHLCV • AI Feature Engine Overlay
           </p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ backgroundColor: '#065f46', color: '#34d399', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
-            ● LIVE STREAM CONNECTED
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Symbol Selector */}
+          <select
+            value={symbol}
+            onChange={(e) => setSymbol(e.target.value)}
+            style={{ backgroundColor: '#1e293b', color: '#f8fafc', border: '1px solid #334155', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            <option value="BTCUSDT">BTC / USDT</option>
+            <option value="ETHUSDT">ETH / USDT</option>
+            <option value="SOLUSDT">SOL / USDT</option>
+            <option value="BASEUSDT">BASE / USDT</option>
+          </select>
+          <span style={{ backgroundColor: error ? '#831843' : '#065f46', color: error ? '#f472b6' : '#34d399', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+            {error ? '● CACHED / RETRYING' : '● LIVE STREAM'}
           </span>
         </div>
       </div>
@@ -109,46 +221,72 @@ export default function TradingPage() {
         <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div>
-              <h2 style={{ fontSize: '1.25rem', margin: 0, color: '#f8fafc' }}>BTC/USDT — 1H Candlestick & Volume</h2>
-              <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Binance WebSocket Stream + Historical Feed</span>
+              <h2 style={{ fontSize: '1.25rem', margin: 0, color: '#f8fafc' }}>
+                {symbol} — {interval.toUpperCase()} Candlestick & Volume
+              </h2>
+              <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                {loading ? 'Updating live candles...' : 'Binance WebSocket Stream + Historical Feed'}
+              </span>
             </div>
+            {/* Interval Selector */}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button style={{ backgroundColor: '#334155', color: '#f8fafc', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer' }}>1M</button>
-              <button style={{ backgroundColor: '#0284c7', color: '#ffffff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>1H</button>
-              <button style={{ backgroundColor: '#334155', color: '#f8fafc', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer' }}>4H</button>
-              <button style={{ backgroundColor: '#334155', color: '#f8fafc', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer' }}>1D</button>
+              {(['1m', '1h', '4h', '1d'] as const).map((tf) => (
+                <button
+                  key={tf}
+                  onClick={() => setInterval(tf)}
+                  style={{
+                    backgroundColor: interval === tf ? '#0284c7' : '#334155',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.3rem 0.6rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: interval === tf ? 'bold' : 'normal',
+                  }}
+                >
+                  {tf.toUpperCase()}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* SVG Candlestick Chart */}
+          {/* SVG Candlestick Chart Container */}
           <div style={{ backgroundColor: '#0f172a', padding: '1rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
-            <CandlestickChart candles={mockCandles} />
+            <CandlestickChart candles={candles} />
           </div>
 
-          {/* Derived Market Metrics */}
+          {/* Derived Market Metrics Bar */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginTop: '1.5rem' }}>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
               <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>LAST PRICE</span>
-              <span style={{ color: '#34d399', fontSize: '1.1rem', fontWeight: 'bold' }}>$65,400.00</span>
+              <span style={{ color: '#34d399', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                ${lastClose.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
             </div>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>1H VOLATILITY</span>
-              <span style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: 'bold' }}>1.42% (LOW)</span>
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>MARKET VOLATILITY</span>
+              <span style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                {signal?.inputs.marketVolatility || 'LOW'}
+              </span>
             </div>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>24H VOLUME</span>
-              <span style={{ color: '#f8fafc', fontSize: '1.1rem', fontWeight: 'bold' }}>14,820 BTC</span>
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>WEB SENTIMENT</span>
+              <span style={{ color: '#f8fafc', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                {signal?.inputs.webSentiment || 'NEUTRAL'}
+              </span>
             </div>
             <div style={{ backgroundColor: '#0f172a', padding: '0.8rem', borderRadius: '6px', border: '1px solid #334155' }}>
-              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>VOLUME ANOMALY</span>
-              <span style={{ color: '#a78bfa', fontSize: '1.1rem', fontWeight: 'bold' }}>NORMAL (1.1×)</span>
+              <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>COUNTERPARTY</span>
+              <span style={{ color: '#a78bfa', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                {signal?.inputs.counterpartyRisk || 'CLEAR'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Intelligence Signal Overlay & Orderbook Depth */}
+        {/* Right Column: AI Overlay & Orderbook Depth */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* AI Intelligence Overlay */}
+          {/* AI Intelligence Signal Overlay Panel */}
           <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '1.25rem' }}>
             <h3 style={{ fontSize: '1.1rem', margin: '0 0 1rem 0', color: '#c084fc' }}>
               🤖 AI Feature Engine Signal Overlay
@@ -157,63 +295,102 @@ export default function TradingPage() {
             <div style={{ backgroundColor: '#0f172a', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #334155' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Computed Confidence Score</span>
-                <span style={{ color: '#34d399', fontSize: '1.25rem', fontWeight: 'bold' }}>85.0%</span>
+                <span style={{ color: '#34d399', fontSize: '1.25rem', fontWeight: 'bold' }}>
+                  {signal ? `${(signal.computedConfidenceScore * 100).toFixed(1)}%` : '85.0%'}
+                </span>
               </div>
               <div style={{ backgroundColor: '#334155', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ backgroundColor: '#34d399', height: '100%', width: '85%' }} />
+                <div
+                  style={{
+                    backgroundColor: '#34d399',
+                    height: '100%',
+                    width: `${(signal?.computedConfidenceScore || 0.85) * 100}%`,
+                    transition: 'width 0.5s ease-in-out',
+                  }}
+                />
               </div>
             </div>
 
             <div style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.4', marginBottom: '1rem' }}>
-              <strong>Signal Rationale:</strong> Counterparty cleared by Arkham (EXCHANGE, score: 95/100) | Market volatility LOW (1.42%) | Spread normal (0.02%) | Web sentiment POSITIVE (0.78)
+              <strong>Signal Rationale:</strong> {signal?.rationale || 'Counterparty cleared by Arkham | Volatility LOW | Spread normal'}
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <span style={{ backgroundColor: '#065f46', color: '#34d399', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>
-                ✓ Arkham Clear
+                ✓ Arkham {signal?.inputs.counterpartyRisk || 'CLEAR'}
               </span>
               <span style={{ backgroundColor: '#1e40af', color: '#60a5fa', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>
-                ✓ Firecrawl Sentiment 0.78
+                ✓ Sentiment {signal?.inputs.webSentiment || 'NEUTRAL'}
               </span>
               <span style={{ backgroundColor: '#374151', color: '#9ca3af', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>
-                ✓ Volatility Low
+                ✓ Volatility {signal?.inputs.marketVolatility || 'LOW'}
               </span>
             </div>
           </div>
 
-          {/* Orderbook Depth & Whale Wall Alert */}
+          {/* Orderbook Depth & Whale Wall Detection Panel */}
           <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#f8fafc' }}>Orderbook Depth & Spread</h3>
-              <span style={{ color: '#34d399', fontSize: '0.8rem', fontWeight: 'bold' }}>Spread: 0.02%</span>
+              <span style={{ color: '#34d399', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                Spread: {orderbook ? `${orderbook.spreadPct}%` : '0.02%'}
+              </span>
             </div>
 
             {/* Asks (Sells) */}
             <div style={{ marginBottom: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f87171', fontSize: '0.85rem', padding: '0.2rem 0' }}>
-                <span>65,410.00</span>
-                <span>3.80 BTC</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f87171', fontSize: '0.85rem', padding: '0.2rem 0', backgroundColor: 'rgba(248, 113, 113, 0.1)' }}>
-                <span>65,405.00 🐳</span>
-                <span>15.00 BTC (Whale Wall)</span>
-              </div>
+              {orderbook?.asks.slice(0, 2).map(([p, q], i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+
+                    color: '#f87171',
+                    fontSize: '0.85rem',
+                    padding: '0.2rem 0',
+                    backgroundColor: q > 10 ? 'rgba(248, 113, 113, 0.15)' : 'transparent',
+                  }}
+                >
+                  <span>${p.toLocaleString()} {q > 10 ? '🐳' : ''}</span>
+                  <span>{q} {symbol.replace('USDT', '')} {q > 10 ? '(Whale Wall)' : ''}</span>
+                </div>
+              )) || (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f87171', fontSize: '0.85rem' }}>
+                  <span>$65,405.00 🐳</span>
+                  <span>15.0 BTC (Whale Wall)</span>
+                </div>
+              )}
             </div>
 
             <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem', padding: '0.25rem 0', borderTop: '1px solid #334155', borderBottom: '1px solid #334155', margin: '0.4rem 0' }}>
-              ── Market Midpoint: $65,402.50 ──
+              ── Market Midpoint: ${((orderbook?.bestBid || 65400) + (orderbook?.bestAsk || 65405)) / 2} ──
             </div>
 
             {/* Bids (Buys) */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399', fontSize: '0.85rem', padding: '0.2rem 0', backgroundColor: 'rgba(52, 211, 153, 0.1)' }}>
-                <span>65,400.00 🐳</span>
-                <span>12.80 BTC (Whale Wall)</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399', fontSize: '0.85rem', padding: '0.2rem 0' }}>
-                <span>65,395.00</span>
-                <span>4.20 BTC</span>
-              </div>
+              {orderbook?.bids.slice(0, 2).map(([p, q], i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+
+                    color: '#34d399',
+                    fontSize: '0.85rem',
+                    padding: '0.2rem 0',
+                    backgroundColor: q > 10 ? 'rgba(52, 211, 153, 0.15)' : 'transparent',
+                  }}
+                >
+                  <span>${p.toLocaleString()} {q > 10 ? '🐳' : ''}</span>
+                  <span>{q} {symbol.replace('USDT', '')} {q > 10 ? '(Whale Wall)' : ''}</span>
+                </div>
+              )) || (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399', fontSize: '0.85rem' }}>
+                  <span>$65,400.00 🐳</span>
+                  <span>12.8 BTC (Whale Wall)</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -223,14 +400,58 @@ export default function TradingPage() {
               🛡️ Proposal-Only Execution Gate
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0 0 1rem 0' }}>
-              AI Proposal #prop-8291 requires explicit user approval. Deterministic Risk Gate will evaluate intent upon approval.
+              AI Proposal for {symbol} requires user approval. Status: <strong>{proposalStatus}</strong>
             </p>
+
+            {actionFeedback && (
+              <div
+                style={{
+                  backgroundColor: '#0f172a',
+                  padding: '0.6rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  marginBottom: '0.75rem',
+                  border: '1px solid #334155',
+                  color: actionFeedback.includes('✅') ? '#34d399' : actionFeedback.includes('❌') ? '#f87171' : '#f8fafc',
+                }}
+              >
+                {actionFeedback}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button style={{ flex: 1, backgroundColor: '#16a34a', color: '#ffffff', border: 'none', padding: '0.6rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                Approve Proposal
+              <button
+                onClick={handleApproveProposal}
+                disabled={isSubmitting || proposalStatus === 'APPROVED'}
+                style={{
+                  flex: 1,
+                  backgroundColor: proposalStatus === 'APPROVED' ? '#334155' : '#16a34a',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.6rem',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: isSubmitting || proposalStatus === 'APPROVED' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSubmitting ? 'Processing...' : proposalStatus === 'APPROVED' ? 'Approved' : 'Approve Proposal'}
               </button>
-              <button style={{ flex: 1, backgroundColor: '#dc2626', color: '#ffffff', border: 'none', padding: '0.6rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                Reject
+
+              <button
+                onClick={handleRejectProposal}
+                disabled={isSubmitting || proposalStatus === 'REJECTED'}
+                style={{
+                  flex: 1,
+                  backgroundColor: proposalStatus === 'REJECTED' ? '#334155' : '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '0.6rem',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: isSubmitting || proposalStatus === 'REJECTED' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {proposalStatus === 'REJECTED' ? 'Rejected' : 'Reject'}
               </button>
             </div>
           </div>
