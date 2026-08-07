@@ -24,7 +24,8 @@ export class KillSwitchManager {
     activatedBy: string,
     reason: string,
     targetId: string | undefined,
-    db: KillSwitchDbAdapter
+    db: KillSwitchDbAdapter,
+    pubsub?: { publish(channel: string, message: string): Promise<unknown> }
   ): Promise<KillSwitchRecord> {
     console.warn(`[EMERGENCY KILL SWITCH] Activating ${scope} kill switch by admin ${activatedBy}. Reason: ${reason}`);
 
@@ -47,6 +48,16 @@ export class KillSwitchManager {
       `Emergency kill switch activated for ${scope} (Target: ${targetId || 'ALL'}). Reason: ${reason}`
     );
 
+    // Optional Async PubSub Broadcast for Sub-Second Worker Notification
+    if (pubsub) {
+      try {
+        const payload = JSON.stringify({ event: 'KILL_SWITCH_ACTIVATED', scope, targetId, reason, id, timestamp: activatedAt });
+        await pubsub.publish('kill_switch_triggered_pubsub', payload);
+      } catch (err) {
+        console.warn(`[KillSwitchManager] PubSub broadcast warning (non-blocking):`, (err as Error).message);
+      }
+    }
+
     return { id, activatedAt, ...record };
   }
 
@@ -57,7 +68,8 @@ export class KillSwitchManager {
     killSwitchId: string,
     deactivatedBy: string,
     reason: string,
-    db: KillSwitchDbAdapter
+    db: KillSwitchDbAdapter,
+    pubsub?: { publish(channel: string, message: string): Promise<unknown> }
   ): Promise<void> {
     console.log(`[KILL SWITCH RECOVERY] Deactivating kill switch ${killSwitchId} by admin ${deactivatedBy}`);
 
@@ -70,6 +82,16 @@ export class KillSwitchManager {
       killSwitchId,
       `Kill switch recovered/deactivated. Reason: ${reason}`
     );
+
+    // Optional Async PubSub Broadcast
+    if (pubsub) {
+      try {
+        const payload = JSON.stringify({ event: 'KILL_SWITCH_DEACTIVATED', killSwitchId, reason, timestamp: new Date().toISOString() });
+        await pubsub.publish('kill_switch_triggered_pubsub', payload);
+      } catch (err) {
+        console.warn(`[KillSwitchManager] PubSub broadcast warning (non-blocking):`, (err as Error).message);
+      }
+    }
   }
 
   /**

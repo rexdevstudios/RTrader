@@ -10,6 +10,7 @@ import { DualControlManager } from '../admin/dual-control';
 import { KillSwitchManager } from '../admin/kill-switch-manager';
 import { ComplianceEngine } from '../compliance/compliance-engine';
 import { SubscriptionsEngine } from '../billing/subscriptions-engine';
+import { upstashRedis } from './redis-client';
 import {
   TradeIntentInput,
   UserRiskLimits,
@@ -31,7 +32,8 @@ export class SystemOrchestrator {
     return {
       status: 'OPERATIONAL',
       controlPlane: 'Vercel / Next.js',
-      operationalSsot: 'PostgreSQL SSOT',
+      operationalSsot: 'PostgreSQL SSOT (Neon)',
+      ephemeralSidecar: upstashRedis.isConfigured() ? 'UPSTASH_REDIS_ACTIVE' : 'IN_MEMORY_FALLBACK',
       executionPlaneWorkers: ['BinanceOrderWorker', 'LaunchpadIndexerWorker', 'DaytonaSandboxRunner', 'BinanceStreamListener'],
       primaryRpcProvider: 'dRPC',
       fallbackRpcProvider: 'Ankr / Alchemy',
