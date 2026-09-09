@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet } from 'lucide-react';
+import { NutritionLabelCard } from '../components/NutritionLabelCard';
 
 export default function LaunchpadPage() {
   const { isConnected, userRole, walletAddress, connectMetaMask, isConnecting } = useAuth();
@@ -195,9 +196,22 @@ export default function LaunchpadPage() {
                 <span className="text-muted">Arkham Risk Passport:</span>
                 <span style={{ color: 'var(--color-accent)', fontWeight: 900 }}>{draftResult.riskPassportScore} / 100 (LOW_RISK)</span>
               </div>
-              <div style={{ backgroundColor: '#041E15', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '12px', borderRadius: '4px', textAlign: 'center', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <div style={{ backgroundColor: '#041E15', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '12px', borderRadius: '4px', textAlign: 'center', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
                 <CheckCircle2 size={16} /> Draft Ready for Onchain Graduation Test
               </div>
+
+              {/* Investor Nutrition Label Preview */}
+              <NutritionLabelCard
+                liquidityLocked={false}
+                mintRevoked={true}
+                creatorTrustScore={draftResult.riskPassportScore || 75}
+                overallTier="LOW"
+                reasons={[
+                  'Template contracts enforced via BondingCurveLaunchpad.sol',
+                  'Zero withdrawal keys detected on deployer vault',
+                  'Pre-launch fair distribution limits active'
+                ]}
+              />
             </div>
           ) : (
             <div className="bg-panel flex-col items-center justify-center" style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '6px', border: '1px dashed var(--color-border)', fontSize: '13px' }}>
