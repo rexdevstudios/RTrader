@@ -13,7 +13,9 @@ export class NutritionLabelService {
     creatorWallet: string,
     isGraduatedOrLocked: boolean,
     creatorTrustScore: number,
-    unlockTimestamp?: number
+    unlockTimestamp?: number,
+    yieldStakingActive?: boolean,
+    stakingApy: number = 4.2
   ): Promise<NutritionLabelRiskScore> {
     const reasons: string[] = [];
     const arkhamProfile = await this.arkham.profileWallet(creatorWallet, 'SYSTEM_LABEL');
@@ -33,6 +35,9 @@ export class NutritionLabelService {
     if (creatorTrustScore < 40) {
       reasons.push('Creator/KOL has low social trust score');
     }
+    if (yieldStakingActive) {
+      reasons.push(`Liquidity generating ${stakingApy}% APY staking yield for holders`);
+    }
 
     let overallRiskTier: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
     if (arkhamProfile.isCounterpartyBlocked || creatorTrustScore < 30) {
@@ -46,6 +51,8 @@ export class NutritionLabelService {
       liquidityLocked,
       liquidityUnlockTimestamp: unlockTimestamp,
       timeLockDays,
+      yieldStakingActive: !!yieldStakingActive,
+      stakingApy: yieldStakingActive ? stakingApy : undefined,
       mintRevoked,
       creatorTrustScore,
       arkhamRiskScore: arkhamProfile.riskPassportScore,

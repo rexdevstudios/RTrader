@@ -217,6 +217,10 @@ export interface KolProfile {
   userId: string;
   twitterHandle?: string;
   followersCount: number;
+  farcasterFid?: number;
+  farcasterUsername?: string;
+  lensHandle?: string;
+  web3SocialScore?: number;
   trustScore: number;
   completedBounties: number;
   totalEarnedUsd: number;
@@ -251,10 +255,36 @@ export interface NutritionLabelRiskScore {
   liquidityLocked: boolean;
   liquidityUnlockTimestamp?: number;
   timeLockDays?: number;
+  yieldStakingActive?: boolean;
+  stakingApy?: number;
+  accruedYieldWei?: bigint;
   mintRevoked: boolean;
   creatorTrustScore: number; // 0-100
   arkhamRiskScore: number; // 0-100
   overallRiskTier: 'LOW' | 'MEDIUM' | 'HIGH';
   reasons: string[];
+}
+
+export interface PaymasterSponsorshipQuote {
+  sponsorAddress: string;
+  sponsoredTxType: 'BOUNTY_CLAIM' | 'PROFILE_REGISTRATION';
+  kolWallet: string;
+  tokenAddress: string;
+  tokenAmount: string;
+  deadline: number;
+  chainId: number;
+  signature: string;
+}
+
+export interface Web3SocialProfile {
+  walletAddress: string;
+  farcasterFid?: number;
+  farcasterUsername?: string;
+  farcasterFollowers?: number;
+  lensHandle?: string;
+  lensProfileId?: string;
+  lensFollowers?: number;
+  web3SocialScore: number; // 0-100
+  isWeb3Verified: boolean;
 }
 

@@ -74,6 +74,33 @@ library MerkleProof {
     }
 }
 
+library ECDSA {
+    function recover(bytes32 hash, bytes memory signature) internal pure returns (address) {
+        if (signature.length != 65) {
+            return address(0);
+        }
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(signature, 0x20))
+            s := mload(add(signature, 0x40))
+            v := byte(0, mload(add(signature, 0x60)))
+        }
+        if (v < 27) {
+            v += 27;
+        }
+        if (v != 27 && v != 28) {
+            return address(0);
+        }
+        return ecrecover(hash, v, r, s);
+    }
+
+    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
+}
+
 contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     enum LaunchMode {
         FAIR_LAUNCH,
@@ -111,6 +138,20 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     uint256 public constant MIN_LOCK_DURATION = 180 days;
     // Mapping: Token Address => Unix Timestamp likuiditas boleh dicairkan
     mapping(address => uint256) public liquidityUnlockTimestamps;
+
+    // --- Advanced SocialFi Scaling State ---
+    // Authorized Paymaster address untuk ERC-4337 gasless claim sponsorship
+    address public authorizedPaymaster;
+    // Mapping: Token Address => Apakah likuiditas terkunci dialirkan ke Liquid Staking Vault
+    mapping(address => bool) public isLiquidityStaked;
+    // Mapping: Token Address => Pokok likuiditas yang didelegasikan ke Staking Vault
+    mapping(address => uint256) public stakedLiquidityAmount;
+    // Mapping: Token Address => Waktu panen yield terakhir
+    mapping(address => uint256) public lastYieldHarvestTimestamp;
+    // Mapping: Token Address => Akumulasi yield yang telah dipanen (in Wei)
+    mapping(address => uint256) public accruedYieldWei;
+    // Estimasi basis points APY liquid staking (420 bps = 4.2% APY)
+    uint256 public constant STAKING_APY_BPS = 420;
 
     // Events
     event TokenCreated(
@@ -175,6 +216,27 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         uint32 dstEid,
         bytes32 recipientOnDst,
         uint256 tokenAmount
+    );
+
+    event AuthorizedPaymasterUpdated(address indexed newPaymaster);
+
+    event GaslessBountyClaimed(
+        address indexed tokenAddress,
+        address indexed kolWallet,
+        uint256 tokenAmount,
+        address indexed paymaster
+    );
+
+    event LiquidityStaked(
+        address indexed tokenAddress,
+        uint256 amountStakedWei,
+        uint256 apyBps
+    );
+
+    event YieldHarvested(
+        address indexed tokenAddress,
+        uint256 yieldAmountWei,
+        address indexed recipient
     );
 
     /**
@@ -425,6 +487,15 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         require(block.timestamp >= liquidityUnlockTimestamps[tokenAddress], "TIMELOCK_ACTIVE: Liquidity is locked for 180 days");
         require(_msgSender() == config.creator || _msgSender() == owner(), "Unauthorized to release liquidity");
 
+        if (isLiquidityStaked[tokenAddress]) {
+            uint256 elapsed = block.timestamp - lastYieldHarvestTimestamp[tokenAddress];
+            if (elapsed > 0) {
+                uint256 finalYield = (stakedLiquidityAmount[tokenAddress] * STAKING_APY_BPS * elapsed) / (10000 * 365 days);
+                accruedYieldWei[tokenAddress] += finalYield;
+            }
+            isLiquidityStaked[tokenAddress] = false;
+        }
+
         uint256 amount = config.raisedAmountWei;
         config.raisedAmountWei = 0;
         payable(_msgSender()).transfer(amount);
@@ -459,5 +530,119 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         config.currentSupplySold += tokenAmount;
 
         emit CrossChainBountyClaimInitiated(tokenAddress, _msgSender(), dstEid, recipientOnDst, tokenAmount);
+    }
+
+    /**
+     * @notice Menetapkan Paymaster address yang terverifikasi untuk ERC-4337 gasless transactions
+     */
+    function setAuthorizedPaymaster(address _paymaster) external onlyOwner {
+        require(_paymaster != address(0), "Invalid paymaster address");
+        authorizedPaymaster = _paymaster;
+        emit AuthorizedPaymasterUpdated(_paymaster);
+    }
+
+    /**
+     * @notice Klaim reward bounty tanpa biaya gas (gasless) yang disponsori oleh platform paymaster
+     */
+    function claimBountyRewardGasless(
+        address tokenAddress,
+        uint256 tokenAmount,
+        bytes32[] calldata merkleProof,
+        address kolWallet,
+        uint256 deadline,
+        bytes calldata paymasterSignature
+    ) external nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.creator != address(0), "Token launch does not exist");
+        require(!config.isPaused, "Token launch is paused");
+        require(tokenAmount > 0, "Reward amount must be > 0");
+        require(kolWallet != address(0), "Invalid KOL wallet");
+        require(block.timestamp <= deadline, "PAYMASTER_SIGNATURE_EXPIRED");
+        require(!hasClaimedBounty[tokenAddress][kolWallet], "Bounty reward already claimed");
+        require(bountyMerkleRoots[tokenAddress] != bytes32(0), "Bounty root not set");
+        require(authorizedPaymaster != address(0), "No authorized paymaster set");
+
+        bytes32 structHash = keccak256(
+            abi.encodePacked(
+                tokenAddress,
+                kolWallet,
+                tokenAmount,
+                deadline,
+                block.chainid
+            )
+        );
+        bytes32 ethSignedHash = ECDSA.toEthSignedMessageHash(structHash);
+        address recoveredSigner = ECDSA.recover(ethSignedHash, paymasterSignature);
+        require(recoveredSigner == authorizedPaymaster, "INVALID_PAYMASTER_SIGNATURE: Unauthorized sponsor");
+
+        bytes32 leaf = keccak256(abi.encodePacked(kolWallet, tokenAmount));
+        require(
+            MerkleProof.verify(merkleProof, bountyMerkleRoots[tokenAddress], leaf),
+            "INVALID_BOUNTY_PROOF: Merkle proof verification failed"
+        );
+
+        hasClaimedBounty[tokenAddress][kolWallet] = true;
+        config.currentSupplySold += tokenAmount;
+
+        emit GaslessBountyClaimed(tokenAddress, kolWallet, tokenAmount, authorizedPaymaster);
+        emit BountyRewardClaimed(tokenAddress, kolWallet, tokenAmount);
+    }
+
+    /**
+     * @notice Pendelegasian likuiditas yang terkunci ke DeFi Liquid Staking Vault untuk menghasilkan yield 4.2% APY
+     */
+    function stakeLockedLiquidity(address tokenAddress) external nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.isGraduated, "Token not graduated");
+        require(liquidityUnlockTimestamps[tokenAddress] > block.timestamp, "Timelock already expired");
+        require(!isLiquidityStaked[tokenAddress], "Liquidity already staked");
+        require(_msgSender() == config.creator || _msgSender() == owner(), "Unauthorized to stake liquidity");
+        require(config.raisedAmountWei > 0, "No liquidity available to stake");
+
+        isLiquidityStaked[tokenAddress] = true;
+        stakedLiquidityAmount[tokenAddress] = config.raisedAmountWei;
+        lastYieldHarvestTimestamp[tokenAddress] = block.timestamp;
+
+        emit LiquidityStaked(tokenAddress, config.raisedAmountWei, STAKING_APY_BPS);
+    }
+
+    /**
+     * @notice Memanen bunga dividen (yield harvest) dari liquid staking vault tanpa mengganggu pokok likuiditas
+     */
+    function harvestYield(address tokenAddress) public nonReentrant returns (uint256 yieldAmount) {
+        require(isLiquidityStaked[tokenAddress], "Liquidity not staked");
+        uint256 lastHarvest = lastYieldHarvestTimestamp[tokenAddress];
+        require(block.timestamp > lastHarvest, "No time elapsed since last harvest");
+
+        uint256 elapsed = block.timestamp - lastHarvest;
+        uint256 principal = stakedLiquidityAmount[tokenAddress];
+        yieldAmount = (principal * STAKING_APY_BPS * elapsed) / (10000 * 365 days);
+        lastYieldHarvestTimestamp[tokenAddress] = block.timestamp;
+        accruedYieldWei[tokenAddress] += yieldAmount;
+
+        emit YieldHarvested(tokenAddress, yieldAmount, _msgSender());
+        return yieldAmount;
+    }
+
+    /**
+     * @notice Informasi detail kalkulasi yield staking likuiditas
+     */
+    function getStakingYieldInfo(address tokenAddress) external view returns (
+        bool isStaked,
+        uint256 stakedAmount,
+        uint256 apyBps,
+        uint256 totalAccruedYieldWei,
+        uint256 pendingYieldWei
+    ) {
+        isStaked = isLiquidityStaked[tokenAddress];
+        stakedAmount = stakedLiquidityAmount[tokenAddress];
+        apyBps = STAKING_APY_BPS;
+        totalAccruedYieldWei = accruedYieldWei[tokenAddress];
+        if (isStaked && block.timestamp > lastYieldHarvestTimestamp[tokenAddress]) {
+            uint256 elapsed = block.timestamp - lastYieldHarvestTimestamp[tokenAddress];
+            pendingYieldWei = (stakedAmount * STAKING_APY_BPS * elapsed) / (10000 * 365 days);
+        } else {
+            pendingYieldWei = 0;
+        }
     }
 }

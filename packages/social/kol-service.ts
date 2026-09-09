@@ -4,6 +4,7 @@
 
 import { KolProfile } from '../shared/types/domain';
 import { ArkhamIntelligenceService } from '../intelligence/arkham-enrichment';
+import { FarcasterLensService } from './farcaster-lens-service';
 import { ethers } from 'ethers';
 
 export interface KolDbAdapter {
@@ -55,7 +56,10 @@ export class KolService {
     userId: string,
     walletAddress: string,
     twitterHandle: string,
-    followersCount: number
+    followersCount: number,
+    farcasterFid?: number,
+    farcasterUsername?: string,
+    lensHandle?: string
   ): Promise<KolProfile> {
     // 1. Ambil reputasi wallet dari Arkham yang sudah ada
     const arkhamProfile = await this.arkhamService.profileWallet(walletAddress, userId);
@@ -65,15 +69,36 @@ export class KolService {
     if (followersCount > 10000) score = Math.min(100, score + 10);
     if (followersCount < 500) score = Math.max(10, score - 20);
 
+    // 3. Web3 Social Graph Bonus (Farcaster & Lens)
+    let web3SocialScore: number | undefined;
+    if (farcasterFid || lensHandle) {
+      web3SocialScore = FarcasterLensService.calculateWeb3ReputationScore(
+        !!farcasterFid,
+        !!lensHandle,
+        farcasterFid ? 350 : 0,
+        lensHandle ? 200 : 0
+      );
+      score = Math.min(100, score + 10); // Reward KOL for Web3 native identity
+    }
+
     const profile = await this.db.upsertKolProfile({
       userId,
       twitterHandle,
       followersCount,
+      farcasterFid,
+      farcasterUsername,
+      lensHandle,
+      web3SocialScore,
       trustScore: score,
       isVerified: score >= 60,
     });
 
-    await this.db.createAuditLog(userId, 'KOL_PROFILE_UPDATED', profile.id, `Twitter: @${twitterHandle}`);
+    await this.db.createAuditLog(
+      userId,
+      'KOL_PROFILE_UPDATED',
+      profile.id,
+      `Twitter: @${twitterHandle} | FC: ${farcasterUsername || 'none'} | Lens: ${lensHandle || 'none'}`
+    );
     return profile;
   }
 

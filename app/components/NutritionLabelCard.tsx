@@ -6,6 +6,8 @@ import { ShieldCheck, AlertCircle, ShieldAlert, CheckCircle2 } from 'lucide-reac
 export interface NutritionLabelProps {
   liquidityLocked: boolean;
   timeLockDays?: number;
+  yieldStakingActive?: boolean;
+  stakingApy?: number;
   mintRevoked: boolean;
   creatorTrustScore: number;
   overallTier: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -15,6 +17,8 @@ export interface NutritionLabelProps {
 export const NutritionLabelCard: React.FC<NutritionLabelProps> = ({
   liquidityLocked,
   timeLockDays,
+  yieldStakingActive,
+  stakingApy,
   mintRevoked,
   creatorTrustScore,
   overallTier,
@@ -71,6 +75,15 @@ export const NutritionLabelCard: React.FC<NutritionLabelProps> = ({
             <span className="text-muted">Time-Lock Vault:</span>
             <span style={{ color: 'var(--color-accent, #00E676)', fontWeight: 700 }}>
               🔒 {timeLockDays} HARI TERKUNCI (ANTI-RUG)
+            </span>
+          </div>
+        )}
+
+        {yieldStakingActive && (
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-muted">Liquid Staking:</span>
+            <span style={{ color: 'var(--color-accent, #00E676)', fontWeight: 700 }}>
+              🌾 {stakingApy || 4.2}% APY YIELD (ACTIVE)
             </span>
           </div>
         )}
