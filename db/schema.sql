@@ -215,6 +215,48 @@ CREATE TABLE launch_vesting_schedules (
 );
 
 -- ----------------------------------------------------------------------------
+-- 4.1 SOCIALFI & KOL REPUTATION EXTENSION
+-- ----------------------------------------------------------------------------
+CREATE TABLE kol_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    twitter_handle VARCHAR(100) UNIQUE,
+    twitter_id VARCHAR(100),
+    followers_count INT NOT NULL DEFAULT 0,
+    trust_score INT NOT NULL DEFAULT 50, -- 0 to 100
+    completed_bounties INT NOT NULL DEFAULT 0,
+    total_earned_usd NUMERIC(18, 4) NOT NULL DEFAULT 0,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE bounty_campaigns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    launch_id UUID NOT NULL REFERENCES token_launches(id) ON DELETE CASCADE,
+    creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    required_hashtag VARCHAR(100) NOT NULL,
+    min_followers INT NOT NULL DEFAULT 100,
+    reward_per_kol NUMERIC(36, 0) NOT NULL,
+    max_participants INT NOT NULL DEFAULT 10,
+    current_participants INT NOT NULL DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE bounty_claims (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_id UUID NOT NULL REFERENCES bounty_campaigns(id) ON DELETE CASCADE,
+    kol_id UUID NOT NULL REFERENCES kol_profiles(id) ON DELETE CASCADE,
+    proof_url TEXT NOT NULL,
+    verification_status VARCHAR(50) NOT NULL DEFAULT 'PENDING', -- PENDING, VERIFIED, REJECTED, CLAIMED
+    claimed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ----------------------------------------------------------------------------
 -- 5. TRADING DOMAIN (Binance Read+Trade Key Guard & Idempotency)
 -- ----------------------------------------------------------------------------
 CREATE TABLE binance_credentials (
