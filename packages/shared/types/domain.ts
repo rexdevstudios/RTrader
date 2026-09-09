@@ -249,6 +249,8 @@ export interface BountyClaim {
 export interface NutritionLabelRiskScore {
   tokenAddress: string;
   liquidityLocked: boolean;
+  liquidityUnlockTimestamp?: number;
+  timeLockDays?: number;
   mintRevoked: boolean;
   creatorTrustScore: number; // 0-100
   arkhamRiskScore: number; // 0-100

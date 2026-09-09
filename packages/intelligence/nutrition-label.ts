@@ -12,13 +12,17 @@ export class NutritionLabelService {
     tokenAddress: string,
     creatorWallet: string,
     isGraduatedOrLocked: boolean,
-    creatorTrustScore: number
+    creatorTrustScore: number,
+    unlockTimestamp?: number
   ): Promise<NutritionLabelRiskScore> {
     const reasons: string[] = [];
     const arkhamProfile = await this.arkham.profileWallet(creatorWallet, 'SYSTEM_LABEL');
 
     const liquidityLocked = isGraduatedOrLocked;
     const mintRevoked = true; // Sesuai BondingCurveLaunchpad.sol yang tidak memiliki fungsi mint sepihak
+    const timeLockDays = unlockTimestamp
+      ? Math.max(0, Math.floor((unlockTimestamp - Math.floor(Date.now() / 1000)) / 86400))
+      : (isGraduatedOrLocked ? 180 : 0);
 
     if (!liquidityLocked) {
       reasons.push('Liquidity is still in bonding curve (pre-graduation)');
@@ -40,6 +44,8 @@ export class NutritionLabelService {
     return {
       tokenAddress,
       liquidityLocked,
+      liquidityUnlockTimestamp: unlockTimestamp,
+      timeLockDays,
       mintRevoked,
       creatorTrustScore,
       arkhamRiskScore: arkhamProfile.riskPassportScore,

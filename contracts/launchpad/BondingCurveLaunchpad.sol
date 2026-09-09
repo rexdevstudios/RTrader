@@ -107,6 +107,10 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     mapping(address => bytes32) public bountyMerkleRoots;
     // Mapping: Token Address => KOL Wallet => hasClaimed
     mapping(address => mapping(address => bool)) public hasClaimedBounty;
+    // Anti-Rugpull Time-Lock Vault: Minimum 180 hari terkunci on-chain setelah kelulusan
+    uint256 public constant MIN_LOCK_DURATION = 180 days;
+    // Mapping: Token Address => Unix Timestamp likuiditas boleh dicairkan
+    mapping(address => uint256) public liquidityUnlockTimestamps;
 
     // Events
     event TokenCreated(
@@ -157,6 +161,20 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     event BountyMerkleRootSet(
         address indexed tokenAddress,
         bytes32 newRoot
+    );
+
+    event LiquidityTimeLocked(
+        address indexed tokenAddress,
+        uint256 unlockTimestamp,
+        uint256 lockedAmountWei
+    );
+
+    event CrossChainBountyClaimInitiated(
+        address indexed tokenAddress,
+        address indexed kolWallet,
+        uint32 dstEid,
+        bytes32 recipientOnDst,
+        uint256 tokenAmount
     );
 
     /**
@@ -233,10 +251,13 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
             payable(_msgSender()).transfer(msg.value - costWei);
         }
 
-        // 5. Liquidity Graduation Condition Check
+        // 5. Liquidity Graduation Condition Check & 180-Day Time-Lock Vault Activation
         if (config.raisedAmountWei >= config.graduationThresholdWei) {
             config.isGraduated = true;
+            uint256 unlockTime = block.timestamp + MIN_LOCK_DURATION;
+            liquidityUnlockTimestamps[tokenAddress] = unlockTime;
             emit TokenGraduated(tokenAddress, config.raisedAmountWei, config.currentSupplySold);
+            emit LiquidityTimeLocked(tokenAddress, unlockTime, config.raisedAmountWei);
         }
     }
 
@@ -308,7 +329,10 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
 
         if (config.raisedAmountWei >= config.graduationThresholdWei) {
             config.isGraduated = true;
+            uint256 unlockTime = block.timestamp + MIN_LOCK_DURATION;
+            liquidityUnlockTimestamps[tokenAddress] = unlockTime;
             emit TokenGraduated(tokenAddress, config.raisedAmountWei, config.currentSupplySold);
+            emit LiquidityTimeLocked(tokenAddress, unlockTime, config.raisedAmountWei);
         }
     }
 
@@ -371,5 +395,69 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         config.currentSupplySold += tokenAmount;
 
         emit BountyRewardClaimed(tokenAddress, _msgSender(), tokenAmount);
+    }
+
+    /**
+     * @notice Informasi status Time-Lock Vault likuiditas
+     */
+    function getLiquidityLockInfo(address tokenAddress) external view returns (
+        bool isLocked,
+        uint256 unlockTimestamp,
+        uint256 timeRemaining
+    ) {
+        uint256 unlockTime = liquidityUnlockTimestamps[tokenAddress];
+        if (unlockTime == 0) {
+            return (false, 0, 0);
+        }
+        if (block.timestamp >= unlockTime) {
+            return (false, unlockTime, 0);
+        }
+        return (true, unlockTime, unlockTime - block.timestamp);
+    }
+
+    /**
+     * @notice Pencairan likuiditas setelah periode Time-Lock Vault (180 hari) berakhir
+     */
+    function releaseGraduatedLiquidity(address tokenAddress) external nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.isGraduated, "Token not graduated");
+        require(liquidityUnlockTimestamps[tokenAddress] > 0, "No timelock registered");
+        require(block.timestamp >= liquidityUnlockTimestamps[tokenAddress], "TIMELOCK_ACTIVE: Liquidity is locked for 180 days");
+        require(_msgSender() == config.creator || _msgSender() == owner(), "Unauthorized to release liquidity");
+
+        uint256 amount = config.raisedAmountWei;
+        config.raisedAmountWei = 0;
+        payable(_msgSender()).transfer(amount);
+    }
+
+    /**
+     * @notice Klaim alokasi bounty lintas rantai berbasis LayerZero v2 standard
+     */
+    function claimBountyRewardCrossChain(
+        address tokenAddress,
+        uint256 tokenAmount,
+        bytes32[] calldata merkleProof,
+        uint32 dstEid,
+        bytes32 recipientOnDst
+    ) external payable nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.creator != address(0), "Token launch does not exist");
+        require(!config.isPaused, "Token launch is paused");
+        require(tokenAmount > 0, "Reward amount must be > 0");
+        require(dstEid > 0, "Invalid destination endpoint ID");
+        require(recipientOnDst != bytes32(0), "Invalid recipient on destination");
+        require(!hasClaimedBounty[tokenAddress][_msgSender()], "Bounty reward already claimed");
+        require(bountyMerkleRoots[tokenAddress] != bytes32(0), "Bounty root not set");
+
+        bytes32 leaf = keccak256(abi.encodePacked(_msgSender(), tokenAmount));
+        require(
+            MerkleProof.verify(merkleProof, bountyMerkleRoots[tokenAddress], leaf),
+            "INVALID_BOUNTY_PROOF: Merkle proof verification failed"
+        );
+
+        hasClaimedBounty[tokenAddress][_msgSender()] = true;
+        config.currentSupplySold += tokenAmount;
+
+        emit CrossChainBountyClaimInitiated(tokenAddress, _msgSender(), dstEid, recipientOnDst, tokenAmount);
     }
 }

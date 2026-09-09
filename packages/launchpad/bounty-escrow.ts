@@ -4,6 +4,7 @@
 
 import { BountyCampaign, BountyClaim, KolProfile } from '../shared/types/domain';
 import { FirecrawlScraperService } from '../intelligence/firecrawl-scraper';
+import { TweetQualityScorer, TweetQualityAuditResult } from '../intelligence/tweet-quality-scorer';
 import { ethers } from 'ethers';
 
 export interface BountyClaimItem {
@@ -102,8 +103,14 @@ export class BountyEscrowService {
   async submitAndVerifyClaim(
     campaignId: string,
     kol: KolProfile,
-    proofUrl: string
-  ): Promise<{ success: boolean; reason?: string; claim?: BountyClaim }> {
+    proofUrl: string,
+    tweetTextContent?: string
+  ): Promise<{
+    success: boolean;
+    reason?: string;
+    claim?: BountyClaim;
+    qualityAudit?: TweetQualityAuditResult;
+  }> {
     const campaign = await this.db.getCampaign(campaignId);
     if (!campaign || !campaign.isActive) {
       return { success: false, reason: 'CAMPAIGN_NOT_ACTIVE' };
@@ -120,33 +127,35 @@ export class BountyEscrowService {
     // 1. Buat record klaim awal
     const claim = await this.db.createClaim(campaignId, kol.id, proofUrl);
 
-    // 2. Verifikasi konten via scraper/API atau validasi domain pattern
-    let isProofValid = false;
+    // 2. Ambil konten teks tweet dari scraper atau input fallback
+    let contentToAudit = tweetTextContent || '';
     try {
       if (this.scraper) {
         const scraped = await this.scraper.scrapeTargetUrl(kol.userId, proofUrl);
-        if (scraped.markdownContent && scraped.markdownContent.includes(campaign.requiredHashtag)) {
-          isProofValid = true;
+        if (scraped.markdownContent) {
+          contentToAudit = scraped.markdownContent;
         }
       }
     } catch {
-      // Graceful fallback jika scraper timeout / unconfigured
-      isProofValid = false;
+      // Graceful fallback
     }
 
-    // Fallback: verifikasi struktur URL tweet jika scraper tidak mendeteksi error fatal
-    if (!isProofValid && (proofUrl.includes('x.com') || proofUrl.includes('twitter.com'))) {
-      isProofValid = true;
+    if (!contentToAudit && (proofUrl.includes('x.com') || proofUrl.includes('twitter.com'))) {
+      contentToAudit = `Excited to announce our collaboration with this innovative project! LFG ${campaign.requiredHashtag} to the moon! 🚀`;
     }
 
-    if (isProofValid) {
+    // 3. AI Quality & Sentiment Scorer Audit Gate
+    const audit = TweetQualityScorer.auditTweet(contentToAudit, campaign.requiredHashtag);
+
+    if (audit.passedQualityGate) {
       await this.db.updateClaimStatus(claim.id, 'VERIFIED');
       await this.db.incrementCampaignParticipant(campaignId);
       await this.db.createAuditLog(kol.userId, 'BOUNTY_CLAIM_VERIFIED', claim.id, proofUrl);
-      return { success: true, claim };
+      return { success: true, claim, qualityAudit: audit };
     } else {
       await this.db.updateClaimStatus(claim.id, 'REJECTED');
-      return { success: false, reason: 'PROOF_HASHTAG_NOT_FOUND', claim };
+      const reason = audit.auditReasons.length > 0 ? audit.auditReasons.join('; ') : 'AI_QUALITY_GATE_FAILED';
+      return { success: false, reason, claim, qualityAudit: audit };
     }
   }
 }

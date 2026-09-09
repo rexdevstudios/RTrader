@@ -48,10 +48,12 @@ export default function KolHubPage() {
   const [isVerifyingProof, setIsVerifyingProof] = useState(false);
   const [verificationFeedback, setVerificationFeedback] = useState<string | null>(null);
 
-  // Merkle Claim
+  // Merkle Claim & LayerZero
   const [merkleProofData, setMerkleProofData] = useState<any>(null);
   const [isClaimingOnChain, setIsClaimingOnChain] = useState(false);
   const [claimFeedback, setClaimFeedback] = useState<string | null>(null);
+  const [aiAuditResult, setAiAuditResult] = useState<any>(null);
+  const [claimDestination, setClaimDestination] = useState<'BASE' | 'ARBITRUM' | 'OPTIMISM'>('BASE');
 
   // Creator form
   const [newTitle, setNewTitle] = useState('');
@@ -152,10 +154,16 @@ export default function KolHubPage() {
       });
       const json = await res.json();
       if (json.success) {
-        setVerificationFeedback('🎉 TWEET TERVERIFIKASI! Bukti lolos validasi hashtag otomatis.');
+        setVerificationFeedback('🎉 TWEET TERVERIFIKASI! Bukti lolos audit AI & validasi hashtag otomatis.');
+        if (json.data?.qualityAudit) {
+          setAiAuditResult(json.data.qualityAudit);
+        }
         checkMerkleProof();
       } else {
         setVerificationFeedback(`❌ Verifikasi Ditolak: ${json.error?.message || 'Hashtag tidak ditemukan'}`);
+        if (json.data?.qualityAudit) {
+          setAiAuditResult(json.data.qualityAudit);
+        }
       }
     } catch (err) {
       setVerificationFeedback(`⚠️ Error verifikasi: ${(err as Error).message}`);
@@ -181,9 +189,13 @@ export default function KolHubPage() {
     setIsClaimingOnChain(true);
     setClaimFeedback(null);
     try {
-      // Simulasi panggilan on-chain BondingCurveLaunchpad.claimBountyReward
+      // Simulasi panggilan on-chain BondingCurveLaunchpad.claimBountyReward / claimBountyRewardCrossChain
       await new Promise((r) => setTimeout(r, 1200));
-      setClaimFeedback('✅ 1,000 TOKEN REWARD BERHASIL DIKLAIM ON-CHAIN! Transaksi tercatat di Base Mainnet.');
+      if (claimDestination === 'BASE') {
+        setClaimFeedback('✅ 1,000 TOKEN REWARD BERHASIL DIKLAIM ON-CHAIN! Transaksi tercatat di Base Mainnet.');
+      } else {
+        setClaimFeedback(`✅ 1,000 TOKEN REWARD DIKLAIM VIA LAYERZERO v2! Pesan cross-chain berhasil dikirim ke ${claimDestination}.`);
+      }
     } catch (err) {
       setClaimFeedback(`❌ Gagal klaim on-chain: ${(err as Error).message}`);
     } finally {
@@ -480,6 +492,32 @@ export default function KolHubPage() {
                 {verificationFeedback}
               </div>
             )}
+
+            {aiAuditResult && (
+              <div
+                style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255,255,255,0.02)',
+                  border: '1px solid var(--color-border)',
+                  fontSize: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span className="text-muted">AI Tweet Quality Score:</span>
+                  <strong style={{ color: aiAuditResult.passedQualityGate ? '#10B981' : '#EF4444' }}>
+                    {aiAuditResult.qualityScore}/100 ({aiAuditResult.sentiment})
+                  </strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Anti-Bot & Spam Filter:</span>
+                  <span style={{ color: aiAuditResult.isSpamOrBot ? '#EF4444' : '#10B981', fontWeight: 700 }}>
+                    {aiAuditResult.isSpamOrBot ? '🚨 BOT / SPAM' : '✓ LOLOS FILTER'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-panel" style={{ padding: '24px', borderRadius: '12px' }}>
@@ -505,6 +543,39 @@ export default function KolHubPage() {
               </div>
             </div>
 
+            {/* LayerZero Cross-Chain Claim Options */}
+            <div style={{ marginTop: '16px' }}>
+              <span className="text-muted" style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>
+                Pilih Jaringan Klaim (LayerZero v2):
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setClaimDestination('BASE')}
+                  className={claimDestination === 'BASE' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ flex: 1, padding: '6px', fontSize: '11px', justifyContent: 'center' }}
+                >
+                  Base (Direct)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClaimDestination('ARBITRUM')}
+                  className={claimDestination === 'ARBITRUM' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ flex: 1, padding: '6px', fontSize: '11px', justifyContent: 'center' }}
+                >
+                  Arbitrum
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClaimDestination('OPTIMISM')}
+                  className={claimDestination === 'OPTIMISM' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ flex: 1, padding: '6px', fontSize: '11px', justifyContent: 'center' }}
+                >
+                  Optimism
+                </button>
+              </div>
+            </div>
+
             <div style={{ marginTop: '20px' }}>
               <button
                 onClick={handleClaimOnChain}
@@ -513,7 +584,13 @@ export default function KolHubPage() {
                 style={{ width: '100%', justifyContent: 'center' }}
               >
                 <Coins size={16} />
-                <span>{isClaimingOnChain ? 'Memproses On-Chain...' : 'Klaim 1,000 Token Reward (Gas-Efisien)'}</span>
+                <span>
+                  {isClaimingOnChain
+                    ? 'Memproses On-Chain...'
+                    : claimDestination === 'BASE'
+                    ? 'Klaim 1,000 Token Reward (Base)'
+                    : `Klaim ke ${claimDestination} (via LayerZero)`}
+                </span>
               </button>
             </div>
 

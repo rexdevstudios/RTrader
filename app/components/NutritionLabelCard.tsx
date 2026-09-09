@@ -5,6 +5,7 @@ import { ShieldCheck, AlertCircle, ShieldAlert, CheckCircle2 } from 'lucide-reac
 
 export interface NutritionLabelProps {
   liquidityLocked: boolean;
+  timeLockDays?: number;
   mintRevoked: boolean;
   creatorTrustScore: number;
   overallTier: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -13,6 +14,7 @@ export interface NutritionLabelProps {
 
 export const NutritionLabelCard: React.FC<NutritionLabelProps> = ({
   liquidityLocked,
+  timeLockDays,
   mintRevoked,
   creatorTrustScore,
   overallTier,
@@ -63,6 +65,15 @@ export const NutritionLabelCard: React.FC<NutritionLabelProps> = ({
             {liquidityLocked ? 'LOCKED (100% SAFE)' : 'IN BONDING CURVE'}
           </span>
         </div>
+
+        {timeLockDays !== undefined && timeLockDays > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-muted">Time-Lock Vault:</span>
+            <span style={{ color: 'var(--color-accent, #00E676)', fontWeight: 700 }}>
+              🔒 {timeLockDays} HARI TERKUNCI (ANTI-RUG)
+            </span>
+          </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span className="text-muted">Mint Function:</span>
