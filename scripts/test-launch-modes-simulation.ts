@@ -70,7 +70,7 @@ async function runLaunchModesSimulation() {
     totalSupply: '1000000000',
     creatorAllocationPct: 10,
     socialLinks: {
-      whitelist_wallets: '0xAngel111111111111111111111111111111111111,0xAngel222222222222222222222222222222222222',
+      whitelist_wallets: '0x1111111111111111111111111111111111111111,0x2222222222222222222222222222222222222222',
     },
   });
   if (angelDraft.launchMode === 'WHITELIST_PRIVATE' && angelDraft.merkleRoot !== '0x0000000000000000000000000000000000000000000000000000000000000000') {

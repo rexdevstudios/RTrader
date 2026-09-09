@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet, Users, Tag, Sparkles } from 'lucide-react';
 import { NutritionLabelCard } from '../components/NutritionLabelCard';
+import { AngelDealRoomModal } from '../components/AngelDealRoomModal';
 
 export type LaunchModeType = 'BONDING_CURVE' | 'FAIR_LAUNCH' | 'WHITELIST_PRIVATE' | 'FIXED_PRICE' | 'COMMUNITY_PRELAUNCH';
 
 export default function LaunchpadPage() {
   const { isConnected, userRole, walletAddress, connectMetaMask, isConnecting } = useAuth();
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [isAngelModalOpen, setIsAngelModalOpen] = useState(false);
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [mode, setMode] = useState<LaunchModeType>('BONDING_CURVE');
@@ -89,16 +91,31 @@ export default function LaunchpadPage() {
           </p>
         </div>
         <div className="flex-row gap-sm items-center">
+          <button
+            type="button"
+            onClick={() => setIsAngelModalOpen(true)}
+            className="badge badge-admin"
+            style={{ cursor: 'pointer', border: '1px solid #D500F9', color: '#E040FB', backgroundColor: '#1A0826', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Users size={14} /> 👑 ANGEL DEAL ROOM
+          </button>
           {userRole === 'SYSTEM_ADMIN' && (
             <span className="badge badge-admin">
               👑 LAUNCHPAD CONTROLLER ACTIVE
             </span>
           )}
           <span className="badge badge-trader" style={{ border: '1px solid #00E5FF', color: '#00E5FF', backgroundColor: '#071A2E' }}>
-            BONDING CURVE ACTIVE
+            5 MODES ACTIVE
           </span>
         </div>
       </div>
+
+      {/* Angel Deal Room Modal */}
+      <AngelDealRoomModal
+        isOpen={isAngelModalOpen}
+        onClose={() => setIsAngelModalOpen(false)}
+        connectedWallet={walletAddress}
+      />
 
       <div className="grid-2">
         {/* Left Column: Interactive Token Launch Form */}

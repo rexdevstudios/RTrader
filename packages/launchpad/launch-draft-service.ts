@@ -18,6 +18,79 @@ export class LaunchDraftService {
     private riskPassportService?: LaunchRiskPassportService
   ) {}
 
+  static hashWallet(wallet: string): string {
+    if (!ethers.isAddress(wallet)) {
+      throw new Error(`INVALID_WALLET_ADDRESS: ${wallet} is not a valid EVM address`);
+    }
+    return ethers.solidityPackedKeccak256(['address'], [ethers.getAddress(wallet)]);
+  }
+
+  static generateMerkleTree(wallets: string[]): { root: string; getProof: (wallet: string) => string[] } {
+    const cleaned = wallets
+      .map((w) => w.trim())
+      .filter((w) => ethers.isAddress(w))
+      .map((w) => ethers.getAddress(w));
+    if (cleaned.length === 0) {
+      return {
+        root: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        getProof: () => [],
+      };
+    }
+
+    const leaves = cleaned.map((w) => LaunchDraftService.hashWallet(w));
+    if (leaves.length === 1) {
+      return {
+        root: leaves[0],
+        getProof: (w) => (ethers.isAddress(w) && ethers.getAddress(w) === cleaned[0] ? [] : []),
+      };
+    }
+
+    // Pairwise sort hash
+    const combine = (a: string, b: string) => {
+      return a <= b
+        ? ethers.keccak256(ethers.concat([a, b]))
+        : ethers.keccak256(ethers.concat([b, a]));
+    };
+
+    let currentLevel = [...leaves];
+    const treeLevels: string[][] = [currentLevel];
+
+    while (currentLevel.length > 1) {
+      const nextLevel: string[] = [];
+      for (let i = 0; i < currentLevel.length; i += 2) {
+        if (i + 1 < currentLevel.length) {
+          nextLevel.push(combine(currentLevel[i], currentLevel[i + 1]));
+        } else {
+          nextLevel.push(currentLevel[i]);
+        }
+      }
+      currentLevel = nextLevel;
+      treeLevels.push(currentLevel);
+    }
+
+    const root = treeLevels[treeLevels.length - 1][0];
+
+    const getProof = (targetWallet: string): string[] => {
+      if (!ethers.isAddress(targetWallet)) return [];
+      const targetHash = LaunchDraftService.hashWallet(targetWallet);
+      let index = treeLevels[0].indexOf(targetHash);
+      if (index === -1) return [];
+
+      const proof: string[] = [];
+      for (let level = 0; level < treeLevels.length - 1; level++) {
+        const isRight = index % 2 === 1;
+        const pairIndex = isRight ? index - 1 : index + 1;
+        if (pairIndex < treeLevels[level].length) {
+          proof.push(treeLevels[level][pairIndex]);
+        }
+        index = Math.floor(index / 2);
+      }
+      return proof;
+    };
+
+    return { root, getProof };
+  }
+
   async createDraft(actorId: string, creatorWallet: string, req: CreateLaunchDraftRequest) {
     if (!req.name || !req.ticker) {
       throw new Error('INVALID_DRAFT_INPUT: Token name and ticker are required');
@@ -27,14 +100,11 @@ export class LaunchDraftService {
 
     // 1. Validasi spesifik per-mode
     if (req.launchMode === 'WHITELIST_PRIVATE') {
-      // Validasi atau kalkulasi Merkle Root untuk Angel Investor Whitelist
       const rawWallets = req.socialLinks?.['whitelist_wallets'];
       const whitelistAddresses = rawWallets ? rawWallets.split(',').map((w) => w.trim()).filter(Boolean) : [];
       if (whitelistAddresses.length > 0) {
-        const leaves = whitelistAddresses.map((addr) =>
-          ethers.keccak256(ethers.toUtf8Bytes(addr.toLowerCase()))
-        );
-        merkleRoot = leaves[0]; // Representasi root leaf
+        const tree = LaunchDraftService.generateMerkleTree(whitelistAddresses);
+        merkleRoot = tree.root;
       }
     } else if (req.launchMode === 'BONDING_CURVE' || req.launchMode === 'FAIR_LAUNCH') {
       if (!req.bondingCurveConfig) {

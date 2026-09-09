@@ -59,6 +59,21 @@ abstract contract ReentrancyGuard {
     }
 }
 
+library MerkleProof {
+    function verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) internal pure returns (bool) {
+        bytes32 computedHash = leaf;
+        for (uint256 i = 0; i < proof.length; i++) {
+            bytes32 proofElement = proof[i];
+            if (computedHash <= proofElement) {
+                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+            } else {
+                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+            }
+        }
+        return computedHash == root;
+    }
+}
+
 contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     enum LaunchMode {
         FAIR_LAUNCH,
@@ -115,6 +130,19 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     );
 
     event LaunchPaused(address indexed tokenAddress, bool isPaused);
+
+    event WhitelistTokenPurchased(
+        address indexed tokenAddress,
+        address indexed buyer,
+        uint256 amountTokens,
+        uint256 costWei
+    );
+
+    event ReferralFeePaid(
+        address indexed tokenAddress,
+        address indexed referralWallet,
+        uint256 feeAmountWei
+    );
 
     /**
      * @notice Pendaftaran peluncuran token baru di Bonding Curve Launchpad
@@ -191,6 +219,78 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         }
 
         // 5. Liquidity Graduation Condition Check
+        if (config.raisedAmountWei >= config.graduationThresholdWei) {
+            config.isGraduated = true;
+            emit TokenGraduated(tokenAddress, config.raisedAmountWei, config.currentSupplySold);
+        }
+    }
+
+    /**
+     * @notice Pembelian alokasi Angel Investor menggunakan verifikasi kriptografis Merkle Proof
+     */
+    function buyWhitelistTokens(
+        address tokenAddress,
+        uint256 tokenAmount,
+        bytes32[] calldata merkleProof
+    ) external payable nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.creator != address(0), "Token launch does not exist");
+        require(!config.isGraduated, "Token already graduated");
+        require(!config.isPaused, "Token launch is paused");
+        require(config.mode == LaunchMode.WHITELIST_PRIVATE, "Not in whitelist private mode");
+
+        // Verifikasi Merkle Proof untuk Angel Investor
+        bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
+        require(MerkleProof.verify(merkleProof, config.merkleRoot, leaf), "INVALID_MERKLE_PROOF: Not whitelisted");
+
+        uint256 costWei = calculateCost(tokenAddress, tokenAmount);
+        require(msg.value >= costWei, "INSUFFICIENT_ETH_SENT");
+
+        config.raisedAmountWei += costWei;
+        config.currentSupplySold += tokenAmount;
+        walletPurchases[tokenAddress][_msgSender()] += tokenAmount;
+
+        emit WhitelistTokenPurchased(tokenAddress, _msgSender(), tokenAmount, costWei);
+
+        if (msg.value > costWei) {
+            payable(_msgSender()).transfer(msg.value - costWei);
+        }
+    }
+
+    /**
+     * @notice Pembelian token dengan pembagian fee on-chain 0.25% untuk referral KOL
+     */
+    function buyTokensWithReferral(
+        address tokenAddress,
+        uint256 tokenAmount,
+        address payable referralWallet
+    ) external payable nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.creator != address(0), "Token launch does not exist");
+        require(!config.isGraduated, "Token already graduated");
+        require(!config.isPaused, "Token launch is paused");
+        require(tokenAmount > 0, "Amount must be > 0");
+
+        uint256 costWei = calculateCost(tokenAddress, tokenAmount);
+        require(msg.value >= costWei, "INSUFFICIENT_ETH_SENT");
+
+        // Hitung referral reward 0.25% (25 basis points)
+        uint256 referralFee = (costWei * 25) / 10000;
+        if (referralWallet != address(0) && referralWallet != _msgSender() && referralFee > 0) {
+            referralWallet.transfer(referralFee);
+            emit ReferralFeePaid(tokenAddress, referralWallet, referralFee);
+        }
+
+        config.raisedAmountWei += (costWei - referralFee);
+        config.currentSupplySold += tokenAmount;
+        walletPurchases[tokenAddress][_msgSender()] += tokenAmount;
+
+        emit TokenPurchased(tokenAddress, _msgSender(), tokenAmount, costWei, config.raisedAmountWei);
+
+        if (msg.value > costWei) {
+            payable(_msgSender()).transfer(msg.value - costWei);
+        }
+
         if (config.raisedAmountWei >= config.graduationThresholdWei) {
             config.isGraduated = true;
             emit TokenGraduated(tokenAddress, config.raisedAmountWei, config.currentSupplySold);
