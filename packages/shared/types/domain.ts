@@ -208,3 +208,51 @@ export function validateFairLaunchPurchase(
     );
   }
 }
+
+// ----------------------------------------------------------------------------
+// 4. SOCIALFI & KOL DOMAIN CONTRACTS
+// ----------------------------------------------------------------------------
+export interface KolProfile {
+  id: string;
+  userId: string;
+  twitterHandle?: string;
+  followersCount: number;
+  trustScore: number;
+  completedBounties: number;
+  totalEarnedUsd: number;
+  isVerified: boolean;
+}
+
+export interface BountyCampaign {
+  id: string;
+  launchId: string;
+  creatorId: string;
+  title: string;
+  requiredHashtag: string;
+  minFollowers: number;
+  rewardPerKol: bigint;
+  maxParticipants: number;
+  currentParticipants: number;
+  isActive: boolean;
+}
+
+export interface BountyClaim {
+  id: string;
+  campaignId: string;
+  kolId: string;
+  proofUrl: string;
+  verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'CLAIMED';
+  claimedAt?: Date;
+  createdAt: Date;
+}
+
+export interface NutritionLabelRiskScore {
+  tokenAddress: string;
+  liquidityLocked: boolean;
+  mintRevoked: boolean;
+  creatorTrustScore: number; // 0-100
+  arkhamRiskScore: number; // 0-100
+  overallRiskTier: 'LOW' | 'MEDIUM' | 'HIGH';
+  reasons: string[];
+}
+
