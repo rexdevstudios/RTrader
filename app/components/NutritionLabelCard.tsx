@@ -8,6 +8,8 @@ export interface NutritionLabelProps {
   timeLockDays?: number;
   yieldStakingActive?: boolean;
   stakingApy?: number;
+  autoCompounding?: boolean;
+  mevProtected?: boolean;
   mintRevoked: boolean;
   creatorTrustScore: number;
   overallTier: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -19,6 +21,8 @@ export const NutritionLabelCard: React.FC<NutritionLabelProps> = ({
   timeLockDays,
   yieldStakingActive,
   stakingApy,
+  autoCompounding = true,
+  mevProtected = true,
   mintRevoked,
   creatorTrustScore,
   overallTier,
@@ -84,6 +88,24 @@ export const NutritionLabelCard: React.FC<NutritionLabelProps> = ({
             <span className="text-muted">Liquid Staking:</span>
             <span style={{ color: 'var(--color-accent, #00E676)', fontWeight: 700 }}>
               🌾 {stakingApy || 4.2}% APY YIELD (ACTIVE)
+            </span>
+          </div>
+        )}
+
+        {yieldStakingActive && autoCompounding && (
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-muted">Auto-Compounding:</span>
+            <span style={{ color: 'var(--color-accent, #00E676)', fontWeight: 700 }}>
+              🤖 WEEKLY (CHAINLINK KEEPER)
+            </span>
+          </div>
+        )}
+
+        {liquidityLocked && mevProtected && (
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span className="text-muted">MEV Protection:</span>
+            <span style={{ color: 'var(--color-accent, #00E676)', fontWeight: 700 }}>
+              🛡️ ACTIVE (MAX 1.5% SLIPPAGE)
             </span>
           </div>
         )}

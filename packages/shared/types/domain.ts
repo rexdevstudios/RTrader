@@ -221,6 +221,7 @@ export interface KolProfile {
   farcasterUsername?: string;
   lensHandle?: string;
   web3SocialScore?: number;
+  stakingBoosterMultiplier?: number;
   trustScore: number;
   completedBounties: number;
   totalEarnedUsd: number;
@@ -258,6 +259,9 @@ export interface NutritionLabelRiskScore {
   yieldStakingActive?: boolean;
   stakingApy?: number;
   accruedYieldWei?: bigint;
+  autoCompoundingActive?: boolean;
+  mevProtectedGraduation?: boolean;
+  maxGraduationSlippagePct?: number;
   mintRevoked: boolean;
   creatorTrustScore: number; // 0-100
   arkhamRiskScore: number; // 0-100
@@ -287,4 +291,21 @@ export interface Web3SocialProfile {
   web3SocialScore: number; // 0-100
   isWeb3Verified: boolean;
 }
+
+export interface UpkeepStatus {
+  tokenAddress: string;
+  upkeepNeeded: boolean;
+  lastHarvestTimestamp: number;
+  nextHarvestTimestamp: number;
+  pendingYieldWei: bigint;
+}
+
+export interface MevProtectionQuote {
+  tokenAddress: string;
+  liquidityWei: bigint;
+  recommendedRpc: string;
+  maxSlippageBps: number;
+  isProtected: boolean;
+}
+
 

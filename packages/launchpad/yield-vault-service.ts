@@ -82,4 +82,42 @@ export class YieldVaultService {
       communityEarnedEth: projection.communityShareEth,
     };
   }
+
+  /**
+   * Hitung kalkulasi yield dengan insentif tier-based booster KOL
+   * Bronze: 1.0x (4.2% APY)
+   * Silver: 1.15x (4.83% APY)
+   * Gold: 1.25x (5.25% APY)
+   * Web3 Native Verified: +0.10x (hingga 1.35x = 5.67% APY)
+   */
+  static calculateBoostedYield(
+    principalWei: bigint,
+    tier: 'BRONZE' | 'SILVER' | 'GOLD' = 'BRONZE',
+    isWeb3Verified: boolean = false,
+    elapsedSeconds: number = 180 * 24 * 3600
+  ) {
+    let multiplier = 1.0;
+    if (tier === 'SILVER') multiplier = 1.15;
+    else if (tier === 'GOLD') multiplier = 1.25;
+
+    if (isWeb3Verified) {
+      multiplier += 0.1;
+    }
+
+    const baseApy = Number(YieldVaultService.DEFAULT_APY_BPS) / 100; // 4.2%
+    const effectiveApy = Number((baseApy * multiplier).toFixed(2));
+    const effectiveApyBps = BigInt(Math.round(effectiveApy * 100));
+
+    const boostedYieldWei =
+      (principalWei * effectiveApyBps * BigInt(elapsedSeconds)) /
+      (10000n * YieldVaultService.SECONDS_PER_YEAR);
+
+    return {
+      baseApy,
+      effectiveApy,
+      boosterMultiplier: multiplier,
+      boostedYieldWei,
+      boostedYieldEth: ethers.formatEther(boostedYieldWei),
+    };
+  }
 }

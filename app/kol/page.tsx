@@ -18,6 +18,7 @@ import {
   Lock,
   Zap,
   Globe,
+  Clock,
 } from 'lucide-react';
 import HeaderNav from '../components/HeaderNav';
 
@@ -300,6 +301,12 @@ export default function KolHubPage() {
 
   const trustScore = kolProfile?.trustScore || 80;
   const tier = trustScore >= 85 ? 'GOLD' : trustScore >= 65 ? 'SILVER' : 'BRONZE';
+  const isWeb3Linked = Boolean(kolProfile?.farcasterUsername || kolProfile?.lensHandle);
+  const boosterMultiplier = kolProfile?.stakingBoosterMultiplier || (
+    tier === 'GOLD' ? (isWeb3Linked ? 1.35 : 1.25) :
+    tier === 'SILVER' ? (isWeb3Linked ? 1.25 : 1.15) :
+    (isWeb3Linked ? 1.10 : 1.00)
+  );
 
   return (
     <div className="container" style={{ paddingBottom: '60px' }}>
@@ -498,6 +505,9 @@ export default function KolHubPage() {
                   </span>
                   <span className="badge" style={{ backgroundColor: 'rgba(255,214,0,0.15)', color: '#FFD600', border: '1px solid rgba(255,214,0,0.3)', fontSize: '10px' }}>
                     ⚡ Paymaster Eligible
+                  </span>
+                  <span className="badge" style={{ backgroundColor: 'rgba(56,189,248,0.15)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.3)', fontSize: '10px' }}>
+                    ⚡ {boosterMultiplier.toFixed(2)}x Yield Booster ({(boosterMultiplier * 4.2).toFixed(2)}% APY)
                   </span>
                 </div>
               </div>
@@ -800,6 +810,34 @@ export default function KolHubPage() {
               </div>
               <span style={{ fontWeight: 800, color: 'var(--color-accent, #00E676)', fontSize: '12px' }}>
                 AKTIF (4.2% APY)
+              </span>
+            </div>
+          </div>
+
+          {/* Chainlink Automation / Gelato Keeper Section */}
+          <div
+            style={{
+              marginTop: '12px',
+              padding: '16px',
+              borderRadius: '8px',
+              background: 'rgba(0, 230, 118, 0.05)',
+              border: '1px solid rgba(0, 230, 118, 0.2)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={18} color="var(--color-accent, #00E676)" />
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '13px', color: 'var(--color-accent, #00E676)' }}>
+                    🤖 Auto-Compound Keeper: 7-Day Cycle
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--color-muted)' }}>
+                    Yield dipanen otomatis tiap 7 hari oleh Chainlink Automation / Gelato Keeper tanpa gas admin.
+                  </div>
+                </div>
+              </div>
+              <span className="badge badge-trader" style={{ fontSize: '11px' }}>
+                KEEPER AKTIF
               </span>
             </div>
           </div>

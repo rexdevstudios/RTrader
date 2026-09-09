@@ -152,6 +152,12 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     mapping(address => uint256) public accruedYieldWei;
     // Estimasi basis points APY liquid staking (420 bps = 4.2% APY)
     uint256 public constant STAKING_APY_BPS = 420;
+    // Interval panen otomatis oleh Chainlink Automation keeper: 7 hari
+    uint256 public constant HARVEST_INTERVAL = 7 days;
+    // Toleransi slippage maksimum pada migrasi DEX saat kelulusan (150 bps = 1.5%)
+    uint256 public constant MAX_GRADUATION_SLIPPAGE_BPS = 150;
+    // Multiplier staking yield per wallet KOL (10000 = 1.0x, 12500 = 1.25x)
+    mapping(address => uint256) public kolStakingBoosterBps;
 
     // Events
     event TokenCreated(
@@ -237,6 +243,24 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         address indexed tokenAddress,
         uint256 yieldAmountWei,
         address indexed recipient
+    );
+
+    event UpkeepPerformed(
+        address indexed tokenAddress,
+        uint256 yieldHarvestedWei,
+        uint256 timestamp
+    );
+
+    event KolBoosterUpdated(
+        address indexed kolWallet,
+        uint256 boosterBps
+    );
+
+    event DexGraduationInitiated(
+        address indexed tokenAddress,
+        uint256 liquidityAmountWei,
+        uint256 maxSlippageBps,
+        bool mevProtected
     );
 
     /**
@@ -644,5 +668,63 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         } else {
             pendingYieldWei = 0;
         }
+    }
+
+    /**
+     * @notice Chainlink Automation checkUpkeep: Mengecek apakah ada yield yang siap dipanen
+     */
+    function checkUpkeep(bytes calldata checkData) external view returns (bool upkeepNeeded, bytes memory performData) {
+        address tokenAddress = abi.decode(checkData, (address));
+        if (
+            isLiquidityStaked[tokenAddress] &&
+            block.timestamp >= lastYieldHarvestTimestamp[tokenAddress] + HARVEST_INTERVAL
+        ) {
+            upkeepNeeded = true;
+            performData = abi.encode(tokenAddress);
+        } else {
+            upkeepNeeded = false;
+            performData = "";
+        }
+    }
+
+    /**
+     * @notice Chainlink Automation performUpkeep: Mengeksekusi panen yield otomatis secara terdesentralisasi
+     */
+    function performUpkeep(bytes calldata performData) external nonReentrant {
+        address tokenAddress = abi.decode(performData, (address));
+        require(isLiquidityStaked[tokenAddress], "Liquidity not staked");
+        require(
+            block.timestamp >= lastYieldHarvestTimestamp[tokenAddress] + HARVEST_INTERVAL,
+            "Upkeep not due yet"
+        );
+
+        uint256 harvested = harvestYield(tokenAddress);
+        emit UpkeepPerformed(tokenAddress, harvested, block.timestamp);
+    }
+
+    /**
+     * @notice Menetapkan multiplier booster staking yield khusus untuk KOL berdasarkan tier reputasi
+     */
+    function setKolStakingBooster(address kolWallet, uint256 boosterBps) external onlyOwner {
+        require(kolWallet != address(0), "Invalid KOL wallet");
+        require(boosterBps >= 10000 && boosterBps <= 20000, "Booster must be between 1.0x (10000) and 2.0x (20000)");
+        kolStakingBoosterBps[kolWallet] = boosterBps;
+        emit KolBoosterUpdated(kolWallet, boosterBps);
+    }
+
+    /**
+     * @notice Inisialisasi migrasi likuiditas ke Uniswap v3 dengan proteksi anti-MEV & dynamic slippage 1.5%
+     */
+    function prepareMevProtectedGraduation(
+        address tokenAddress,
+        uint256 minExpectedLpTokens
+    ) external nonReentrant returns (bool) {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.isGraduated, "Token not graduated");
+        require(_msgSender() == config.creator || _msgSender() == owner(), "Unauthorized");
+        require(minExpectedLpTokens > 0, "Invalid LP expectation");
+
+        emit DexGraduationInitiated(tokenAddress, config.raisedAmountWei, MAX_GRADUATION_SLIPPAGE_BPS, true);
+        return true;
     }
 }

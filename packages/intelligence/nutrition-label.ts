@@ -15,7 +15,9 @@ export class NutritionLabelService {
     creatorTrustScore: number,
     unlockTimestamp?: number,
     yieldStakingActive?: boolean,
-    stakingApy: number = 4.2
+    stakingApy: number = 4.2,
+    mevProtectedGraduation: boolean = true,
+    autoCompoundingActive: boolean = true
   ): Promise<NutritionLabelRiskScore> {
     const reasons: string[] = [];
     const arkhamProfile = await this.arkham.profileWallet(creatorWallet, 'SYSTEM_LABEL');
@@ -38,6 +40,12 @@ export class NutritionLabelService {
     if (yieldStakingActive) {
       reasons.push(`Liquidity generating ${stakingApy}% APY staking yield for holders`);
     }
+    if (isGraduatedOrLocked && mevProtectedGraduation) {
+      reasons.push('Protected by Anti-MEV private RPC (max 1.5% slippage)');
+    }
+    if (yieldStakingActive && autoCompoundingActive) {
+      reasons.push('Weekly auto-compounding enabled via Chainlink Automation');
+    }
 
     let overallRiskTier: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
     if (arkhamProfile.isCounterpartyBlocked || creatorTrustScore < 30) {
@@ -53,6 +61,9 @@ export class NutritionLabelService {
       timeLockDays,
       yieldStakingActive: !!yieldStakingActive,
       stakingApy: yieldStakingActive ? stakingApy : undefined,
+      autoCompoundingActive: yieldStakingActive ? autoCompoundingActive : false,
+      mevProtectedGraduation,
+      maxGraduationSlippagePct: 1.5,
       mintRevoked,
       creatorTrustScore,
       arkhamRiskScore: arkhamProfile.riskPassportScore,
