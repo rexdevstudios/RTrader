@@ -2,9 +2,10 @@
 // SOCIAL PROOF BOUNTY & ESCROW SERVICE
 // ============================================================================
 
-import { BountyCampaign, BountyClaim, KolProfile } from '../shared/types/domain';
+import { BountyCampaign, BountyClaim, KolProfile, WorldIdProofPayload } from '../shared/types/domain';
 import { FirecrawlScraperService } from '../intelligence/firecrawl-scraper';
 import { TweetQualityScorer, TweetQualityAuditResult } from '../intelligence/tweet-quality-scorer';
+import { SybilResistanceService } from '../social/sybil-resistance-service';
 import { ethers } from 'ethers';
 
 export interface BountyClaimItem {
@@ -104,7 +105,11 @@ export class BountyEscrowService {
     campaignId: string,
     kol: KolProfile,
     proofUrl: string,
-    tweetTextContent?: string
+    tweetTextContent?: string,
+    sybilProof?: {
+      gitcoinScore?: number;
+      worldIdProof?: WorldIdProofPayload;
+    }
   ): Promise<{
     success: boolean;
     reason?: string;
@@ -122,6 +127,29 @@ export class BountyEscrowService {
 
     if (kol.followersCount < campaign.minFollowers) {
       return { success: false, reason: 'INSUFFICIENT_FOLLOWERS' };
+    }
+
+    // 0. Proof-of-Humanity / Sybil Resistance Check
+    if (campaign.requiresHumanityProof) {
+      if (sybilProof?.worldIdProof) {
+        const worldIdResult = SybilResistanceService.verifyWorldIdProof(sybilProof.worldIdProof, campaignId);
+        if (!worldIdResult.isValid) {
+          return { success: false, reason: worldIdResult.reason || 'WORLD_ID_VERIFICATION_FAILED' };
+        }
+      } else if (sybilProof?.gitcoinScore !== undefined) {
+        const minScore = campaign.minGitcoinScore || SybilResistanceService.DEFAULT_GITCOIN_THRESHOLD;
+        if (sybilProof.gitcoinScore < minScore) {
+          return {
+            success: false,
+            reason: `INSUFFICIENT_GITCOIN_SCORE: Score ${sybilProof.gitcoinScore} is below required threshold (${minScore})`,
+          };
+        }
+      } else {
+        return {
+          success: false,
+          reason: 'PROOF_OF_HUMANITY_REQUIRED: Campaign requires Gitcoin Passport or World ID ZK-proof',
+        };
+      }
     }
 
     // 1. Buat record klaim awal

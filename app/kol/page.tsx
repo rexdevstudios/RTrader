@@ -33,6 +33,8 @@ interface BountyCampaignView {
   maxParticipants: number;
   currentParticipants: number;
   isActive: boolean;
+  requiresHumanityProof?: boolean;
+  minGitcoinScore?: number;
 }
 
 export default function KolHubPage() {
@@ -75,6 +77,7 @@ export default function KolHubPage() {
   const [newHashtag, setNewHashtag] = useState('#DegenMoon');
   const [newReward, setNewReward] = useState('1000');
   const [newMinFollowers, setNewMinFollowers] = useState(500);
+  const [requiresHumanityProof, setRequiresHumanityProof] = useState(false);
   const [creatorFeedback, setCreatorFeedback] = useState<string | null>(null);
 
   // Load existing profile & campaigns
@@ -547,6 +550,14 @@ export default function KolHubPage() {
                   Wajib menyertakan hashtag: <strong style={{ color: '#60A5FA' }}>{c.requiredHashtag}</strong>
                 </p>
 
+                {c.requiresHumanityProof && (
+                  <div style={{ marginTop: '8px' }}>
+                    <span className="badge" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#C084FC', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '10px' }}>
+                      🛡️ Sybil-Proof (World ID / Gitcoin)
+                    </span>
+                  </div>
+                )}
+
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="text-muted" style={{ fontSize: '12px' }}>
                     Min. Follower: {c.minFollowers.toLocaleString()}
@@ -682,10 +693,10 @@ export default function KolHubPage() {
               </div>
             </div>
 
-            {/* LayerZero Cross-Chain Claim Options */}
+            {/* LayerZero & Chainlink CCIP Cross-Chain Claim Options */}
             <div style={{ marginTop: '16px' }}>
               <span className="text-muted" style={{ fontSize: '11px', display: 'block', marginBottom: '6px' }}>
-                Pilih Jaringan Klaim (LayerZero v2):
+                Pilih Jaringan Klaim (LayerZero v2 & Chainlink CCIP):
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
@@ -899,6 +910,33 @@ export default function KolHubPage() {
                   required
                 />
               </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px',
+                background: 'rgba(168, 85, 247, 0.05)',
+                borderRadius: '8px',
+                border: '1px solid rgba(168, 85, 247, 0.2)',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '12px', color: '#C084FC' }}>
+                  🛡️ Sybil Resistance (World ID & Gitcoin Passport)
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--color-muted)' }}>
+                  Wajibkan Proof-of-Humanity ZK-proof untuk mencegah bot multi-akun.
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={requiresHumanityProof}
+                onChange={(e) => setRequiresHumanityProof(e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
             </div>
 
             <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>

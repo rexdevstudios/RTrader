@@ -239,6 +239,8 @@ export interface BountyCampaign {
   maxParticipants: number;
   currentParticipants: number;
   isActive: boolean;
+  requiresHumanityProof?: boolean;
+  minGitcoinScore?: number;
 }
 
 export interface BountyClaim {
@@ -247,6 +249,9 @@ export interface BountyClaim {
   kolId: string;
   proofUrl: string;
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'CLAIMED';
+  sybilVerified?: boolean;
+  humanityScore?: number;
+  nullifierHash?: string;
   claimedAt?: Date;
   createdAt: Date;
 }
@@ -307,5 +312,25 @@ export interface MevProtectionQuote {
   maxSlippageBps: number;
   isProtected: boolean;
 }
+
+export interface WorldIdProofPayload {
+  merkleRoot: string;
+  nullifierHash: string;
+  proof: string;
+  credentialType?: 'orb' | 'phone';
+  action: string;
+  signal: string;
+}
+
+export interface CcipBridgeQuote {
+  destinationChainSelector: string;
+  chainName: string;
+  recipientAddress: string;
+  tokenAddress: string;
+  amountWei: string;
+  estimatedFeeEth: string;
+  encodedMessage: string;
+}
+
 
 

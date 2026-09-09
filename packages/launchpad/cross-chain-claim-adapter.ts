@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { ethers } from 'ethers';
+import { CcipBridgeQuote } from '../shared/types/domain';
 
 export const LAYERZERO_ENDPOINT_IDS = {
   BASE_MAINNET: 30184,
@@ -11,7 +12,15 @@ export const LAYERZERO_ENDPOINT_IDS = {
   POLYGON_MAINNET: 30109,
 } as const;
 
+export const CHAINLINK_CCIP_SELECTORS = {
+  BASE_MAINNET: '15971525489660198786',
+  ARBITRUM_ONE: '4949039107694359620',
+  OPTIMISM_MAINNET: '5224473277236331295',
+  POLYGON_MAINNET: '4051577828743386545',
+} as const;
+
 export type SupportedDestinationChain = keyof typeof LAYERZERO_ENDPOINT_IDS;
+export type SupportedCcipDestinationChain = keyof typeof CHAINLINK_CCIP_SELECTORS;
 
 export interface CrossChainQuoteResult {
   dstEid: number;
@@ -35,6 +44,21 @@ export class CrossChainClaimAdapter {
         return 'Polygon PoS';
       default:
         return `EVM Chain (EID: ${dstEid})`;
+    }
+  }
+
+  static getCcipChainName(selector: string): string {
+    switch (selector) {
+      case CHAINLINK_CCIP_SELECTORS.BASE_MAINNET:
+        return 'Base Mainnet';
+      case CHAINLINK_CCIP_SELECTORS.ARBITRUM_ONE:
+        return 'Arbitrum One';
+      case CHAINLINK_CCIP_SELECTORS.OPTIMISM_MAINNET:
+        return 'Optimism Mainnet';
+      case CHAINLINK_CCIP_SELECTORS.POLYGON_MAINNET:
+        return 'Polygon PoS';
+      default:
+        return `CCIP Chain (${selector})`;
     }
   }
 
@@ -84,4 +108,63 @@ export class CrossChainClaimAdapter {
       encodedPayload,
     };
   }
+
+  /**
+   * Encodes standard Chainlink CCIP Any2EVMMessage payload
+   */
+  static encodeCcipBridgeMessage(
+    recipient: string,
+    tokenAddress: string,
+    amountWei: bigint,
+    destinationChainSelector: string
+  ): string {
+    if (!ethers.isAddress(recipient)) {
+      throw new Error(`INVALID_RECIPIENT_ADDRESS: ${recipient}`);
+    }
+    if (!ethers.isAddress(tokenAddress)) {
+      throw new Error(`INVALID_TOKEN_ADDRESS: ${tokenAddress}`);
+    }
+    if (!Object.values(CHAINLINK_CCIP_SELECTORS).includes(destinationChainSelector as any)) {
+      throw new Error(`UNSUPPORTED_CCIP_CHAIN_SELECTOR: ${destinationChainSelector}`);
+    }
+
+    const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+    // Encode Any2EVMMessage format: (address receiver, address token, uint256 amount, uint64 chainSelector)
+    return abiCoder.encode(
+      ['address', 'address', 'uint256', 'uint64'],
+      [ethers.getAddress(recipient), ethers.getAddress(tokenAddress), amountWei, BigInt(destinationChainSelector)]
+    );
+  }
+
+  /**
+   * Stateless estimation of Chainlink CCIP cross-chain yield bridge fee
+   */
+  static estimateCcipBridgeFee(
+    destinationChainSelector: string,
+    amountWei: bigint,
+    recipient: string = '0x1111111111111111111111111111111111111111',
+    tokenAddress: string = '0x2222222222222222222222222222222222222222'
+  ): CcipBridgeQuote {
+    const chainName = CrossChainClaimAdapter.getCcipChainName(destinationChainSelector);
+    // CCIP base messaging + token transfer fee: ~0.00065 ETH on L2
+    const baseCcipFeeWei = 650000000000000n; // 0.00065 ETH
+
+    const encodedMessage = CrossChainClaimAdapter.encodeCcipBridgeMessage(
+      recipient,
+      tokenAddress,
+      amountWei,
+      destinationChainSelector
+    );
+
+    return {
+      destinationChainSelector,
+      chainName,
+      recipientAddress: ethers.getAddress(recipient),
+      tokenAddress: ethers.getAddress(tokenAddress),
+      amountWei: amountWei.toString(),
+      estimatedFeeEth: ethers.formatEther(baseCcipFeeWei),
+      encodedMessage,
+    };
+  }
 }
+

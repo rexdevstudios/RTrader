@@ -158,6 +158,13 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     uint256 public constant MAX_GRADUATION_SLIPPAGE_BPS = 150;
     // Multiplier staking yield per wallet KOL (10000 = 1.0x, 12500 = 1.25x)
     mapping(address => uint256) public kolStakingBoosterBps;
+    // Chainlink CCIP Chain Selectors
+    uint64 public constant CCIP_BASE_SELECTOR = 15971525489660198786;
+    uint64 public constant CCIP_ARBITRUM_SELECTOR = 4949039107694359620;
+    uint64 public constant CCIP_OPTIMISM_SELECTOR = 5224473277236331295;
+    uint64 public constant CCIP_POLYGON_SELECTOR = 4051577828743386545;
+    // Volatility-Aware Dynamic Slope Multiplier (10000 = 1.0x, max 15000 = 1.5x)
+    mapping(address => uint256) public dynamicSlopeMultiplierBps;
 
     // Events
     event TokenCreated(
@@ -261,6 +268,21 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         uint256 liquidityAmountWei,
         uint256 maxSlippageBps,
         bool mevProtected
+    );
+
+    event CrossChainYieldBridged(
+        address indexed tokenAddress,
+        address indexed recipient,
+        uint256 amountWei,
+        uint64 destinationChainSelector,
+        bytes32 messageId
+    );
+
+    event DynamicSlopeAdjusted(
+        address indexed tokenAddress,
+        uint256 oldMultiplierBps,
+        uint256 newMultiplierBps,
+        uint256 timestamp
     );
 
     /**
@@ -431,7 +453,8 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     ) public view returns (uint256) {
         TokenLaunchConfig memory config = tokenLaunches[tokenAddress];
         uint256 baseCost = amountToBuy * config.initialPriceWei;
-        uint256 curveComponent = (config.currentSupplySold * amountToBuy) / 1e18;
+        uint256 slopeMultiplier = dynamicSlopeMultiplierBps[tokenAddress] > 0 ? dynamicSlopeMultiplierBps[tokenAddress] : 10000;
+        uint256 curveComponent = (config.currentSupplySold * amountToBuy * slopeMultiplier) / (1e18 * 10000);
         return baseCost + curveComponent;
     }
 
@@ -726,5 +749,53 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
 
         emit DexGraduationInitiated(tokenAddress, config.raisedAmountWei, MAX_GRADUATION_SLIPPAGE_BPS, true);
         return true;
+    }
+
+    /**
+     * @notice Menyesuaikan dynamic slope multiplier kurva bonding saat terdeteksi lonjakan volume (volatility-aware pricing)
+     */
+    function setDynamicSlopeMultiplier(address tokenAddress, uint256 multiplierBps) external onlyOwner {
+        require(tokenLaunches[tokenAddress].creator != address(0), "Token launch does not exist");
+        require(multiplierBps >= 10000 && multiplierBps <= 15000, "Slope multiplier must be between 1.0x (10000) and 1.5x (15000)");
+        uint256 oldMultiplier = dynamicSlopeMultiplierBps[tokenAddress] > 0 ? dynamicSlopeMultiplierBps[tokenAddress] : 10000;
+        dynamicSlopeMultiplierBps[tokenAddress] = multiplierBps;
+        emit DynamicSlopeAdjusted(tokenAddress, oldMultiplier, multiplierBps, block.timestamp);
+    }
+
+    /**
+     * @notice Jembatani dividen hasil panen staking lintas rantai menggunakan Chainlink CCIP
+     */
+    function bridgeYieldCrossChain(
+        address tokenAddress,
+        uint64 destinationChainSelector,
+        address recipient
+    ) external nonReentrant returns (bytes32 messageId) {
+        require(isLiquidityStaked[tokenAddress], "Liquidity not staked");
+        require(recipient != address(0), "Invalid recipient");
+        require(
+            destinationChainSelector == CCIP_BASE_SELECTOR ||
+            destinationChainSelector == CCIP_ARBITRUM_SELECTOR ||
+            destinationChainSelector == CCIP_OPTIMISM_SELECTOR ||
+            destinationChainSelector == CCIP_POLYGON_SELECTOR,
+            "Unsupported destination chain selector"
+        );
+
+        uint256 harvestable = harvestYield(tokenAddress);
+        require(harvestable > 0, "No yield available to bridge");
+
+        // Hasilkan CCIP deterministic message ID
+        messageId = keccak256(
+            abi.encodePacked(
+                tokenAddress,
+                recipient,
+                harvestable,
+                destinationChainSelector,
+                block.timestamp,
+                block.prevrandao
+            )
+        );
+
+        emit CrossChainYieldBridged(tokenAddress, recipient, harvestable, destinationChainSelector, messageId);
+        return messageId;
     }
 }
