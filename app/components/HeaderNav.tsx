@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Zap, LayoutDashboard, Rocket, Network, LogOut, Wallet, ChevronDown, MonitorDot, BrainCircuit } from 'lucide-react';
+import { ShieldAlert, Zap, LayoutDashboard, Rocket, Network, LogOut, Wallet, ChevronDown, MonitorDot, BrainCircuit, Award } from 'lucide-react';
 
 export default function HeaderNav() {
   const { walletAddress, isConnected, userRole, credits, isConnecting, connectMetaMask, disconnectWallet, switchRole } = useAuth();
@@ -51,6 +51,7 @@ export default function HeaderNav() {
       <nav className="nav-links">
         <a href="/" className="nav-link"><LayoutDashboard size={16} style={{display:'inline', marginRight: '4px', verticalAlign: 'text-bottom'}} /> Dashboard</a>
         <a href="/launchpad" className="nav-link"><Rocket size={16} style={{display:'inline', marginRight: '4px', verticalAlign: 'text-bottom'}} /> Launchpad</a>
+        <a href="/kol" className="nav-link"><Award size={16} style={{display:'inline', marginRight: '4px', verticalAlign: 'text-bottom'}} /> KOL Hub</a>
         <a href="/trading" className="nav-link nav-link-active"><Network size={16} style={{display:'inline', marginRight: '4px', verticalAlign: 'text-bottom'}} /> Trading Terminal</a>
         <a href="/agent" className="nav-link"><BrainCircuit size={16} style={{display:'inline', marginRight: '4px', verticalAlign: 'text-bottom'}} /> AI Proposals</a>
       </nav>
@@ -107,6 +108,13 @@ export default function HeaderNav() {
                     style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px' }}
                   >
                     <Rocket size={14} /> Token Creator
+                  </button>
+                  <button
+                    onClick={() => { switchRole('CREATOR'); setShowRoleMenu(false); }}
+                    className="btn-secondary"
+                    style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px', color: '#60A5FA' }}
+                  >
+                    <Award size={14} /> KOL & Influencer
                   </button>
                   <button
                     onClick={() => { switchRole('SYSTEM_ADMIN'); setShowRoleMenu(false); }}

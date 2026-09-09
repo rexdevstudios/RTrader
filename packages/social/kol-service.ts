@@ -4,6 +4,7 @@
 
 import { KolProfile } from '../shared/types/domain';
 import { ArkhamIntelligenceService } from '../intelligence/arkham-enrichment';
+import { ethers } from 'ethers';
 
 export interface KolDbAdapter {
   upsertKolProfile(profile: Partial<KolProfile> & { userId: string }): Promise<KolProfile>;
@@ -16,6 +17,39 @@ export class KolService {
     private db: KolDbAdapter,
     private arkhamService: ArkhamIntelligenceService
   ) {}
+
+  static getAttestationMessage(walletAddress: string, twitterHandle: string): string {
+    return `RTrader SocialFi Identity Attestation:\nWallet: ${ethers.getAddress(walletAddress).toLowerCase()}\nTwitter: @${twitterHandle.toLowerCase()}`;
+  }
+
+  static verifySocialAttestation(
+    walletAddress: string,
+    twitterHandle: string,
+    signature: string
+  ): boolean {
+    if (!ethers.isAddress(walletAddress)) return false;
+    try {
+      const message = KolService.getAttestationMessage(walletAddress, twitterHandle);
+      const recovered = ethers.verifyMessage(message, signature);
+      return recovered.toLowerCase() === walletAddress.toLowerCase();
+    } catch {
+      return false;
+    }
+  }
+
+  static generateTwitterAuthUrl(state: string, redirectUri: string): string {
+    const clientId = process.env.TWITTER_CLIENT_ID || 'mock_twitter_client_id';
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: 'users.read tweet.read offline.access',
+      state,
+      code_challenge: 'challenge',
+      code_challenge_method: 'plain',
+    });
+    return `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
+  }
 
   async registerOrUpdateKol(
     userId: string,

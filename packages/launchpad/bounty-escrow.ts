@@ -4,6 +4,12 @@
 
 import { BountyCampaign, BountyClaim, KolProfile } from '../shared/types/domain';
 import { FirecrawlScraperService } from '../intelligence/firecrawl-scraper';
+import { ethers } from 'ethers';
+
+export interface BountyClaimItem {
+  walletAddress: string;
+  tokenAmount: bigint;
+}
 
 export interface BountyDbAdapter {
   getCampaign(campaignId: string): Promise<BountyCampaign | null>;
@@ -19,6 +25,79 @@ export class BountyEscrowService {
     private db: BountyDbAdapter,
     private scraper?: FirecrawlScraperService
   ) {}
+
+  static hashClaim(walletAddress: string, tokenAmount: bigint): string {
+    if (!ethers.isAddress(walletAddress)) {
+      throw new Error(`INVALID_WALLET_ADDRESS: ${walletAddress}`);
+    }
+    return ethers.solidityPackedKeccak256(['address', 'uint256'], [ethers.getAddress(walletAddress), tokenAmount]);
+  }
+
+  static generateBountyMerkleTree(claims: BountyClaimItem[]): {
+    root: string;
+    getProof: (wallet: string, amount: bigint) => string[];
+  } {
+    const validClaims = claims.filter((c) => ethers.isAddress(c.walletAddress) && c.tokenAmount > 0n);
+    if (validClaims.length === 0) {
+      return {
+        root: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        getProof: () => [],
+      };
+    }
+
+    const leaves = validClaims.map((c) => BountyEscrowService.hashClaim(c.walletAddress, c.tokenAmount));
+    if (leaves.length === 1) {
+      return {
+        root: leaves[0],
+        getProof: (w, a) => {
+          if (!ethers.isAddress(w)) return [];
+          const targetHash = BountyEscrowService.hashClaim(w, a);
+          return targetHash === leaves[0] ? [] : [];
+        },
+      };
+    }
+
+    const combine = (a: string, b: string) =>
+      a <= b ? ethers.keccak256(ethers.concat([a, b])) : ethers.keccak256(ethers.concat([b, a]));
+
+    let currentLevel = [...leaves];
+    const treeLevels: string[][] = [currentLevel];
+
+    while (currentLevel.length > 1) {
+      const nextLevel: string[] = [];
+      for (let i = 0; i < currentLevel.length; i += 2) {
+        if (i + 1 < currentLevel.length) {
+          nextLevel.push(combine(currentLevel[i], currentLevel[i + 1]));
+        } else {
+          nextLevel.push(currentLevel[i]);
+        }
+      }
+      currentLevel = nextLevel;
+      treeLevels.push(currentLevel);
+    }
+
+    const root = treeLevels[treeLevels.length - 1][0];
+
+    const getProof = (targetWallet: string, targetAmount: bigint): string[] => {
+      if (!ethers.isAddress(targetWallet)) return [];
+      const targetHash = BountyEscrowService.hashClaim(targetWallet, targetAmount);
+      let index = treeLevels[0].indexOf(targetHash);
+      if (index === -1) return [];
+
+      const proof: string[] = [];
+      for (let level = 0; level < treeLevels.length - 1; level++) {
+        const isRight = index % 2 === 1;
+        const pairIndex = isRight ? index - 1 : index + 1;
+        if (pairIndex < treeLevels[level].length) {
+          proof.push(treeLevels[level][pairIndex]);
+        }
+        index = Math.floor(index / 2);
+      }
+      return proof;
+    };
+
+    return { root, getProof };
+  }
 
   async submitAndVerifyClaim(
     campaignId: string,

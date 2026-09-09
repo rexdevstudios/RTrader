@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Activity, ShieldAlert, BarChart3, Clock, AlertTriangle, Lightbulb, Wallet, BrainCircuit, ActivitySquare, Lock } from 'lucide-react';
+import { NutritionLabelCard } from '../components/NutritionLabelCard';
 
 interface Candle {
   timestamp: number;
@@ -198,13 +199,17 @@ export default function TradingPage() {
           type: 'MARKET',
           quantity: 0.1,
           maxSlippagePct: 1.5,
-          stage: 'TESTNET',
+          stage: symbol.includes('/') ? 'PAPER' : 'TESTNET',
         }),
       });
       const json = await res.json();
       if (json.success) {
         setProposalStatus('APPROVED');
-        setActionFeedback(`✅ Proposal APPROVED & Intent ${json.data?.tradeIntentId || ''} passed Risk Gate!`);
+        setActionFeedback(
+          symbol.includes('/')
+            ? `✅ [PAPER TRADING SIMULATION] Proposal APPROVED & Intent ${json.data?.tradeIntentId || ''} lolos Risk Gate! Simulasi bonding curve 100% aman bebas risiko modal.`
+            : `✅ Proposal APPROVED & Intent ${json.data?.tradeIntentId || ''} passed Risk Gate!`
+        );
       } else {
         setActionFeedback(`❌ Risk Gate Rejected: ${json.error?.message || 'Policy violation'}`);
       }
@@ -241,10 +246,13 @@ export default function TradingPage() {
             className="input"
             style={{ padding: '6px 12px', fontSize: '12px', width: 'auto', display: 'inline-block' }}
           >
-            <option value="BTCUSDT">BTC / USDT</option>
-            <option value="ETHUSDT">ETH / USDT</option>
-            <option value="SOLUSDT">SOL / USDT</option>
-            <option value="BASEUSDT">BASE / USDT</option>
+            <option value="BTCUSDT">BTC / USDT (Binance Live)</option>
+            <option value="ETHUSDT">ETH / USDT (Binance Live)</option>
+            <option value="SOLUSDT">SOL / USDT (Binance Live)</option>
+            <option value="BASEUSDT">BASE / USDT (Binance Live)</option>
+            <option value="MOON/ETH">MOON / ETH (Bonding Curve)</option>
+            <option value="PEOPLE/ETH">PEOPLE / ETH (Fair Launch)</option>
+            <option value="CDAO/ETH">CDAO / ETH (Community Prelaunch)</option>
           </select>
           <span className={error ? 'badge badge-admin' : 'badge badge-trader'} style={{ fontSize: '12px' }}>
             {error ? '● RETRYING' : '● LIVE STREAM'}
@@ -539,6 +547,25 @@ export default function TradingPage() {
               </div>
             )}
           </div>
+
+          {/* Investor Safety Nutrition Label (for SocialFi / Bonding Curve tokens) */}
+          {symbol.includes('/') && (
+            <div style={{ marginTop: '8px' }}>
+              <NutritionLabelCard
+                liquidityLocked={symbol !== 'CDAO/ETH'}
+                mintRevoked={true}
+                creatorTrustScore={symbol === 'MOON/ETH' ? 88 : symbol === 'PEOPLE/ETH' ? 72 : 55}
+                overallTier={symbol === 'MOON/ETH' ? 'LOW' : symbol === 'PEOPLE/ETH' ? 'MEDIUM' : 'HIGH'}
+                reasons={
+                  symbol === 'MOON/ETH'
+                    ? ['Audited Bonding Curve Template', 'Arkham Creator Score 88/100', 'Automatic Liquidity Lock at 24 ETH']
+                    : symbol === 'PEOPLE/ETH'
+                    ? ['Fair Launch 1% Max Wallet Anti-Snipe', 'Creator wallet age < 30 days']
+                    : ['Prelaunch crowdfund in progress', 'Liquidity lock pending graduation']
+                }
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

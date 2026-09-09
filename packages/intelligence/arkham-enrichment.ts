@@ -16,14 +16,24 @@ export interface ArkhamIntelligenceDbAdapter {
   createAuditLog(actorId: string, action: string, entityId?: string, reason?: string): Promise<void>;
 }
 
+const defaultArkhamDb: ArkhamIntelligenceDbAdapter = {
+  getArkhamProfile: async () => null,
+  upsertArkhamProfile: async () => {},
+  createAuditLog: async () => {},
+};
+
 export class ArkhamIntelligenceService {
   private apiBaseUrl: string;
+  private apiKey: string;
+  private db: ArkhamIntelligenceDbAdapter;
 
   constructor(
-    private apiKey: string,
-    private db: ArkhamIntelligenceDbAdapter,
+    apiKey?: string,
+    db?: ArkhamIntelligenceDbAdapter,
     baseUrl?: string
   ) {
+    this.apiKey = apiKey || process.env.ARKHAM_API_KEY || 'mock_arkham_api_key';
+    this.db = db || defaultArkhamDb;
     this.apiBaseUrl = baseUrl || 'https://api.arkhamintelligence.com';
   }
 

@@ -103,6 +103,10 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
     mapping(address => TokenLaunchConfig) public tokenLaunches;
     // Mapping: Token Address => Wallet => Purchased Amount
     mapping(address => mapping(address => uint256)) public walletPurchases;
+    // Mapping: Token Address => Bounty Campaign Merkle Root
+    mapping(address => bytes32) public bountyMerkleRoots;
+    // Mapping: Token Address => KOL Wallet => hasClaimed
+    mapping(address => mapping(address => bool)) public hasClaimedBounty;
 
     // Events
     event TokenCreated(
@@ -142,6 +146,17 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         address indexed tokenAddress,
         address indexed referralWallet,
         uint256 feeAmountWei
+    );
+
+    event BountyRewardClaimed(
+        address indexed tokenAddress,
+        address indexed kolWallet,
+        uint256 amountTokens
+    );
+
+    event BountyMerkleRootSet(
+        address indexed tokenAddress,
+        bytes32 newRoot
     );
 
     /**
@@ -317,5 +332,44 @@ contract BondingCurveLaunchpad is Ownable, ReentrancyGuard {
         require(tokenLaunches[tokenAddress].creator != address(0), "Token launch does not exist");
         tokenLaunches[tokenAddress].isPaused = isPaused;
         emit LaunchPaused(tokenAddress, isPaused);
+    }
+
+    /**
+     * @notice Set Merkle Root untuk alokasi reward klaim bounty promosi KOL
+     */
+    function setBountyMerkleRoot(address tokenAddress, bytes32 newRoot) external {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.creator != address(0), "Token launch does not exist");
+        require(_msgSender() == config.creator || _msgSender() == owner(), "Unauthorized to set bounty root");
+        bountyMerkleRoots[tokenAddress] = newRoot;
+        emit BountyMerkleRootSet(tokenAddress, newRoot);
+    }
+
+    /**
+     * @notice Klaim on-chain alokasi reward promosi marketing KOL berbasis cryptographic Merkle Proof
+     */
+    function claimBountyReward(
+        address tokenAddress,
+        uint256 tokenAmount,
+        bytes32[] calldata merkleProof
+    ) external nonReentrant {
+        TokenLaunchConfig storage config = tokenLaunches[tokenAddress];
+        require(config.creator != address(0), "Token launch does not exist");
+        require(!config.isPaused, "Token launch is paused");
+        require(tokenAmount > 0, "Reward amount must be > 0");
+        require(!hasClaimedBounty[tokenAddress][_msgSender()], "Bounty reward already claimed");
+        require(bountyMerkleRoots[tokenAddress] != bytes32(0), "Bounty root not set");
+
+        // Verifikasi Merkle Proof (Leaf adalah hash dari wallet address dan tokenAmount)
+        bytes32 leaf = keccak256(abi.encodePacked(_msgSender(), tokenAmount));
+        require(
+            MerkleProof.verify(merkleProof, bountyMerkleRoots[tokenAddress], leaf),
+            "INVALID_BOUNTY_PROOF: Merkle proof verification failed"
+        );
+
+        hasClaimedBounty[tokenAddress][_msgSender()] = true;
+        config.currentSupplySold += tokenAmount;
+
+        emit BountyRewardClaimed(tokenAddress, _msgSender(), tokenAmount);
     }
 }
