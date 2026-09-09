@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Award,
-  Twitter,
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
@@ -21,6 +20,14 @@ import {
   Clock,
 } from 'lucide-react';
 import HeaderNav from '../components/HeaderNav';
+import {
+  getContractConfiguration,
+  ensureBaseNetwork,
+  getBrowserSigner,
+  getLaunchpadContract,
+  normalizeWeb3Error,
+  getExplorerUrl,
+} from '@packages/launchpad/web3-provider';
 
 interface BountyCampaignView {
   id: string;
@@ -200,13 +207,18 @@ export default function KolHubPage() {
     setVerificationFeedback(null);
 
     try {
+      if (!walletAddress) {
+        setVerificationFeedback('⚠️ Silakan hubungkan dompet Web3 terlebih dahulu.');
+        return;
+      }
+
       const res = await fetch('/api/launchpad/bounty/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           campaignId: selectedCampaignId,
           proofUrl: tweetProofUrl,
-          walletAddress: walletAddress || '0x1111111111111111111111111111111111111111',
+          walletAddress,
           twitterHandle: twitterHandle || 'rtrader_kol',
           followersCount,
         }),
@@ -232,15 +244,15 @@ export default function KolHubPage() {
   };
 
   const checkMerkleProof = async () => {
-    const address = walletAddress || '0x1111111111111111111111111111111111111111';
+    if (!walletAddress) return;
     try {
-      const res = await fetch(`/api/launchpad/bounty/claim?walletAddress=${address}`);
+      const res = await fetch(`/api/launchpad/bounty/claim?walletAddress=${walletAddress}`);
       const json = await res.json();
       if (json.success && json.data) {
         setMerkleProofData(json.data);
       }
     } catch {
-      // Fallback
+      // Graceful fallback
     }
   };
 
@@ -248,28 +260,88 @@ export default function KolHubPage() {
     setIsClaimingOnChain(true);
     setClaimFeedback(null);
     try {
+      if (!walletAddress) {
+        setClaimFeedback('⚠️ Silakan hubungkan dompet Web3 MetaMask terlebih dahulu.');
+        return;
+      }
+
       if (isGaslessClaim) {
-        await fetch('/api/paymaster/sponsor', {
+        // Explicit Gasless Simulation Harness separation (Section 11)
+        const sponsorRes = await fetch('/api/paymaster/sponsor', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            tokenAddress: '0x1111111111111111111111111111111111111111',
-            kolWallet: walletAddress || '0x2222222222222222222222222222222222222222',
-            tokenAmount: '1000000000000000000000',
+            tokenAddress: merkleProofData?.tokenAddress || '0x0000000000000000000000000000000000000000',
+            kolWallet: walletAddress,
+            tokenAmount: merkleProofData?.tokenAmount || '1000000000000000000000',
             chainId: 8453,
           }),
         });
+        const sponsorJson = await sponsorRes.json();
+        if (sponsorJson.success && sponsorJson.data) {
+          setClaimFeedback(
+            `⚡ SIMULATION HARNESS: Paymaster EIP-191 sponsor signature valid (Sponsor: ${sponsorJson.data.sponsorAddress}). On-chain ERC-4337 bundler relay belum terhubung di jaringan ini.`
+          );
+        } else {
+          setClaimFeedback(`❌ Gagal sponsor paymaster: ${sponsorJson.error?.message || 'Error'}`);
+        }
+        return;
       }
-      await new Promise((r) => setTimeout(r, 1200));
-      if (isGaslessClaim) {
-        setClaimFeedback('⚡ 1,000 TOKEN REWARD BERHASIL DIKLAIM (GASLESS SPONSORED)! Biaya gas dibayar penuh oleh RTrader Paymaster.');
-      } else if (claimDestination === 'BASE') {
-        setClaimFeedback('✅ 1,000 TOKEN REWARD BERHASIL DIKLAIM ON-CHAIN! Transaksi tercatat di Base Mainnet.');
+
+      // 1. Contract Address Verification Gate (Rule 6 & Section 9)
+      const contractConfig = getContractConfiguration();
+      if (!contractConfig.isConfigured || !contractConfig.contractAddress) {
+        setClaimFeedback(`❌ ${contractConfig.message} Transaksi on-chain dinonaktifkan demi keamanan.`);
+        return;
+      }
+
+      // 2. Base Network Validation & Switching (Rule 8)
+      const networkCheck = await ensureBaseNetwork('0x2105');
+      if (!networkCheck.success) {
+        setClaimFeedback(`❌ ${networkCheck.error || 'Harap beralih ke jaringan Base'}`);
+        return;
+      }
+
+      // 3. Merkle Proof Verification Check
+      if (
+        !merkleProofData ||
+        !merkleProofData.isEligible ||
+        !merkleProofData.merkleProof ||
+        merkleProofData.merkleProof.length === 0
+      ) {
+        setClaimFeedback('❌ Alamat dompet ini tidak memiliki alokasi bounty terverifikasi pada Merkle Tree kampanye.');
+        return;
+      }
+
+      // 4. Real Web3 Transaction via MetaMask Signer
+      setClaimFeedback('⏳ Menunggu konfirmasi transaksi di MetaMask...');
+      const signer = await getBrowserSigner();
+      const contract = getLaunchpadContract(signer);
+
+      const targetToken =
+        merkleProofData.tokenAddress && merkleProofData.tokenAddress !== '0x0000000000000000000000000000000000000000'
+          ? merkleProofData.tokenAddress
+          : contractConfig.contractAddress;
+
+      const tx = await contract.claimBountyReward(
+        targetToken,
+        BigInt(merkleProofData.tokenAmount),
+        merkleProofData.merkleProof
+      );
+
+      setClaimFeedback(`📡 Transaksi terkirim ke mempool: ${tx.hash}. Menunggu konfirmasi blok Base...`);
+      const receipt = await tx.wait(1);
+
+      if (receipt && receipt.status === 1) {
+        const explorerLink = getExplorerUrl(tx.hash, '0x2105', 'tx');
+        setClaimFeedback(
+          `✅ 1,000 TOKEN REWARD BERHASIL DIKLAIM ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di BaseScan: ${explorerLink}`
+        );
       } else {
-        setClaimFeedback(`✅ 1,000 TOKEN REWARD DIKLAIM VIA LAYERZERO v2! Pesan cross-chain berhasil dikirim ke ${claimDestination}.`);
+        setClaimFeedback('❌ Transaksi gagal dieksekusi di blockchain Base.');
       }
-    } catch (err) {
-      setClaimFeedback(`❌ Gagal klaim on-chain: ${(err as Error).message}`);
+    } catch (err: any) {
+      setClaimFeedback(`❌ Gagal klaim on-chain: ${normalizeWeb3Error(err)}`);
     } finally {
       setIsClaimingOnChain(false);
     }
@@ -369,7 +441,7 @@ export default function KolHubPage() {
         <div className="grid-3" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '24px', gap: '24px' }}>
           <div className="bg-panel" style={{ padding: '24px', borderRadius: '12px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Twitter className="text-accent" size={20} /> Tautkan Akun Twitter / X
+              <span style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-accent, #00E676)' }}>𝕏</span> Tautkan Akun Twitter / X
             </h3>
             <p className="text-muted" style={{ fontSize: '13px' }}>
               Daftarkan handle media sosial Anda untuk mengevaluasi Arkham On-Chain Trust Score dan memenuhi syarat bounty.

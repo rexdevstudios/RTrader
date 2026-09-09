@@ -3,9 +3,8 @@ import { ApiResponse } from '@packages/shared/contracts/api-contracts';
 import { BountyEscrowService, BountyClaimItem } from '@packages/launchpad/bounty-escrow';
 import { FirecrawlScraperService } from '@packages/intelligence/firecrawl-scraper';
 import { BountyCampaign, BountyClaim, KolProfile } from '@packages/shared/types/domain';
+import { defaultBountyDbAdapter } from '@packages/shared/db-pool';
 
-// In-memory SSOT store for claims
-const inMemoryClaims: Map<string, BountyClaim> = new Map();
 const verifiedClaimWallets: BountyClaimItem[] = [
   {
     walletAddress: '0x1111111111111111111111111111111111111111',
@@ -16,49 +15,6 @@ const verifiedClaimWallets: BountyClaimItem[] = [
     tokenAmount: 1000000000000000000000n,
   },
 ];
-
-const mockBountyDb = {
-  getCampaign: async (id: string): Promise<BountyCampaign | null> => {
-    return {
-      id,
-      launchId: 'launch-demo',
-      creatorId: 'usr-creator',
-      title: 'Demo Marketing Campaign',
-      requiredHashtag: '#DegenMoon',
-      minFollowers: 500,
-      rewardPerKol: 1000000000000000000000n,
-      maxParticipants: 50,
-      currentParticipants: verifiedClaimWallets.length,
-      isActive: true,
-    };
-  },
-  getClaim: async (campaignId: string, kolId: string): Promise<BountyClaim | null> => {
-    return inMemoryClaims.get(`${campaignId}:${kolId}`) || null;
-  },
-  createClaim: async (campaignId: string, kolId: string, proofUrl: string): Promise<BountyClaim> => {
-    const claim: BountyClaim = {
-      id: `claim-${Date.now()}`,
-      campaignId,
-      kolId,
-      proofUrl,
-      verificationStatus: 'PENDING',
-      createdAt: new Date(),
-    };
-    inMemoryClaims.set(`${campaignId}:${kolId}`, claim);
-    return claim;
-  },
-  updateClaimStatus: async (claimId: string, status: 'VERIFIED' | 'REJECTED' | 'CLAIMED') => {
-    for (const [key, val] of inMemoryClaims.entries()) {
-      if (val.id === claimId) {
-        val.verificationStatus = status;
-        if (status === 'CLAIMED') val.claimedAt = new Date();
-        break;
-      }
-    }
-  },
-  incrementCampaignParticipant: async () => {},
-  createAuditLog: async () => {},
-};
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -131,8 +87,7 @@ export async function POST(req: NextRequest) {
       isVerified: true,
     };
 
-    const scraper = new FirecrawlScraperService();
-    const service = new BountyEscrowService(mockBountyDb, scraper);
+    const service = new BountyEscrowService(defaultBountyDbAdapter);
 
     const result = await service.submitAndVerifyClaim(campaignId, kolMock, proofUrl);
 

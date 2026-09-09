@@ -2,6 +2,15 @@
 
 import React, { useState } from 'react';
 import { ShieldCheck, Users, X, CheckCircle2, AlertCircle, Coins, ArrowRight } from 'lucide-react';
+import { ethers } from 'ethers';
+import {
+  getContractConfiguration,
+  ensureBaseNetwork,
+  getBrowserSigner,
+  getLaunchpadContract,
+  normalizeWeb3Error,
+  getExplorerUrl,
+} from '../../packages/launchpad/web3-provider';
 
 interface AngelDealRoomModalProps {
   isOpen: boolean;
@@ -24,25 +33,98 @@ export const AngelDealRoomModal: React.FC<AngelDealRoomModalProps> = ({
   } | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleCheckEligibility = () => {
-    // Simulasi verifikasi Merkle proof untuk dompet angel yang terhubung
-    setWhitelistCheck({
-      checked: true,
-      isEligible: true,
-      proof: ['0x1111111111111111111111111111111111111111111111111111111111111111'],
-      root: '0x2cc5811b29aa1fb5cf826c2c91700c1538415d3af95dabbebe07280e7865a3e1',
-    });
+  const handleCheckEligibility = async () => {
+    if (!connectedWallet) {
+      setActionFeedback('⚠️ Silakan hubungkan dompet Web3 terlebih dahulu.');
+      return;
+    }
+    setActionFeedback(null);
+    try {
+      const res = await fetch(
+        `/api/launchpad/whitelist?tokenAddress=${encodeURIComponent(targetToken)}&walletAddress=${encodeURIComponent(connectedWallet)}`
+      );
+      const json = await res.json();
+      if (json.success && json.data) {
+        setWhitelistCheck({
+          checked: true,
+          isEligible: json.data.isWhitelisted,
+          proof: json.data.merkleProof,
+          root: json.data.merkleRoot,
+        });
+        if (!json.data.isWhitelisted) {
+          setActionFeedback('❌ Dompet Anda tidak terdaftar dalam whitelist alokasi kampanye ini.');
+        }
+      } else {
+        setActionFeedback(`❌ Gagal verifikasi whitelist: ${json.error?.message || 'Error'}`);
+      }
+    } catch (err: any) {
+      setActionFeedback(`❌ Error verifikasi: ${err.message}`);
+    }
   };
 
-  const handleClaimSeed = () => {
+  const handleClaimSeed = async () => {
     setIsClaiming(true);
-    setTimeout(() => {
+    setActionFeedback(null);
+    try {
+      if (!connectedWallet) {
+        setActionFeedback('⚠️ Silakan hubungkan dompet Web3 MetaMask terlebih dahulu.');
+        return;
+      }
+
+      // 1. Contract Address Verification Gate (Rule 6)
+      const contractConfig = getContractConfiguration();
+      if (!contractConfig.isConfigured || !contractConfig.contractAddress) {
+        setActionFeedback(`❌ ${contractConfig.message} Pembelian on-chain dinonaktifkan demi keamanan.`);
+        return;
+      }
+
+      // 2. Base Network Validation (Rule 8)
+      const networkCheck = await ensureBaseNetwork('0x2105');
+      if (!networkCheck.success) {
+        setActionFeedback(`❌ ${networkCheck.error || 'Harap beralih ke jaringan Base'}`);
+        return;
+      }
+
+      if (!whitelistCheck || !whitelistCheck.isEligible) {
+        setActionFeedback('❌ Alamat dompet tidak memiliki alokasi whitelist yang valid.');
+        return;
+      }
+
+      // 3. Real Web3 Execution via MetaMask Signer
+      setActionFeedback('⏳ Menghitung estimasi biaya pembelian...');
+      const signer = await getBrowserSigner();
+      const contract = getLaunchpadContract(signer);
+
+      const tokenAmountWei = ethers.parseEther(allocationAmount || '1000');
+      const costWei = await contract.calculateCost(targetToken, tokenAmountWei);
+
+      setActionFeedback(`⏳ Menunggu konfirmasi transaksi di MetaMask (Biaya: ${ethers.formatEther(costWei)} ETH)...`);
+      const tx = await contract.buyWhitelistTokens(targetToken, tokenAmountWei, whitelistCheck.proof, {
+        value: costWei,
+      });
+
+      setActionFeedback(`📡 Transaksi terkirim: ${tx.hash}. Menunggu konfirmasi blok Base...`);
+      const receipt = await tx.wait(1);
+
+      if (receipt && receipt.status === 1) {
+        setTxHash(tx.hash);
+        setClaimSuccess(true);
+        setActionFeedback(
+          `✅ Pembelian alokasi Angel Investor berhasil! Blok #${receipt.blockNumber}. Hash: ${tx.hash}`
+        );
+      } else {
+        setActionFeedback('❌ Transaksi gagal dieksekusi di blockchain Base.');
+      }
+    } catch (err: any) {
+      setActionFeedback(`❌ Gagal klaim seed on-chain: ${normalizeWeb3Error(err)}`);
+    } finally {
       setIsClaiming(false);
-      setClaimSuccess(true);
-    }, 800);
+    }
   };
 
   return (
@@ -187,6 +269,36 @@ export const AngelDealRoomModal: React.FC<AngelDealRoomModalProps> = ({
                 }}
               >
                 🎉 Success! {allocationAmount} Seed tokens allocated and locked in your wallet vesting schedule.
+              </div>
+            )}
+
+            {actionFeedback && (
+              <div
+                style={{
+                  marginTop: '12px',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  backgroundColor: actionFeedback.includes('✅')
+                    ? 'rgba(16, 185, 129, 0.1)'
+                    : actionFeedback.includes('❌') || actionFeedback.includes('BLOCKED')
+                    ? 'rgba(239, 68, 68, 0.1)'
+                    : 'rgba(0, 229, 255, 0.1)',
+                  border: `1px solid ${
+                    actionFeedback.includes('✅')
+                      ? '#10B981'
+                      : actionFeedback.includes('❌') || actionFeedback.includes('BLOCKED')
+                      ? '#EF4444'
+                      : '#00E5FF'
+                  }`,
+                  color: actionFeedback.includes('✅')
+                    ? '#10B981'
+                    : actionFeedback.includes('❌') || actionFeedback.includes('BLOCKED')
+                    ? '#EF4444'
+                    : '#00E5FF',
+                }}
+              >
+                {actionFeedback}
               </div>
             )}
           </div>

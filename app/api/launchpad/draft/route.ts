@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse, CreateLaunchDraftRequest } from '@packages/shared/contracts/api-contracts';
 import { LaunchDraftService } from '@packages/launchpad/launch-draft-service';
-
-// In-memory cache fallback untuk serverless session
-const inMemoryDrafts: any[] = [];
-
-const defaultDbAdapter = {
-  saveDraft: async (draft: any) => {
-    inMemoryDrafts.unshift(draft);
-    return draft.id;
-  },
-  saveWhitelist: async () => {},
-  createAuditLog: async () => {},
-};
+import { defaultDraftDbAdapter } from '@packages/shared/db-pool';
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +9,7 @@ export async function POST(req: NextRequest) {
     const creatorWallet = body.creatorWallet || '0x0000000000000000000000000000000000000000';
     const actorId = `usr-${creatorWallet.slice(0, 8).toLowerCase()}`;
 
-    const service = new LaunchDraftService(defaultDbAdapter);
+    const service = new LaunchDraftService(defaultDraftDbAdapter);
     const draft = await service.createDraft(actorId, creatorWallet, body);
 
     const response: ApiResponse<typeof draft> = {
@@ -40,9 +29,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const response: ApiResponse<typeof inMemoryDrafts> = {
+  const drafts = await defaultDraftDbAdapter.getDrafts();
+  const response: ApiResponse<typeof drafts> = {
     success: true,
-    data: inMemoryDrafts,
+    data: drafts,
     timestamp: new Date().toISOString(),
   };
   return NextResponse.json(response);

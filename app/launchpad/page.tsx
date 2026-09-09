@@ -2,9 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet, Users, Tag, Sparkles } from 'lucide-react';
+import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet, Users, Tag, Sparkles, Coins, Zap } from 'lucide-react';
 import { NutritionLabelCard } from '../components/NutritionLabelCard';
 import { AngelDealRoomModal } from '../components/AngelDealRoomModal';
+import { ethers } from 'ethers';
+import {
+  getContractConfiguration,
+  ensureBaseNetwork,
+  getBrowserSigner,
+  getLaunchpadContract,
+  normalizeWeb3Error,
+  getExplorerUrl,
+} from '@packages/launchpad/web3-provider';
 
 export type LaunchModeType = 'BONDING_CURVE' | 'FAIR_LAUNCH' | 'WHITELIST_PRIVATE' | 'FIXED_PRICE' | 'COMMUNITY_PRELAUNCH';
 
@@ -75,6 +84,96 @@ export default function LaunchpadPage() {
       });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const [isRegisteringOnChain, setIsRegisteringOnChain] = useState(false);
+  const [onChainFeedback, setOnChainFeedback] = useState<string | null>(null);
+  const [publishedTxHash, setPublishedTxHash] = useState<string | null>(null);
+
+  const handleRegisterOnChain = async () => {
+    if (!draftResult) return;
+    setIsRegisteringOnChain(true);
+    setOnChainFeedback(null);
+    try {
+      if (!walletAddress) {
+        setOnChainFeedback('⚠️ Silakan hubungkan dompet Web3 MetaMask terlebih dahulu.');
+        return;
+      }
+
+      // 1. Access Control Invariant Check (onlyOwner in BondingCurveLaunchpad.sol)
+      if (userRole !== 'SYSTEM_ADMIN' && userRole !== 'SUPER_ADMIN') {
+        setOnChainFeedback(
+          '🛡️ Akses Terbatas: Pendaftaran token launchpad on-chain memerlukan hak otorisasi Platform Admin / Contract Owner. Draft Anda telah disimpan di SSOT untuk diproses oleh controller.'
+        );
+        return;
+      }
+
+      // 2. Contract Configuration Verification Gate (Rule 6)
+      const contractConfig = getContractConfiguration();
+      if (!contractConfig.isConfigured || !contractConfig.contractAddress) {
+        setOnChainFeedback(`❌ ${contractConfig.message} Pendaftaran on-chain dinonaktifkan demi keamanan.`);
+        return;
+      }
+
+      // 3. Base Network Validation (Rule 8)
+      const networkCheck = await ensureBaseNetwork('0x2105');
+      if (!networkCheck.success) {
+        setOnChainFeedback(`❌ ${networkCheck.error || 'Harap beralih ke jaringan Base'}`);
+        return;
+      }
+
+      // 4. Mode mapping to enum integer (0: FAIR_LAUNCH, 1: BONDING_CURVE, 2: FIXED_PRICE, 3: WHITELIST_PRIVATE, 4: COMMUNITY_PRELAUNCH)
+      const modeMap: Record<string, number> = {
+        FAIR_LAUNCH: 0,
+        BONDING_CURVE: 1,
+        FIXED_PRICE: 2,
+        WHITELIST_PRIVATE: 3,
+        COMMUNITY_PRELAUNCH: 4,
+      };
+      const modeInt = modeMap[draftResult.mode] ?? 1;
+
+      // 5. Real Contract Call via MetaMask Signer
+      setOnChainFeedback('⏳ Menyiapkan pendaftaran token on-chain di Base...');
+      const signer = await getBrowserSigner();
+      const contract = getLaunchpadContract(signer);
+
+      const derivedTokenAddress = ethers.getCreateAddress({ from: walletAddress, nonce: Math.floor(Math.random() * 100000) });
+      const totalSupplyWei = ethers.parseEther('1000000000');
+      const initialPriceWei = ethers.parseEther('0.00000002');
+      const graduationThresholdWei = ethers.parseEther('24');
+      const maxPerWalletPct = 100n;
+      const merkleRoot = ethers.ZeroHash;
+
+      setOnChainFeedback('⏳ Menunggu tanda tangan transaksi pendaftaran di MetaMask...');
+      const tx = await contract.registerTokenLaunch(
+        derivedTokenAddress,
+        draftResult.name,
+        draftResult.symbol,
+        totalSupplyWei,
+        initialPriceWei,
+        graduationThresholdWei,
+        maxPerWalletPct,
+        modeInt,
+        merkleRoot
+      );
+
+      setOnChainFeedback(`📡 Transaksi terkirim: ${tx.hash}. Menunggu konfirmasi blok Base...`);
+      const receipt = await tx.wait(1);
+
+      if (receipt && receipt.status === 1) {
+        setPublishedTxHash(tx.hash);
+        const explorerLink = getExplorerUrl(tx.hash, '0x2105', 'tx');
+        setOnChainFeedback(
+          `✅ Token $${draftResult.symbol} BERHASIL DIDAFTARKAN ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di BaseScan: ${explorerLink}`
+        );
+      } else {
+        setOnChainFeedback('❌ Transaksi gagal dieksekusi di blockchain Base.');
+      }
+    } catch (err: any) {
+      setOnChainFeedback(`❌ Gagal pendaftaran on-chain: ${normalizeWeb3Error(err)}`);
+    } finally {
+      setIsRegisteringOnChain(false);
     }
   };
 
@@ -316,6 +415,50 @@ export default function LaunchpadPage() {
               </div>
               <div style={{ backgroundColor: '#041E15', border: '1px solid var(--color-accent)', color: 'var(--color-accent)', padding: '12px', borderRadius: '4px', textAlign: 'center', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
                 <CheckCircle2 size={16} /> Draft Ready for Onchain Graduation Test
+              </div>
+
+              {/* On-Chain Registration Action & Status */}
+              <div style={{ marginBottom: '16px', padding: '14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: '#0B1017' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, marginBottom: '8px', color: '#00E5FF', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Zap size={14} /> Settlement Layer: Base Blockchain
+                </div>
+                {userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN' ? (
+                  <div>
+                    <p style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '10px' }}>
+                      Sebagai <strong>Protocol Admin</strong>, Anda dapat mendaftarkan token ini langsung ke smart contract <code>BondingCurveLaunchpad.sol</code> (<code>onlyOwner</code>).
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-primary w-full"
+                      onClick={handleRegisterOnChain}
+                      disabled={isRegisteringOnChain || !!publishedTxHash}
+                      style={{ padding: '10px', fontSize: '12px', justifyContent: 'center' }}
+                    >
+                      {isRegisteringOnChain ? '⏳ Memproses di Blockchain Base...' : publishedTxHash ? '✅ Terdaftar On-Chain' : '⚡ Register Token Launch On-Chain'}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '11px', color: 'var(--color-muted)', lineHeight: '1.5' }}>
+                    ℹ️ Fungsi on-chain (<code>registerTokenLaunch</code>) diproteksi modifier <code>onlyOwner</code> pada smart contract. Draft telah tersimpan di PostgreSQL SSOT dan akan diaktivasi on-chain oleh Protocol Admin setelah review governance.
+                  </div>
+                )}
+
+                {onChainFeedback && (
+                  <div
+                    style={{
+                      marginTop: '10px',
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      backgroundColor: onChainFeedback.startsWith('✅') ? '#041E15' : '#2A0808',
+                      color: onChainFeedback.startsWith('✅') ? 'var(--color-accent)' : '#FF5252',
+                      border: `1px solid ${onChainFeedback.startsWith('✅') ? 'var(--color-accent)' : '#FF5252'}`,
+                      wordBreak: 'break-all',
+                    }}
+                  >
+                    {onChainFeedback}
+                  </div>
+                )}
               </div>
 
               {/* Investor Nutrition Label Preview */}

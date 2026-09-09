@@ -54,6 +54,7 @@ export class ArkhamIntelligenceService {
           'API-Key': this.apiKey,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(5000),
       });
 
       if (!res.ok) {

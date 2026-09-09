@@ -39,6 +39,7 @@
     ]
   },
   "include": [
+    "app/**/*",
     "apps/**/*",
     "packages/**/*",
     "scripts/**/*",
