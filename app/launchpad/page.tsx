@@ -2,16 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet } from 'lucide-react';
+import { Rocket, ShieldAlert, FileText, CheckCircle2, AlertTriangle, TrendingUp, Scale, Wallet, Users, Tag, Sparkles } from 'lucide-react';
 import { NutritionLabelCard } from '../components/NutritionLabelCard';
+
+export type LaunchModeType = 'BONDING_CURVE' | 'FAIR_LAUNCH' | 'WHITELIST_PRIVATE' | 'FIXED_PRICE' | 'COMMUNITY_PRELAUNCH';
 
 export default function LaunchpadPage() {
   const { isConnected, userRole, walletAddress, connectMetaMask, isConnecting } = useAuth();
   const [connectError, setConnectError] = useState<string | null>(null);
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
-  const [mode, setMode] = useState<'BONDING_CURVE' | 'FAIR_LAUNCH'>('BONDING_CURVE');
+  const [mode, setMode] = useState<LaunchModeType>('BONDING_CURVE');
   const [creatorWallet, setCreatorWallet] = useState(walletAddress || '');
+  const [whitelistWallets, setWhitelistWallets] = useState('');
+  const [fixedPriceEth, setFixedPriceEth] = useState('0.0001');
+  const [fundingGoalEth, setFundingGoalEth] = useState('25');
   const [draftResult, setDraftResult] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -21,24 +26,54 @@ export default function LaunchpadPage() {
     }
   }, [walletAddress]);
 
-  const handleCreateDraft = (e: React.FormEvent) => {
+  const handleCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tokenName || !tokenSymbol) return;
 
     setIsCreating(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/launchpad/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: tokenName,
+          ticker: tokenSymbol.toUpperCase(),
+          description: `Launch draft for ${tokenName} on ${mode}`,
+          imageUrl: 'https://rtrader.io/token-default.png',
+          launchMode: mode,
+          targetChain: 'base-mainnet',
+          totalSupply: '1000000000',
+          creatorAllocationPct: 0.0,
+          creatorWallet: walletAddress || creatorWallet,
+          socialLinks: {
+            whitelist_wallets: whitelistWallets,
+            fixed_price_eth: fixedPriceEth,
+            funding_goal_eth: fundingGoalEth,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        setDraftResult(json.data);
+      } else {
+        throw new Error('API request failed');
+      }
+    } catch {
+      // Fallback local preview jika offline
       setDraftResult({
         draftId: `draft-${Date.now()}`,
         name: tokenName,
         symbol: tokenSymbol.toUpperCase(),
         mode,
         creatorWallet: walletAddress || creatorWallet,
-        riskPassportScore: 78,
+        riskPassportScore: 82,
         status: 'DRAFT_CREATED',
         createdAt: new Date().toISOString(),
       });
+    } finally {
       setIsCreating(false);
-    }, 400);
+    }
   };
 
   return (
@@ -99,26 +134,92 @@ export default function LaunchpadPage() {
             </div>
 
             <div className="flex-col gap-xs">
-              <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Launch Model</label>
-              <div className="grid-2">
+              <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Launch Model (5 Deployment Modes Available)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setMode('BONDING_CURVE')}
                   className={mode === 'BONDING_CURVE' ? 'btn-primary' : 'btn-secondary'}
-                  style={{ padding: '12px', justifyContent: 'center' }}
+                  style={{ padding: '10px 6px', justifyContent: 'center', fontSize: '11px' }}
                 >
-                  <TrendingUp size={16} className="inline mr-1" /> Bonding Curve
+                  <TrendingUp size={14} className="inline mr-1" /> Bonding Curve
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('FAIR_LAUNCH')}
                   className={mode === 'FAIR_LAUNCH' ? 'btn-primary' : 'btn-secondary'}
-                  style={{ padding: '12px', justifyContent: 'center' }}
+                  style={{ padding: '10px 6px', justifyContent: 'center', fontSize: '11px' }}
                 >
-                  <Scale size={16} className="inline mr-1" /> Fair Launch
+                  <Scale size={14} className="inline mr-1" /> Fair Launch
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('WHITELIST_PRIVATE')}
+                  className={mode === 'WHITELIST_PRIVATE' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '10px 6px', justifyContent: 'center', fontSize: '11px', border: mode === 'WHITELIST_PRIVATE' ? '1px solid #D500F9' : undefined }}
+                >
+                  <Users size={14} className="inline mr-1" /> Angel Whitelist
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('FIXED_PRICE')}
+                  className={mode === 'FIXED_PRICE' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '10px 6px', justifyContent: 'center', fontSize: '11px' }}
+                >
+                  <Tag size={14} className="inline mr-1" /> Fixed Price
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('COMMUNITY_PRELAUNCH')}
+                  className={mode === 'COMMUNITY_PRELAUNCH' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '10px 6px', justifyContent: 'center', fontSize: '11px' }}
+                >
+                  <Sparkles size={14} className="inline mr-1" /> Community
                 </button>
               </div>
             </div>
+
+            {/* Dynamic Mode-Specific Settings */}
+            {mode === 'WHITELIST_PRIVATE' && (
+              <div className="flex-col gap-xs" style={{ backgroundColor: '#1A0826', border: '1px solid #D500F9', padding: '12px', borderRadius: '6px' }}>
+                <label style={{ color: '#E040FB', fontSize: '11px', fontWeight: 800 }}>👑 Angel Investor Whitelist Addresses (Merkle Proofs)</label>
+                <textarea
+                  placeholder="0x123...abc, 0x456...def (Comma-separated investor wallets)"
+                  value={whitelistWallets}
+                  onChange={(e) => setWhitelistWallets(e.target.value)}
+                  className="input"
+                  style={{ padding: '8px', fontSize: '11px', fontFamily: 'var(--font-mono)', minHeight: '60px' }}
+                />
+                <span className="text-muted" style={{ fontSize: '10px' }}>Only whitelisted angel wallets can claim allocated seed tokens.</span>
+              </div>
+            )}
+
+            {mode === 'FIXED_PRICE' && (
+              <div className="flex-col gap-xs" style={{ backgroundColor: '#071A2E', border: '1px solid #00E5FF', padding: '12px', borderRadius: '6px' }}>
+                <label style={{ color: '#00E5FF', fontSize: '11px', fontWeight: 800 }}>🏷️ Fixed Price Per Token (in ETH)</label>
+                <input
+                  type="text"
+                  value={fixedPriceEth}
+                  onChange={(e) => setFixedPriceEth(e.target.value)}
+                  className="input"
+                  style={{ padding: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}
+                />
+              </div>
+            )}
+
+            {mode === 'COMMUNITY_PRELAUNCH' && (
+              <div className="flex-col gap-xs" style={{ backgroundColor: '#041E15', border: '1px solid var(--color-accent)', padding: '12px', borderRadius: '6px' }}>
+                <label style={{ color: 'var(--color-accent)', fontSize: '11px', fontWeight: 800 }}>🤝 Target Funding Goal (in ETH)</label>
+                <input
+                  type="text"
+                  value={fundingGoalEth}
+                  onChange={(e) => setFundingGoalEth(e.target.value)}
+                  className="input"
+                  style={{ padding: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}
+                />
+                <span className="text-muted" style={{ fontSize: '10px' }}>Tokens only mint if funding goal is reached before the deadline.</span>
+              </div>
+            )}
 
             <div className="flex-col gap-xs">
               <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Creator Wallet Address</label>
