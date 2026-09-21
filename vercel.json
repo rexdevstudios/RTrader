@@ -1,11 +1,7 @@
 {
   "framework": "nextjs",
   "regions": ["iad1"],
-  "functions": {
-    "app/api/**/*": {
-      "maxDuration": 10
-    }
-  },
+
   "headers": [
     {
       "source": "/(.*)",
