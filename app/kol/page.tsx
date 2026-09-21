@@ -19,7 +19,7 @@ import {
   Globe,
   Clock,
 } from 'lucide-react';
-import HeaderNav from '../components/HeaderNav';
+
 import {
   getContractConfiguration,
   ensureBaseNetwork,
@@ -385,25 +385,23 @@ export default function KolHubPage() {
 
   return (
     <div className="container" style={{ paddingBottom: '60px' }}>
-      <HeaderNav />
-
       {/* Hero Header */}
-      <div className="bg-panel" style={{ marginTop: '24px', padding: '24px', borderRadius: '12px' }}>
+      <div className="bg-panel" style={{ padding: '24px', borderRadius: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span className="badge badge-trader" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <Sparkles size={12} /> SOCIALFI TRUST & REPUTATION ENGINE
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#86EFAC', border: '1px solid rgba(34, 197, 94, 0.25)', fontSize: '11px', padding: '2px 8px' }}>
+                SocialFi Bounty Portal
               </span>
-              <span className="badge" style={{ backgroundColor: '#1A1E2F', border: '1px solid #334155', color: '#94A3B8' }}>
-                Arkham Enriched • On-Chain Merkle Claim
+              <span className="badge" style={{ backgroundColor: '#1E293B', border: '1px solid #334155', color: '#94A3B8', fontSize: '11px', padding: '2px 8px' }}>
+                Arkham & Merkle Verified
               </span>
             </div>
-            <h1 style={{ fontSize: '26px', fontWeight: 900, margin: 0 }}>
-              KOL Hub & Marketing Bounty Portal
+            <h1 style={{ fontSize: '24px', fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>
+              KOL Hub & Marketing Bounties
             </h1>
             <p className="text-muted" style={{ margin: '6px 0 0 0', fontSize: '14px' }}>
-              Bekerja sama dengan pembuat token, selesaikan misi promosi sosial, dan klaim alokasi token secara instan & on-chain.
+              Bekerja sama dengan pembuat token, selesaikan misi kampanye sosial, dan klaim alokasi token secara instan & on-chain.
             </p>
           </div>
 
