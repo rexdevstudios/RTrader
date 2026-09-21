@@ -53,16 +53,21 @@ export const KNOWN_PUMPRUN_TOKENS = [
   "0x7ce19e4f978009eb644c27946b47221b824c0ba3",
 ];
 export const DOPPLER_BUY_BASE = `https://app.doppler.lol/tokens/base/`;
+export const DOPPLER_BUY_ROBINHOOD = `https://app.doppler.lol/tokens/robinhood/`;
+export const GMGN_ROBINHOOD_BASE = `https://gmgn.ai/robinhood/token/`;
 export const BANKR_1CLICK_BASE = `https://bankr.bot/terminal/trade?in=ETH&chain=base&out=`;
 export const BANKR_WETH_BASE = `https://bankr.bot/terminal/trade?in=WETH&chain=base&out=`;
 export const DEXSCREENER_BASE = `https://dexscreener.com/base/`;
+export const DEXSCREENER_ROBINHOOD = `https://dexscreener.com/robinhood/`;
 export const GECKOTERMINAL_BASE = `https://www.geckoterminal.com/base/pools/`;
+export const GECKOTERMINAL_ROBINHOOD = `https://www.geckoterminal.com/robinhood-chain/pools/`;
 export const UNISWAP_1CLICK_BASE = `https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=`;
 
 export interface ResolvedTokenTarget {
   address: string;
   ticker: string;
   name: string;
+  chain?: string;
   poolId?: string;
   walletId?: string;
   index?: number;
@@ -96,14 +101,15 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
     // Check if in deploy_logs
     try {
       const row = db
-        .query(`SELECT contract_addr, ticker, token_name, pool_id, wallet_id FROM deploy_logs WHERE contract_addr = ? ORDER BY id DESC LIMIT 1`)
-        .get(addr) as { contract_addr: string; ticker: string; token_name: string; pool_id?: string; wallet_id?: string } | null;
+        .query(`SELECT contract_addr, ticker, token_name, chain, pool_id, wallet_id FROM deploy_logs WHERE contract_addr = ? ORDER BY id DESC LIMIT 1`)
+        .get(addr) as { contract_addr: string; ticker: string; token_name: string; chain?: string; pool_id?: string; wallet_id?: string } | null;
 
       if (row) {
         return {
           address: row.contract_addr,
           ticker: row.ticker || "TOKEN",
           name: row.token_name || "Token",
+          chain: row.chain || "base",
           poolId: row.pool_id || undefined,
           walletId: row.wallet_id || undefined,
         };
@@ -112,11 +118,15 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
       // Fails safe
     }
 
+    const chainArg = process.argv.find((a) => a.startsWith("--chain="));
+    const specifiedChain = chainArg ? chainArg.split("=")[1]?.toLowerCase() : (process.env.BANKR_CHAIN === "robinhood" ? "robinhood" : "base");
+
     const isKnownPumprun = KNOWN_PUMPRUN_TOKENS.includes(addr.toLowerCase());
     return {
       address: addr,
       ticker: isKnownPumprun ? "PUMPRUN" : "CUSTOM",
       name: isKnownPumprun ? "Pump Hill Runner" : "Custom Token",
+      chain: specifiedChain,
       poolId: isKnownPumprun ? DEFAULT_POOL_ID : undefined,
     };
   }
@@ -608,19 +618,24 @@ async function main() {
     }
     case "link": {
       const resolved = resolveTargetToken(targetToken);
+      const isRobinhood = resolved.chain === "robinhood";
       const subType = args[2]?.toLowerCase();
       if (subType === "bankr") {
-        console.log(`${BANKR_1CLICK_BASE}${resolved.address}`);
+        console.log(isRobinhood ? `${DOPPLER_BUY_ROBINHOOD}${resolved.address}` : `${BANKR_1CLICK_BASE}${resolved.address}`);
+      } else if (subType === "doppler") {
+        console.log(isRobinhood ? `${DOPPLER_BUY_ROBINHOOD}${resolved.address}` : `${DOPPLER_BUY_BASE}${resolved.address}`);
+      } else if (subType === "gmgn") {
+        console.log(isRobinhood ? `${GMGN_ROBINHOOD_BASE}${resolved.address}` : `https://gmgn.ai/base/token/${resolved.address}`);
       } else if (subType === "weth") {
         console.log(`${BANKR_WETH_BASE}${resolved.address}`);
       } else if (subType === "uniswap") {
-        console.log(`${UNISWAP_1CLICK_BASE}${resolved.address}`);
+        console.log(isRobinhood ? `https://app.uniswap.org/swap?chain=robinhood&outputCurrency=${resolved.address}` : `${UNISWAP_1CLICK_BASE}${resolved.address}`);
       } else if (subType === "gecko") {
         const poolRef = resolved.poolId || resolved.address;
-        console.log(`${GECKOTERMINAL_BASE}${poolRef}`);
+        console.log(isRobinhood ? `${GECKOTERMINAL_ROBINHOOD}${poolRef}` : `${GECKOTERMINAL_BASE}${poolRef}`);
       } else {
         // default: dexscreener
-        console.log(`${DEXSCREENER_BASE}${resolved.address}`);
+        console.log(isRobinhood ? `${DEXSCREENER_ROBINHOOD}${resolved.address}` : `${DEXSCREENER_BASE}${resolved.address}`);
       }
       break;
     }

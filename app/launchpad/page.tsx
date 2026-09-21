@@ -738,7 +738,11 @@ export default function LaunchpadPage() {
               const raised = Number(token.raisedAmount || 0);
               const target = Number(token.graduationThreshold || 69000);
               const progressPct = Math.min(100, Math.round((raised / target) * 100));
-              const explorerUrl = `https://basescan.org/address/${token.contractAddress}`;
+              const isRobinhood = String(token.chain || '').toLowerCase().includes('robinhood');
+              const explorerUrl = isRobinhood
+                ? `https://robinhoodchain.blockscout.com/address/${token.contractAddress}`
+                : `https://basescan.org/address/${token.contractAddress}`;
+              const explorerLabel = isRobinhood ? 'Blockscout ↗' : 'Basescan ↗';
 
               return (
                 <div
@@ -798,7 +802,7 @@ export default function LaunchpadPage() {
                       className="btn-secondary"
                       style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
                     >
-                      Basescan ↗
+                      {explorerLabel}
                     </a>
                     <a
                       href={`/trading?token=${token.contractAddress}`}

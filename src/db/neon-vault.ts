@@ -307,8 +307,9 @@ export async function ensureNetworkRow(masterSql: SQL, chainInput: string): Prom
     nativeCurrency = "ETH";
     explorer = "https://etherscan.io";
   } else if (norm === "robinhood") {
-    chainId = 46688;
-    explorer = "https://explorer.robinhood.com";
+    chainId = 4663;
+    nativeCurrency = "ETH";
+    explorer = "https://robinhoodchain.blockscout.com";
   } else if (norm === "arc") {
     chainId = 5042;
     explorer = "https://arcscan.io";

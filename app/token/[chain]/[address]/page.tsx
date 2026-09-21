@@ -119,7 +119,7 @@ export default async function TokenPortalPage({ params }: PageProps) {
   const getExplorerUrl = () => {
     if (isSol) return `https://solscan.io/token/${lookupAddress}`;
     if (norm.chain === 'ethereum') return `https://etherscan.io/token/${lookupAddress}`;
-    if (norm.chain === 'robinhood') return `https://explorer.robinhood.com/token/${lookupAddress}`;
+    if (norm.chain === 'robinhood') return `https://robinhoodchain.blockscout.com/token/${lookupAddress}`;
     if (norm.chain === 'arc') return `https://arcscan.io/token/${lookupAddress}`;
     if (norm.chain === 'arbitrum') return `https://arbiscan.io/token/${lookupAddress}`;
     if (norm.chain === 'bsc') return `https://bscscan.com/token/${lookupAddress}`;
