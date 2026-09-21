@@ -12,6 +12,8 @@ import { ApiResponse } from '@packages/shared/contracts/api-contracts';
 // Never blocks critical execution path.
 // ============================================================================
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const macroSignal = await fetchDefiLlamaMacroSignal();

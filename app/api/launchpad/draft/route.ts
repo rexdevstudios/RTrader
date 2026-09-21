@@ -4,6 +4,8 @@ import { LaunchDraftService } from '@packages/launchpad/launch-draft-service';
 import { defaultDraftDbAdapter } from '@packages/shared/db-pool';
 import { requireCapability } from '@packages/auth/session';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireCapability(req, 'CREATE_LAUNCH_DRAFT');

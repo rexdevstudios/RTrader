@@ -11,6 +11,8 @@ const PLANS = [
   { id: 'AGENT', name: 'AI Autonomous Agent', monthlyPriceUsd: 299, monthlyCredits: 15000, features: ['AI Proposal Generation', 'Firecrawl Web Scraping', 'Arkham Wallet Profiling', 'RSI Strategy Backtester'] },
 ];
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const response: ApiResponse<typeof PLANS> = {
     success: true,

@@ -26,6 +26,8 @@ const scraperService = new FirecrawlScraperService('fc_api_key', mockDb);
 
 const orchestrator = new SystemOrchestrator(rpcManager, sandboxRunner, scraperService);
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const overview = await orchestrator.getSystemOverview();
