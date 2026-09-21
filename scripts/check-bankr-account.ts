@@ -175,7 +175,22 @@ async function main() {
     const opEth = formatEther(opBalance);
 
     console.log(` - Alamat Lokal Operator   : ${operatorAccount.address}`);
-    console.log(` - Saldo Gas di Base L2    : ${opEth} ETH (~ $${(parseFloat(opEth) * 2500).toFixed(2)} USD)`);
+    console.log(` - Saldo Gas di Base L2    : ${opEth} ETH (~ $${(parseFloat(opEth) * 2750).toFixed(2)} USD)`);
+
+    // Audit Robinhood Chain L2 balance
+    try {
+      const rhRes = await fetch("https://rpc.mainnet.chain.robinhood.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getBalance", params: [operatorAccount.address, "latest"] }),
+      });
+      const rhJson = await rhRes.json();
+      const rhBalWei = rhJson.result ? BigInt(rhJson.result) : 0n;
+      const rhEth = Number(rhBalWei) / 1e18;
+      console.log(` - Saldo di Robinhood L2   : ${rhEth.toFixed(6)} ETH (~ $${(rhEth * 2750).toFixed(2)} USD) [TERSEDIA]`);
+    } catch {
+      // Non-fatal fallback
+    }
   } catch (err: any) {
     console.log(` - Status Dompet Lokal     : ${err.message}`);
   }
