@@ -57,3 +57,6 @@ scripts/scratch*
 wallets/
 *.csv
 .tempmediaStorage/
+
+.vercel
+.env*
