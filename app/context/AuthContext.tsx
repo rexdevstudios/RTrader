@@ -53,37 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Fallback check from localStorage for sandbox/dev mode
-      const storedRole = (localStorage.getItem('rtrader_role') as UserRole) || null;
-      const cookies = document.cookie.split(';');
-      const sessionCookie = cookies.find((c) => c.trim().startsWith('rtrader_session='));
-
-      if (sessionCookie) {
-        const val = sessionCookie.split('=')[1];
-        let addr = '';
-        let uId = '';
-        try {
-          const decoded = atob(val);
-          const parts = decoded.split(':');
-          if (parts.length >= 2) {
-            uId = parts[0];
-            addr = parts[1];
-          }
-        } catch {
-          // ignore decode error
-        }
-
-        if (addr) {
-          const activeRole: UserRole = storedRole || (addr.toLowerCase().includes('admin') ? 'SYSTEM_ADMIN' : 'TRADER');
-          setWalletAddress(addr);
-          setUserId(uId || `usr-${addr.slice(0, 10).toLowerCase()}`);
-          setIsConnected(true);
-          setUserRole(activeRole);
-          setCredits(activeRole === 'SYSTEM_ADMIN' ? 999999 : 15000);
-          return;
-        }
-      }
-
       // Disconnected state (Guest)
       setWalletAddress(null);
       setUserId(null);
@@ -114,18 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const connectWallet = useCallback((address: string, role: UserRole = 'TRADER') => {
-    const uId = `usr-${address.slice(0, 10).toLowerCase()}`;
-    const issuedAt = Date.now().toString();
-    const nonce = `nonce-${Date.now()}`;
-    const rawToken = `${uId}:${address}:${issuedAt}:${nonce}`;
-    const sessionToken = typeof btoa === 'function' ? btoa(rawToken) : Buffer.from(rawToken).toString('base64');
-
-    // Set cookie for Edge Middleware
-    document.cookie = `rtrader_session=${sessionToken}; path=/; max-age=28800; SameSite=Strict`;
-    localStorage.setItem('rtrader_role', role);
-
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[AuthContext] Direct connectWallet without cryptographic SIWE signature is disabled in production.');
+      return;
+    }
+    // In local development / test harness:
     setWalletAddress(address);
-    setUserId(uId);
+    setUserId(`usr-${address.slice(0, 10).toLowerCase()}`);
     setIsConnected(true);
     setUserRole(role);
     setCredits(role === 'SYSTEM_ADMIN' ? 999999 : 15000);
@@ -203,8 +167,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(verifyJson.error?.message || 'SIWE cryptographic verification failed');
       }
 
-      // 5. Update local state and revalidate from server
-      connectWallet(activeAddress, 'TRADER');
+      // 5. Store cryptographic session token & revalidate from authoritative server
+      if (verifyJson.data?.sessionToken) {
+        document.cookie = `rtrader_session=${verifyJson.data.sessionToken}; path=/; max-age=28800; SameSite=Strict`;
+      }
       await refreshSession();
 
       return { success: true, address: activeAddress };
@@ -214,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsConnecting(false);
     }
-  }, [connectWallet, refreshSession]);
+  }, [refreshSession]);
 
   // Listen for MetaMask account & chain changes dynamically (EIP-1193)
   useEffect(() => {
@@ -225,8 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!accounts || accounts.length === 0) {
           disconnectWallet();
         } else if (accounts[0].toLowerCase() !== walletAddress?.toLowerCase()) {
-          // Dynamic account switch
-          connectWallet(accounts[0], userRole === 'GUEST' ? 'TRADER' : userRole);
+          // Dynamic account switch requires fresh SIWE re-authentication
+          refreshSession();
         }
       };
 
@@ -242,7 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ethereum.removeListener?.('chainChanged', handleChainChanged);
       };
     }
-  }, [walletAddress, userRole, connectWallet, disconnectWallet]);
+  }, [walletAddress, disconnectWallet, refreshSession]);
 
   const switchRole = useCallback((role: UserRole) => {
     if (role === 'GUEST') {
@@ -250,16 +216,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    let targetAddr = walletAddress;
-    if (!targetAddr) {
-      targetAddr =
-        role === 'SYSTEM_ADMIN' || role === 'SUPER_ADMIN'
-          ? '0xADMIN99999999999999999999999999999999999'
-          : '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[AuthContext] Role switching is disabled in production. Roles are strictly authoritative from backend SIWE session.');
+      return;
     }
 
-    connectWallet(targetAddr, role);
-  }, [walletAddress, connectWallet, disconnectWallet]);
+    console.warn('[AuthContext] Role switching is only permitted in local dev sandbox and does not elevate backend API permissions.');
+    setUserRole(role);
+  }, [disconnectWallet]);
 
   return (
     <AuthContext.Provider

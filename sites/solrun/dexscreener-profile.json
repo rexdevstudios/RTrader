@@ -1,0 +1,16 @@
+{
+  "chainId": "solana",
+  "tokenAddress": "4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+  "url": "https://solrun-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Solana%20Runner%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "header": "https://gateway.pinata.cloud/ipfs/QmZLv4ZSJSeAxmWzD3WkjmZiGkTceJdQcqKxJDpKg869kg",
+  "description": "Solana Runner ($SOLRUN) - Autonomous Web3 Protocol on SOLANA. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://solrun-web3.pages.dev"
+    }
+  ],
+  "generatedAt": "2026-09-20T06:56:23.432Z"
+}

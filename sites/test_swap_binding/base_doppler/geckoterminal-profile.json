@@ -1,0 +1,22 @@
+{
+  "network": "base",
+  "tokenAddress": "0x0a99f4251A461e8abC693a56BB837fD815D51BA3",
+  "tokenName": "Pump Hill Runner",
+  "tokenSymbol": "PUMPRUN",
+  "tokenUrl": "https://www.geckoterminal.com/base/tokens/0x0a99f4251A461e8abC693a56BB837fD815D51BA3",
+  "description": "Pump Hill Runner ($PUMPRUN) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Pump%20Hill%20Runner%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://pumprun-web3.pages.dev",
+    "twitter": "https://x.com/PUMPRUN_coin",
+    "telegram": "https://t.me/pumprun_portal",
+    "explorer": "https://basescan.org/tokenupdate/0x0a99f4251A461e8abC693a56BB837fD815D51BA3"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-20T16:01:55.237Z"
+}

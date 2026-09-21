@@ -1,0 +1,22 @@
+{
+  "network": "robinhood",
+  "tokenAddress": "0x1111111111111111111111111111111111111111",
+  "tokenName": "Robinhood Pump Token",
+  "tokenSymbol": "ROBINPUMP",
+  "tokenUrl": "https://www.geckoterminal.com/robinhood/tokens/0x1111111111111111111111111111111111111111",
+  "description": "Robinhood Pump Token ($ROBINPUMP) - Autonomous Web3 Token on ROBINHOOD. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Robinhood%20Pump%20Token%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://robinpump-web3.pages.dev",
+    "twitter": "https://x.com/ROBINPUMP_coin",
+    "telegram": "https://t.me/robinpump_portal",
+    "explorer": "https://blockscout.com/token/0x1111111111111111111111111111111111111111"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-18T10:47:01.553Z"
+}

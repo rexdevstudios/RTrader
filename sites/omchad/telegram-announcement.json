@@ -1,0 +1,28 @@
+{
+  "htmlCard": "🚀 <b>OFFICIAL LAUNCH ALPHA: $OMCHAD (Omni Chain Chad)</b>\n\n⛓️ <b>Chain:</b> Base Mainnet\n📝 <b>CA:</b> <code>0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05</code>\n🛡️ <b>Security:</b> 0% Tax | Audited Liquidity | Minimal Proxy\n\n🌪️ <b>4-PILLAR POSITIVE-SUM FLYWHEEL:</b>\n• 🔥 <b>30% Auto Buyback & Burn:</b> Sends to <code>0x000000000000000000000000000000000000dEaD</code>\n• 💰 <b>20% Passive WETH Yield:</b> Auto-distributed to Diamond Hands\n• ⚡ <b>15% 10-Min FOMO Jackpot:</b> Last buyer takes the prize pool\n• 🏛️ <b>35% Protocol Kas:</b> Autonomous development & maintenance\n\n🔗 <b>OFFICIAL VERIFIED LINKS:</b>\n• 📊 <a href=\"https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05\">Live DexScreener Chart</a>\n• 🦄 <a href=\"https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05\">1-Click Swap</a>\n• 🌐 <a href=\"https://omchad-web3.pages.dev\">Official Web3 DApp</a>\n• 🤖 <a href=\"https://t.me/omchad_portal\">Community Telegram</a>\n\n💡 <i>Always verify CA before swapping:</i> <code>0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05</code>",
+  "markdownCard": "🚀 *OFFICIAL LAUNCH ALPHA: $OMCHAD (Omni Chain Chad)*\n\n⛓️ *Chain:* Base Mainnet\n📝 *CA:* `0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05`\n🛡️ *Security:* 0% Tax | Audited Liquidity\n\n🌪️ *4-PILLAR FLYWHEEL TOKENOMICS:*\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Protocol Kas\n\n🔗 *OFFICIAL LINKS:*\n• [Live DexScreener Chart](https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05)\n• [1-Click Swap](https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05)\n• [Official Web3 DApp](https://omchad-web3.pages.dev)\n• [Community Telegram](https://t.me/omchad_portal)",
+  "plainCard": "🚀 OFFICIAL LAUNCH ALPHA: $OMCHAD (Omni Chain Chad)\nChain: Base Mainnet\nCA: 0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05\nSecurity: 0% Tax | Audited Liquidity\nFlywheel: 30% Burn | 20% Dividend | 15% Jackpot | 35% Kas\nChart: https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05\nSwap: https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05\nDApp: https://omchad-web3.pages.dev\nTelegram: https://t.me/omchad_portal",
+  "shareDeepLink": "https://t.me/share/url?url=https%3A%2F%2Fomchad-web3.pages.dev&text=%F0%9F%9A%80%20OFFICIAL%20LAUNCH%3A%20%24OMCHAD%20(Omni%20Chain%20Chad)%20is%20live%20on%20Base%20Mainnet!%0A%0ACA%3A%200x2a6afc7fcecf70e955085a1b19ed215c5aa08b05%0A%0AChart%3A%20https%3A%2F%2Fdexscreener.com%2Fbase%2F0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05%0ADApp%3A%20https%3A%2F%2Fomchad-web3.pages.dev",
+  "inlineKeyboard": [
+    [
+      {
+        "text": "📊 DexScreener Chart",
+        "url": "https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05"
+      },
+      {
+        "text": "🦄 1-Click Swap",
+        "url": "https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05"
+      }
+    ],
+    [
+      {
+        "text": "🌐 Web3 DApp",
+        "url": "https://omchad-web3.pages.dev"
+      },
+      {
+        "text": "🤖 Telegram Portal",
+        "url": "https://t.me/omchad_portal"
+      }
+    ]
+  ]
+}

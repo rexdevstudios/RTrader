@@ -1,0 +1,22 @@
+{
+  "network": "base",
+  "tokenAddress": "0x1111111111111111111111111111111111111111",
+  "tokenName": "Graduated Token",
+  "tokenSymbol": "GRADUATED",
+  "tokenUrl": "https://www.geckoterminal.com/base/tokens/0x1111111111111111111111111111111111111111",
+  "description": "Graduated Token ($GRADUATED) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Graduated%20Token%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://graduated-web3.pages.dev",
+    "twitter": "https://x.com/GRADUATED_coin",
+    "telegram": "https://t.me/graduated_portal",
+    "explorer": "https://basescan.org/tokenupdate/0x1111111111111111111111111111111111111111"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-20T16:01:56.145Z"
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Robinhood Pump Token",
+  "ticker": "ROBINPUMP",
+  "contractAddress": "0x1111111111111111111111111111111111111111",
+  "chain": "robinhood",
+  "sector": "DEFI_TREASURY",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://robinhoodchain.blockscout.com/token/0x1111111111111111111111111111111111111111",
+    "buy": "https://pons.fun/token/0x1111111111111111111111111111111111111111",
+    "dexscreener": "https://dexscreener.com/robinhood/0x1111111111111111111111111111111111111111"
+  },
+  "generatedAt": "2026-09-18T10:47:01.283Z"
+}

@@ -250,6 +250,7 @@ export default function TradingPage() {
             <option value="ETHUSDT">ETH / USDT (Binance Live)</option>
             <option value="SOLUSDT">SOL / USDT (Binance Live)</option>
             <option value="BASEUSDT">BASE / USDT (Binance Live)</option>
+            <option value="PUMPRUN/WETH">PUMPRUN / WETH (Base Doppler v4)</option>
             <option value="MOON/ETH">MOON / ETH (Bonding Curve)</option>
             <option value="PEOPLE/ETH">PEOPLE / ETH (Fair Launch)</option>
             <option value="CDAO/ETH">CDAO / ETH (Community Prelaunch)</option>
@@ -554,10 +555,12 @@ export default function TradingPage() {
               <NutritionLabelCard
                 liquidityLocked={symbol !== 'CDAO/ETH'}
                 mintRevoked={true}
-                creatorTrustScore={symbol === 'MOON/ETH' ? 88 : symbol === 'PEOPLE/ETH' ? 72 : 55}
-                overallTier={symbol === 'MOON/ETH' ? 'LOW' : symbol === 'PEOPLE/ETH' ? 'MEDIUM' : 'HIGH'}
+                creatorTrustScore={symbol === 'PUMPRUN/WETH' ? 90 : symbol === 'MOON/ETH' ? 88 : symbol === 'PEOPLE/ETH' ? 72 : 55}
+                overallTier={symbol === 'PUMPRUN/WETH' || symbol === 'MOON/ETH' ? 'LOW' : symbol === 'PEOPLE/ETH' ? 'MEDIUM' : 'HIGH'}
                 reasons={
-                  symbol === 'MOON/ETH'
+                  symbol === 'PUMPRUN/WETH'
+                    ? ['GoPlus Audit 90/100 (VERY SAFE)', 'No Honeypot | 0% Tax | Cannot Sell All = FALSE', 'Doppler Hook Uniswap v4 Liquidity Locked', 'Verified Base Mainnet Deployment']
+                    : symbol === 'MOON/ETH'
                     ? ['Audited Bonding Curve Template', 'Arkham Creator Score 88/100', 'Automatic Liquidity Lock at 24 ETH']
                     : symbol === 'PEOPLE/ETH'
                     ? ['Fair Launch 1% Max Wallet Anti-Snipe', 'Creator wallet age < 30 days']

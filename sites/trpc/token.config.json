@@ -1,0 +1,25 @@
+{
+  "name": "RPC Failover Test",
+  "ticker": "TRPC",
+  "contractAddress": "0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+  "chain": "base",
+  "sector": "AI_AGENT",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://basescan.org/token/0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+    "buy": "https://app.doppler.lol/tokens/base/0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+    "dexscreener": "https://dexscreener.com/base/0x7CE19E4F978009EB644c27946B47221b824C0bA3"
+  },
+  "generatedAt": "2026-09-20T16:01:36.109Z"
+}

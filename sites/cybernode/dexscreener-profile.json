@@ -1,0 +1,20 @@
+{
+  "chainId": "base",
+  "tokenAddress": "0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+  "url": "https://cybernode-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Cyber%20DePIN%20Node%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "description": "Cyber DePIN Node ($CYBERNODE) - Autonomous Web3 Protocol on BASE. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://cybernode-web3.pages.dev"
+    },
+    {
+      "type": "docs",
+      "label": "Bankr Agent",
+      "url": "https://bankr.bot/agents/cybernode"
+    }
+  ],
+  "generatedAt": "2026-09-18T10:47:00.225Z"
+}

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>$UNKNOWN — Official Web3 Protocol Landing Page</title>
+  <meta name="description" content="$UNKNOWN (Token 0x2a6a) on Base Mainnet L2. 0% Tax, Autonomous Flywheel, LP Locked." />
+  
+  <!-- OpenGraph / Twitter Cards -->
+  <meta property="og:title" content="$UNKNOWN (Token 0x2a6a) — Official Web3 Protocol" />
+  <meta property="og:description" content="0% Tax, 30% Deflationary Burn, 20% Passive Dividends. Live on Base Mainnet L2." />
+  <meta property="og:image" content="og-image.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="og-image.svg" />
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brandPrimary: '#ff007a',
+            brandSecondary: '#ffb703',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen overflow-x-hidden relative font-sans selection:bg-brandPrimary selection:text-black">
+
+  <!-- Interactive 3D WebGL / Particle Canvas Background -->
+  <canvas id="bg-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 backdrop-blur-lg bg-gray-950/80 border-b border-gray-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="https://image.pollinations.ai/prompt/Token%200x2a6a%20crypto%20token%20logo?width=512&height=512&nologo=true" alt="Token 0x2a6a Logo" class="w-9 h-9 rounded-full ring-2 ring-brandPrimary/50" />
+        <span class="font-extrabold tracking-wider text-lg text-white">$UNKNOWN</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-brandPrimary/20 text-brandPrimary font-mono border border-brandPrimary/30">Viral</span>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
+        <a href="#about" class="hover:text-brandPrimary transition">About</a>
+        <a href="#tokenomics" class="hover:text-brandPrimary transition">Tokenomics</a>
+        <a href="#swap" class="hover:text-brandPrimary transition">Instant Swap</a>
+        <a href="#chart" class="hover:text-brandPrimary transition">Live Chart</a>
+        <a href="#team" class="hover:text-brandPrimary transition">Core Team</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="https://app.uniswap.org/explore/tokens/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-lg bg-gradient-to-r from-brandPrimary to-brandSecondary text-black font-bold text-sm shadow-lg shadow-brandPrimary/25 hover:opacity-90 transition">
+          Buy $UNKNOWN
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section with 3D Parallax Tilt -->
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Hero Left: Text & Badges -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-900 border border-gray-800 text-xs text-gray-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Verified On Base Mainnet L2</span>
+          
+          <span class="text-emerald-400 font-semibold">• ⚡ Bankr Gasless Launch</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white leading-tight">
+          The Next Generation <br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-brandPrimary to-brandSecondary">Token 0x2a6a</span>
+        </h1>
+
+        <p class="text-base sm:text-lg text-gray-400 max-w-xl">
+          High-Energy Community Token with 10-Minute FOMO Jackpot and 0% Friction Tax. Designed mathematically to reward diamond holders with perpetual deflation and native yield.
+        </p>
+
+        <!-- 1-Click Copy Contract Address Box -->
+        <div class="p-4 rounded-xl bg-gray-900/90 border border-gray-800 backdrop-blur-md space-y-2">
+          <div class="flex items-center justify-between text-xs text-gray-400">
+            <span class="font-mono">CONTRACT ADDRESS (CA)</span>
+            <span class="text-emerald-400 font-semibold">● 0% Buy / 0% Sell Tax</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" readonly value="0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" id="ca-input" class="w-full bg-gray-950 px-3 py-2 rounded-lg text-xs font-mono text-gray-200 border border-gray-800 focus:outline-none focus:border-brandPrimary" />
+            <button id="copy-ca-btn" class="px-4 py-2 rounded-lg bg-brandPrimary text-black font-bold text-xs hover:opacity-90 transition whitespace-nowrap">
+              Copy CA
+            </button>
+          </div>
+          <p id="copy-status" class="text-xs text-emerald-400 hidden font-mono">✅ Contract Address copied to clipboard!</p>
+        </div>
+
+        <!-- 1-Click Sniper Bot Quick Action Bar -->
+        <div class="space-y-2">
+          <div class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Fast Execution Sniper Bots</div>
+          <div class="flex flex-wrap gap-2">
+            <a href="https://gmgn.ai/base/token/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="sniper-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition flex items-center gap-1.5">⚡ GMGN</a>
+<a href="https://photon-base.tinyastro.io/en/lp/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="sniper-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition flex items-center gap-1.5">⚡ Photon</a>
+<a href="https://t.me/BananaGunSniper_bot?start=0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="sniper-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition flex items-center gap-1.5">⚡ Banana Gun</a>
+<a href="https://t.me/MaestroSniperBot?start=0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="sniper-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition flex items-center gap-1.5">⚡ Maestro</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Right: 3D Interactive Parallax Card -->
+      <div class="lg:col-span-5 flex justify-center">
+        <div id="parallax-hero-card" class="tilt-card w-full max-w-md p-6 rounded-2xl bg-gray-900/60 border border-gray-800/80 shadow-2xl backdrop-blur-xl relative group">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-brandPrimary to-brandSecondary rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+          
+          <div class="relative space-y-6">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <img src="https://image.pollinations.ai/prompt/Token%200x2a6a%20crypto%20token%20logo?width=512&height=512&nologo=true" alt="Token 0x2a6a" class="w-14 h-14 rounded-2xl ring-2 ring-brandPrimary/30 shadow-lg" />
+                <div>
+                  <h3 class="font-black text-xl text-white">$UNKNOWN</h3>
+                  <span class="text-xs text-gray-400">Base Mainnet L2</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Audit 100/100
+                </span>
+              </div>
+            </div>
+
+            <!-- 10-Minute FOMO Jackpot Live Countdown -->
+            <div class="p-4 rounded-xl bg-gray-950/80 border border-gray-800 text-center">
+              <div class="text-xs font-mono text-gray-400 uppercase">10-Minute FOMO Jackpot Active</div>
+              <div id="jackpot-timer" class="text-3xl font-black font-mono text-brandPrimary mt-1">09:59</div>
+              <div class="text-[11px] text-gray-500 mt-1">Last buyer takes accumulated treasury pool</div>
+            </div>
+
+            <!-- Highlights Matrix -->
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-3 rounded-lg bg-gray-950/60 border border-gray-800">
+                <span class="text-gray-400 block">Buyback & Burn</span>
+                <span class="font-bold text-white text-base">30% Perpetual</span>
+              </div>
+              <div class="p-3 rounded-lg bg-gray-950/60 border border-gray-800">
+                <span class="text-gray-400 block">Passive Dividends</span>
+                <span class="font-bold text-white text-base">20% WETH</span>
+              </div>
+            </div>
+
+            <a href="https://basescan.org/token/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="block w-full text-center py-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-semibold transition border border-gray-700">
+              View Verified Contract on Explorer ↗
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section: Tokenomics Breakdown -->
+    <section id="tokenomics" class="py-20 border-t border-gray-900 mt-12">
+      <div class="text-center max-w-2xl mx-auto space-y-3 mb-12">
+        <h2 class="text-3xl font-extrabold text-white">Mathematical Tokenomics</h2>
+        <p class="text-gray-400 text-sm">Every trade fuels an autonomous positive-sum flywheel.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="tilt-card p-6 rounded-xl bg-gray-900/50 border border-gray-800">
+          <div class="text-3xl font-black text-brandPrimary mb-1">0%</div>
+          <div class="font-bold text-white text-sm">Trading Tax</div>
+          <p class="text-gray-400 text-xs mt-2">Zero friction. You keep 100% of the tokens you trade without hidden slippage.</p>
+        </div>
+        <div class="tilt-card p-6 rounded-xl bg-gray-900/50 border border-gray-800">
+          <div class="text-3xl font-black text-brandSecondary mb-1">30%</div>
+          <div class="font-bold text-white text-sm">Auto Buyback & Burn</div>
+          <p class="text-gray-400 text-xs mt-2">Protocol fees continuously buy $UNKNOWN and incinerate it to 0xdead.</p>
+        </div>
+        <div class="tilt-card p-6 rounded-xl bg-gray-900/50 border border-gray-800">
+          <div class="text-3xl font-black text-brandPrimary mb-1">20%</div>
+          <div class="font-bold text-white text-sm">Passive Yield</div>
+          <p class="text-gray-400 text-xs mt-2">Native dividends distributed directly to token holders with zero staking required.</p>
+        </div>
+        <div class="tilt-card p-6 rounded-xl bg-gray-900/50 border border-gray-800">
+          <div class="text-3xl font-black text-brandSecondary mb-1">15%</div>
+          <div class="font-bold text-white text-sm">10-Min FOMO Pool</div>
+          <p class="text-gray-400 text-xs mt-2">Continuous game-theoretic buying pressure. Last buyer claims the prize.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: In-Page Decentralized Swap Widget -->
+    <section id="swap" class="py-16 border-t border-gray-900">
+      <div class="text-center max-w-2xl mx-auto space-y-3 mb-8">
+        <h2 class="text-3xl font-extrabold text-white">Instant In-Page Swap</h2>
+        <p class="text-gray-400 text-sm">Non-custodial decentralized token exchange with 0% tax, minimal slippage, and optimal routing.</p>
+      </div>
+
+      <div class="max-w-xl mx-auto p-6 rounded-2xl bg-gray-900/80 border border-gray-800 shadow-2xl backdrop-blur-xl relative">
+        <div class="space-y-4">
+          <!-- Input Native Currency -->
+          <div class="p-4 rounded-xl bg-gray-950 border border-gray-800">
+            <div class="flex justify-between text-xs text-gray-400 mb-2">
+              <span>You Pay</span>
+              <span>Balance: Connected Wallet</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <input type="number" id="swap-input-eth" value="0.05" step="0.01" min="0.001" class="w-2/3 bg-transparent text-2xl font-bold text-white focus:outline-none" />
+              <span class="px-3 py-1 rounded-lg bg-gray-800 text-white font-bold text-sm border border-gray-700">ETH</span>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="flex gap-2 text-xs">
+            <button type="button" class="swap-preset-btn px-3 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition font-mono" data-amt="0.01">0.01</button>
+            <button type="button" class="swap-preset-btn px-3 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition font-mono" data-amt="0.05">0.05</button>
+            <button type="button" class="swap-preset-btn px-3 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition font-mono" data-amt="0.10">0.10</button>
+            <button type="button" class="swap-preset-btn px-3 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition font-mono" data-amt="0.50">0.50</button>
+          </div>
+
+          <!-- Arrow Divider -->
+          <div class="flex justify-center -my-1">
+            <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 font-bold">
+              ↓
+            </div>
+          </div>
+
+          <!-- Output Token -->
+          <div class="p-4 rounded-xl bg-gray-950 border border-gray-800">
+            <div class="flex justify-between text-xs text-gray-400 mb-2">
+              <span>You Receive (Estimated)</span>
+              <span class="text-emerald-400 font-semibold">0% Slippage Tax</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span id="swap-output-token" class="text-2xl font-bold text-brandPrimary">Calculating...</span>
+              <span class="px-3 py-1 rounded-lg bg-brandPrimary/20 text-brandPrimary font-bold text-sm border border-brandPrimary/40">$UNKNOWN</span>
+            </div>
+          </div>
+
+          <!-- Swap Routing & Gas Details -->
+          <div class="p-3 rounded-lg bg-gray-950/60 border border-gray-800/80 text-xs space-y-1.5 text-gray-400">
+            <div class="flex justify-between">
+              <span>Network</span>
+              <span class="text-gray-200">Base Mainnet L2</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Routing Protocol</span>
+              <span class="text-gray-200">Decentralized Automated Market Maker</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Trading Tax</span>
+              <span class="text-emerald-400 font-semibold">0% Buy / 0% Sell</span>
+            </div>
+          </div>
+
+          <!-- Execute Button -->
+          <a id="swap-execute-link" href="https://app.uniswap.org/explore/tokens/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="block w-full text-center py-3.5 rounded-xl bg-gradient-to-r from-brandPrimary to-brandSecondary text-black font-extrabold text-sm shadow-lg shadow-brandPrimary/25 hover:opacity-95 transition">
+            Execute Swap on Liquidity Pool ↗
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Live DexScreener Chart Embed -->
+    <section id="chart" class="py-12 border-t border-gray-900">
+      <div class="text-center max-w-2xl mx-auto space-y-3 mb-8">
+        <h2 class="text-3xl font-extrabold text-white">Live Market Chart</h2>
+        <p class="text-gray-400 text-sm">Real-time decentralized trading telemetry on Base Mainnet L2.</p>
+      </div>
+
+      <div class="w-full h-[550px] rounded-2xl overflow-hidden border border-gray-800 bg-gray-950 shadow-2xl">
+        <iframe src="https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05?embed=1&theme=dark&trades=0&info=0" class="w-full h-full border-0"></iframe>
+      </div>
+    </section>
+
+    <!-- Section: Core Team & Ecosystem -->
+    <section id="team" class="py-16 border-t border-gray-900">
+      <div class="text-center max-w-2xl mx-auto space-y-3 mb-10">
+        <h2 class="text-3xl font-extrabold text-white">Autonomous Core Team</h2>
+        <p class="text-gray-400 text-sm">Specialized AI intelligence units driving protocol evolution.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+      <div class="glass-card p-5 rounded-xl border border-gray-800 bg-gray-900/50 backdrop-blur-md">
+        <div class="text-sm font-bold text-white">UNKNOWN Protocol Architect</div>
+        <div class="text-xs text-gray-400 mt-0.5">Autonomous System & Core Protocol Lead</div>
+      </div>
+
+      <div class="glass-card p-5 rounded-xl border border-gray-800 bg-gray-900/50 backdrop-blur-md">
+        <div class="text-sm font-bold text-white">Doppler Sentinel</div>
+        <div class="text-xs text-gray-400 mt-0.5">Liquidity & Flywheel Engineer</div>
+      </div>
+
+      <div class="glass-card p-5 rounded-xl border border-gray-800 bg-gray-900/50 backdrop-blur-md">
+        <div class="text-sm font-bold text-white">NeuroAgent Vanguard</div>
+        <div class="text-xs text-gray-400 mt-0.5">Telegram Bot & Ecosystem Growth</div>
+      </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-900 bg-gray-950 py-10 relative z-10 text-center text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-4 space-y-4">
+      <div class="flex justify-center gap-6 font-medium text-gray-400">
+        <a href="https://basescan.org/token/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Basescan Explorer</a>
+        <a href="https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">DexScreener</a>
+        <a href="https://app.uniswap.org/explore/tokens/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Uniswap / Liquidity Pool</a>
+        <a href="https://bankr.bot/agents/unknown" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition">Bankr Agent Portal ↗</a>
+      </div>
+      <p>© 2026 $UNKNOWN Protocol. Built autonomously with Omnichain Engine.</p>
+    </div>
+  </footer>
+
+  <script src="parallax-3d.js"></script>
+</body>
+</html>

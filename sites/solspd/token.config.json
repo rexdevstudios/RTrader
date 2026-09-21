@@ -1,0 +1,25 @@
+{
+  "name": "Sol Speed Demon",
+  "ticker": "SOLSPD",
+  "contractAddress": "7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp",
+  "chain": "solana",
+  "sector": "VIRAL_MEME",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://solscan.io/token/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp",
+    "buy": "https://pump.fun/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp",
+    "dexscreener": "https://dexscreener.com/solana/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp"
+  },
+  "generatedAt": "2026-09-18T10:44:52.694Z"
+}

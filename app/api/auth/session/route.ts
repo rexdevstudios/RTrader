@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@packages/shared/contracts/api-contracts';
+import { authenticateSession } from '@packages/auth/session';
 
 export interface SessionData {
   authenticated: boolean;
@@ -12,11 +13,9 @@ export interface SessionData {
 
 export async function GET(req: NextRequest) {
   try {
-    const sessionCookie = req.cookies.get('rtrader_session')?.value;
-    const authHeader = req.headers.get('Authorization');
-    const token = sessionCookie || (authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : null);
+    const session = await authenticateSession(req);
 
-    if (!token) {
+    if (!session) {
       const response: ApiResponse<SessionData> = {
         success: true,
         data: {
@@ -31,77 +30,43 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(response, { status: 200 });
     }
 
-    try {
-      const decoded = Buffer.from(token, 'base64').toString('utf8');
-      const parts = decoded.split(':');
-
-      if (parts.length < 3 || !parts[0] || !parts[1]) {
-        throw new Error('Invalid token structure');
-      }
-
-      const userId = parts[0];
-      const walletAddress = parts[1];
-      const issuedAt = parseInt(parts[2], 10) || Date.now();
-
-      // Check token TTL (8 hours = 28,800,000 ms)
-      const maxAgeMs = 8 * 60 * 60 * 1000;
-      if (Date.now() - issuedAt > maxAgeMs) {
-        const expiredResponse: ApiResponse<SessionData> = {
-          success: true,
-          data: {
-            authenticated: false,
-            userId: null,
-            walletAddress: null,
-            userRole: 'GUEST',
-            credits: 0,
-          },
-          timestamp: new Date().toISOString(),
-        };
-        return NextResponse.json(expiredResponse, { status: 200 });
-      }
-
-      const isAdmin =
-        walletAddress.toLowerCase().includes('admin') ||
-        walletAddress.toLowerCase() === '0x90f79bf6eb2c4f870365e785982e1f101e93b906'.toLowerCase() ||
-        walletAddress.toLowerCase() === '0xadmin99999999999999999999999999999999999'.toLowerCase();
-
-      const userRole = isAdmin ? 'SYSTEM_ADMIN' : 'TRADER';
-      const credits = isAdmin ? 999999 : 15000;
-
-      const response: ApiResponse<SessionData> = {
-        success: true,
-        data: {
-          authenticated: true,
-          userId,
-          walletAddress,
-          userRole,
-          credits,
-          issuedAt,
-        },
-        timestamp: new Date().toISOString(),
-      };
-
-      return NextResponse.json(response, { status: 200 });
-    } catch {
-      const invalidResponse: ApiResponse<SessionData> = {
-        success: true,
-        data: {
-          authenticated: false,
-          userId: null,
-          walletAddress: null,
-          userRole: 'GUEST',
-          credits: 0,
-        },
-        timestamp: new Date().toISOString(),
-      };
-      return NextResponse.json(invalidResponse, { status: 200 });
+    const roles = session.user.roles;
+    let userRole: SessionData['userRole'] = 'TRADER';
+    if (roles.includes('SUPER_ADMIN')) {
+      userRole = 'SUPER_ADMIN';
+    } else if (roles.includes('SYSTEM_ADMIN')) {
+      userRole = 'SYSTEM_ADMIN';
+    } else if (roles.includes('CREATOR')) {
+      userRole = 'CREATOR';
     }
-  } catch (err) {
-    const errorResponse: ApiResponse<null> = {
-      success: false,
-      error: { code: 'SERVER_ERROR', message: (err as Error).message },
+
+    const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'SYSTEM_ADMIN';
+    const credits = isAdmin ? 999999 : 15000;
+
+    const response: ApiResponse<SessionData> = {
+      success: true,
+      data: {
+        authenticated: true,
+        userId: session.user.userId,
+        walletAddress: session.walletAddress,
+        userRole,
+        credits,
+        issuedAt: session.issuedAt,
+      },
       timestamp: new Date().toISOString(),
     };
-    return NextResponse.json(errorResponse, { status: 500 });
+
+    return NextResponse.json(response, { status: 200 });
+  } catch (err) {
+    const isDbUnavailable = (err as Error).message?.includes('DATABASE_UNAVAILABLE');
+    const errorResponse: ApiResponse<null> = {
+      success: false,
+      error: {
+        code: isDbUnavailable ? 'SERVICE_UNAVAILABLE' : 'SERVER_ERROR',
+        message: (err as Error).message,
+      },
+      timestamp: new Date().toISOString(),
+    };
+    return NextResponse.json(errorResponse, { status: isDbUnavailable ? 503 : 500 });
   }
 }

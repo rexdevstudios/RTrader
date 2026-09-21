@@ -1,0 +1,21 @@
+{
+  "chainId": "base",
+  "tokenAddress": "0x1111111111111111111111111111111111111111",
+  "url": "https://agentai-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Agent%20AI%20Core%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "header": "https://gateway.pinata.cloud/ipfs/QmbERcZD3e6uDrGNvTVQU4BGtpWCboGtUcJyoEQkFNBT9o",
+  "description": "Agent AI Core ($AGENTAI) - Autonomous Web3 Protocol on BASE. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://agentai-web3.pages.dev"
+    },
+    {
+      "type": "docs",
+      "label": "Bankr Agent",
+      "url": "https://bankr.bot/agents/agentai"
+    }
+  ],
+  "generatedAt": "2026-09-20T07:12:41.138Z"
+}

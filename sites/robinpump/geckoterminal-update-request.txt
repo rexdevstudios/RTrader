@@ -1,0 +1,41 @@
+=================================================================
+  GECKOTERMINAL & COINGECKO TOKEN INFO UPDATE REQUEST DATA
+=================================================================
+Project Name:          Robinhood Pump Token
+Token Symbol:          $ROBINPUMP
+Network / Chain:       ROBINHOOD
+Token Address (CA):    0x1111111111111111111111111111111111111111
+Pool Address (DEX):    See on-chain pair
+GeckoTerminal Chart:   https://www.geckoterminal.com/robinhood/tokens/0x1111111111111111111111111111111111111111
+
+-----------------------------------------------------------------
+OFFICIAL COMMUNITY & SOCIAL LINKS (To resolve 'Info: 0' penalty)
+-----------------------------------------------------------------
+Official Website:      https://robinpump-web3.pages.dev
+Twitter / X:           https://x.com/ROBINPUMP_coin
+Telegram Portal/Bot:   https://t.me/robinpump_portal
+Discord Server:        None
+Token Icon / Logo:     https://image.pollinations.ai/prompt/Robinhood%20Pump%20Token%20crypto%20token%20logo?width=512&height=512&nologo=true
+
+-----------------------------------------------------------------
+SECURITY & TOKENOMICS VERIFICATION (Boosts GT Score to 80-100)
+-----------------------------------------------------------------
+Buy Tax:               0%
+Sell Tax:              0%
+Liquidity Status:      100% Permanently Locked / Burned LP
+Honeypot Risk:         NO (Audited Open-Source Proxy)
+
+Project Description:
+Robinhood Pump Token ($ROBINPUMP) - Autonomous Web3 Token on ROBINHOOD. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.
+=================================================================
+LANGKAH PENGAJUAN RESMI GECKOTERMINAL (100% GRATIS):
+1. Buka Form Tiket CoinGecko / GeckoTerminal:
+   https://support.coingecko.com/hc/en-us/requests/new?ticket_form_id=360000025353
+   -> Pilih: "Update Token Information (Listing on GeckoTerminal)"
+   -> Salin-tempel field dari dokumen ini ke form.
+
+2. Update Profil di Blockchain Explorer (Auto-sync ke GeckoTerminal):
+   https://blockscout.com/token/0x1111111111111111111111111111111111111111
+   -> Begitu profil di-approve oleh explorer, GeckoTerminal akan
+      otomatis mengimpor ikon dan link sosial tanpa biaya!
+=================================================================

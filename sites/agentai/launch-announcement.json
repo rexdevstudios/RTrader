@@ -1,0 +1,81 @@
+{
+  "ticker": "AGENTAI",
+  "name": "Agent AI Core",
+  "contractAddress": "0x1111111111111111111111111111111111111111",
+  "chain": "base",
+  "powerTweet": {
+    "index": 0,
+    "title": "⚡ POWER TWEET (Single Tweet - Fast Announcement)",
+    "content": "🚀 $AGENTAI (Agent AI Core) is LIVE on #Base!\n🛡️ 0% Tax | 🔥 30% Auto Buyback\n📝 CA: 0x1111111111111111111111111111111111111111\n📊 Chart: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n🌐 DApp: https://agentai-web3.pages.dev\n#Base #DeFi #AGENTAI",
+    "charCount": 271,
+    "fitsSingleTweet": true
+  },
+  "threadTweets": [
+    {
+      "index": 1,
+      "title": "🧵 THREAD 1/3: Official Launch Headline & Verified CA",
+      "content": "1/3 🚀 Introducing $AGENTAI (Agent AI Core) — live on Base Mainnet!\n\nBuilt with a Positive-Sum flywheel. Zero insider dump, 100% community protection.\n\n📝 CA: 0x1111111111111111111111111111111111111111\n🦄 Swap: https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111\n📊 Chart: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n\n#Base #DeFi #CryptoLaunch",
+      "charCount": 435,
+      "fitsSingleTweet": false
+    },
+    {
+      "index": 2,
+      "title": "🧵 THREAD 2/3: The 4-Pillar Positive-Sum Flywheel Mechanics",
+      "content": "2/3 🌪️ THE FLYWHEEL ENGINE:\n\nCreator swap fees recycle back to holders:\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Creator Protocol Kas\n\nVolume pumps the floor. Diamond hands win.\n\n#Tokenomics #Flywheel",
+      "charCount": 264,
+      "fitsSingleTweet": true
+    },
+    {
+      "index": 3,
+      "title": "🧵 THREAD 3/3: Security Audit, Official DApp & Community Links",
+      "content": "3/3 🛡️ AUDITED SECURITY & LINKS:\n\n• 0% Buy / Sell Tax (Clean Standard)\n• Audited Liquidity Pool\n\n🌐 Web3 DApp: https://agentai-web3.pages.dev\n🤖 Telegram: https://t.me/agentai_portal\n📊 DexScreener: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n\nRT & spread the alpha! 🚀\n\n#Base #Crypto #DeFi #MemeCoin",
+      "charCount": 329,
+      "fitsSingleTweet": false
+    }
+  ],
+  "telegram": {
+    "htmlCard": "🚀 <b>OFFICIAL LAUNCH ALPHA: $AGENTAI (Agent AI Core)</b>\n\n⛓️ <b>Chain:</b> Base Mainnet\n📝 <b>CA:</b> <code>0x1111111111111111111111111111111111111111</code>\n🛡️ <b>Security:</b> 0% Tax | Audited Liquidity | Minimal Proxy\n\n🌪️ <b>4-PILLAR POSITIVE-SUM FLYWHEEL:</b>\n• 🔥 <b>30% Auto Buyback & Burn:</b> Sends to <code>0x000000000000000000000000000000000000dEaD</code>\n• 💰 <b>20% Passive WETH Yield:</b> Auto-distributed to Diamond Hands\n• ⚡ <b>15% 10-Min FOMO Jackpot:</b> Last buyer takes the prize pool\n• 🏛️ <b>35% Protocol Kas:</b> Autonomous development & maintenance\n\n🔗 <b>OFFICIAL VERIFIED LINKS:</b>\n• 📊 <a href=\"https://dexscreener.com/base/0x1111111111111111111111111111111111111111\">Live DexScreener Chart</a>\n• 🦄 <a href=\"https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111\">1-Click Swap</a>\n• 🌐 <a href=\"https://agentai-web3.pages.dev\">Official Web3 DApp</a>\n• 🤖 <a href=\"https://t.me/agentai_portal\">Community Telegram</a>\n\n💡 <i>Always verify CA before swapping:</i> <code>0x1111111111111111111111111111111111111111</code>",
+    "markdownCard": "🚀 *OFFICIAL LAUNCH ALPHA: $AGENTAI (Agent AI Core)*\n\n⛓️ *Chain:* Base Mainnet\n📝 *CA:* `0x1111111111111111111111111111111111111111`\n🛡️ *Security:* 0% Tax | Audited Liquidity\n\n🌪️ *4-PILLAR FLYWHEEL TOKENOMICS:*\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Protocol Kas\n\n🔗 *OFFICIAL LINKS:*\n• [Live DexScreener Chart](https://dexscreener.com/base/0x1111111111111111111111111111111111111111)\n• [1-Click Swap](https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111)\n• [Official Web3 DApp](https://agentai-web3.pages.dev)\n• [Community Telegram](https://t.me/agentai_portal)",
+    "plainCard": "🚀 OFFICIAL LAUNCH ALPHA: $AGENTAI (Agent AI Core)\nChain: Base Mainnet\nCA: 0x1111111111111111111111111111111111111111\nSecurity: 0% Tax | Audited Liquidity\nFlywheel: 30% Burn | 20% Dividend | 15% Jackpot | 35% Kas\nChart: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\nSwap: https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111\nDApp: https://agentai-web3.pages.dev\nTelegram: https://t.me/agentai_portal",
+    "shareDeepLink": "https://t.me/share/url?url=https%3A%2F%2Fagentai-web3.pages.dev&text=%F0%9F%9A%80%20OFFICIAL%20LAUNCH%3A%20%24AGENTAI%20(Agent%20AI%20Core)%20is%20live%20on%20Base%20Mainnet!%0A%0ACA%3A%200x1111111111111111111111111111111111111111%0A%0AChart%3A%20https%3A%2F%2Fdexscreener.com%2Fbase%2F0x1111111111111111111111111111111111111111%0ADApp%3A%20https%3A%2F%2Fagentai-web3.pages.dev",
+    "inlineKeyboard": [
+      [
+        {
+          "text": "📊 DexScreener Chart",
+          "url": "https://dexscreener.com/base/0x1111111111111111111111111111111111111111"
+        },
+        {
+          "text": "🦄 1-Click Swap",
+          "url": "https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111"
+        }
+      ],
+      [
+        {
+          "text": "🌐 Web3 DApp",
+          "url": "https://agentai-web3.pages.dev"
+        },
+        {
+          "text": "🤖 Telegram Portal",
+          "url": "https://t.me/agentai_portal"
+        }
+      ]
+    ]
+  },
+  "fullText": "=================================================================\n  [+] OFFICIAL LAUNCH ANNOUNCEMENT PACK FOR TWITTER / X & TELEGRAM [+]\n  Token: $AGENTAI (Agent AI Core)\n  Chain: Base Mainnet\n  CA:    0x1111111111111111111111111111111111111111\n=================================================================\n\n--- [OPTION A: SINGLE POWER TWEET (271 chars)] ---\n🚀 $AGENTAI (Agent AI Core) is LIVE on #Base!\n🛡️ 0% Tax | 🔥 30% Auto Buyback\n📝 CA: 0x1111111111111111111111111111111111111111\n📊 Chart: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n🌐 DApp: https://agentai-web3.pages.dev\n#Base #DeFi #AGENTAI\n\n=================================================================\n--- [OPTION B: FULL 3-TWEET LAUNCH THREAD] ---\n\n[TWEET 1/3 - 435 chars]\n1/3 🚀 Introducing $AGENTAI (Agent AI Core) — live on Base Mainnet!\n\nBuilt with a Positive-Sum flywheel. Zero insider dump, 100% community protection.\n\n📝 CA: 0x1111111111111111111111111111111111111111\n🦄 Swap: https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111\n📊 Chart: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n\n#Base #DeFi #CryptoLaunch\n\n-----------------------------------------------------------------\n[TWEET 2/3 - 264 chars]\n2/3 🌪️ THE FLYWHEEL ENGINE:\n\nCreator swap fees recycle back to holders:\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Creator Protocol Kas\n\nVolume pumps the floor. Diamond hands win.\n\n#Tokenomics #Flywheel\n\n-----------------------------------------------------------------\n[TWEET 3/3 - 329 chars]\n3/3 🛡️ AUDITED SECURITY & LINKS:\n\n• 0% Buy / Sell Tax (Clean Standard)\n• Audited Liquidity Pool\n\n🌐 Web3 DApp: https://agentai-web3.pages.dev\n🤖 Telegram: https://t.me/agentai_portal\n📊 DexScreener: https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n\nRT & spread the alpha! 🚀\n\n#Base #Crypto #DeFi #MemeCoin\n\n=================================================================\n--- [OPTION C: TELEGRAM POST-LAUNCH BLITZ (HTML FORMAT)] ---\n🚀 <b>OFFICIAL LAUNCH ALPHA: $AGENTAI (Agent AI Core)</b>\n\n⛓️ <b>Chain:</b> Base Mainnet\n📝 <b>CA:</b> <code>0x1111111111111111111111111111111111111111</code>\n🛡️ <b>Security:</b> 0% Tax | Audited Liquidity | Minimal Proxy\n\n🌪️ <b>4-PILLAR POSITIVE-SUM FLYWHEEL:</b>\n• 🔥 <b>30% Auto Buyback & Burn:</b> Sends to <code>0x000000000000000000000000000000000000dEaD</code>\n• 💰 <b>20% Passive WETH Yield:</b> Auto-distributed to Diamond Hands\n• ⚡ <b>15% 10-Min FOMO Jackpot:</b> Last buyer takes the prize pool\n• 🏛️ <b>35% Protocol Kas:</b> Autonomous development & maintenance\n\n🔗 <b>OFFICIAL VERIFIED LINKS:</b>\n• 📊 <a href=\"https://dexscreener.com/base/0x1111111111111111111111111111111111111111\">Live DexScreener Chart</a>\n• 🦄 <a href=\"https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111\">1-Click Swap</a>\n• 🌐 <a href=\"https://agentai-web3.pages.dev\">Official Web3 DApp</a>\n• 🤖 <a href=\"https://t.me/agentai_portal\">Community Telegram</a>\n\n💡 <i>Always verify CA before swapping:</i> <code>0x1111111111111111111111111111111111111111</code>\n\n-----------------------------------------------------------------\n[TELEGRAM 1-CLICK SHARE WEB LINK]\nhttps://t.me/share/url?url=https%3A%2F%2Fagentai-web3.pages.dev&text=%F0%9F%9A%80%20OFFICIAL%20LAUNCH%3A%20%24AGENTAI%20(Agent%20AI%20Core)%20is%20live%20on%20Base%20Mainnet!%0A%0ACA%3A%200x1111111111111111111111111111111111111111%0A%0AChart%3A%20https%3A%2F%2Fdexscreener.com%2Fbase%2F0x1111111111111111111111111111111111111111%0ADApp%3A%20https%3A%2F%2Fagentai-web3.pages.dev\n\n=================================================================\n  Official Links Summary:\n  - Web3 DApp:     https://agentai-web3.pages.dev\n  - DexScreener:   https://dexscreener.com/base/0x1111111111111111111111111111111111111111\n  - 1-Click Swap:  https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111\n  - Telegram Bot:  https://t.me/agentai_portal\n=================================================================",
+  "tags": [
+    "#Base",
+    "#Crypto",
+    "#DeFi",
+    "#MemeCoin",
+    "#AGENTAI",
+    "#Web3",
+    "#Gem"
+  ],
+  "metadata": {
+    "websiteUrl": "https://agentai-web3.pages.dev",
+    "dexScreenerUrl": "https://dexscreener.com/base/0x1111111111111111111111111111111111111111",
+    "uniswapUrl": "https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x1111111111111111111111111111111111111111",
+    "telegramUrl": "https://t.me/agentai_portal",
+    "generatedAt": "2026-09-20T07:12:41.143Z"
+  }
+}

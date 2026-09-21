@@ -1,0 +1,87 @@
+================================================================================
+   DEXSCREENER TOKEN INFO UPDATE — FORM STEP-BY-STEP SUBMISSION GUIDE
+================================================================================
+Tautan Langsung Form (Otomatis Pre-fill Chain & Token Address):
+https://marketplace.dexscreener.com/product/token-info/order?chainId=solana&tokenAddress=4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+
+Catatan Penting:
+Form ini adalah layanan "Enhanced Token Info" resmi dari DexScreener ($299).
+Jika Anda ingin jalur GRATIS, gunakan panduan BaseScan di bagian paling bawah.
+
+================================================================================
+ URUTAN PENGISIAN FORM (PERSIS SESUAI TAMPILAN DI LAYAR DEXSCREENER):
+================================================================================
+
+1. TOKEN IDENTITY (Paling Atas)
+--------------------------------------------------------------------------------
+ • Chain         : Pilih "Solana"
+ • Token Address : 4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+ 
+ [INFO]: DexScreener akan otomatis mendeteksi nama dan simbol dari blockchain.
+ TIDAK ADA kolom ketik nama atau pair address di form.
+
+--------------------------------------------------------------------------------
+2. DESCRIPTION (Deskripsi Proyek)
+--------------------------------------------------------------------------------
+ [ATURAN VALIDASI DEXSCREENER]: DILARANG menyertakan link/URL di kolom ini!
+ Salin teks di bawah ini ke textarea Description:
+
+Solana Runner ($SOLRUN) - Autonomous Web3 Protocol on SOLANA. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.
+
+--------------------------------------------------------------------------------
+3. LINKS (Tautan Resmi)
+--------------------------------------------------------------------------------
+ DexScreener menyediakan kolom-kolom spesifik berikut:
+ • Website   : https://solrun-web3.pages.dev
+ • Docs      : https://app.doppler.lol/tokens/solana/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+ • X         : (Kosongkan jika belum dibuat)
+ • Telegram  : (Kosongkan jika belum dibuat)
+ • Discord   : (Kosongkan jika belum ada)
+ • TikTok/IG : (Kosongkan jika belum ada)
+
+ *Catatan Telegram: DexScreener menolak link invite rahasia (t.me/+...), gunakan username publik.
+
+--------------------------------------------------------------------------------
+4. IMAGES (Klik Tombol "Upload image" untuk Mengunggah Berkas PNG)
+--------------------------------------------------------------------------------
+ A. ICON (Syarat: Rasio 1:1, Persegi, Format PNG/JPG, Min 100px, Maks 4.5MB):
+    📁 Unggah berkas dari komputer Anda:
+    C:\Users\a\Downloads\BOT\sites\test_swap_binding\sol_run\dexscreener-icon.png
+    (Rasio 1:1, Format PNG — Siap Upload)
+
+ B. HEADER (Syarat: Rasio 3:1, Persegi Panjang, Format PNG/JPG, Min 600px, Maks 4.5MB):
+    📁 Unggah berkas dari komputer Anda:
+    C:\Users\a\Downloads\BOT\sites\test_swap_binding\sol_run\dexscreener-header.png
+    (Rasio 3:1, Format PNG — Siap Upload)
+
+--------------------------------------------------------------------------------
+5. LOCKED SUPPLY (Optional)
+--------------------------------------------------------------------------------
+ 👉 TINDAKAN: BIARKAN KOSONG / JANGAN DIISI APA PUN!
+ 
+ Penjelasan penting:
+ DexScreener memberi peringatan eksplisit: "Not to be confused with Locked Liquidity".
+ Kolom ini BUKAN untuk likuiditas DEX/Doppler, melainkan untuk token developer
+ yang di-lock di vesting contract (misal Unicrypt). Karena 100% likuiditas token ini
+ sudah berada di contract pool, kolom ini WAJIB dikosongkan.
+
+--------------------------------------------------------------------------------
+6. ORDER SUMMARY & SUBMISSION
+--------------------------------------------------------------------------------
+ • Centang kedua checkbox persetujuan syarat & ketentuan.
+ • Klik tombol "Order Now" ($299, pembayaran via Crypto atau Kartu).
+ • Halaman Chart Resmi: https://dexscreener.com/solana/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+
+================================================================================
+ ALTERNATIF JALUR 100% GRATIS (TANPA BAYAR $299 KE DEXSCREENER):
+================================================================================
+1. Update Token Profile di BaseScan (100% Gratis):
+   https://basescan.org/tokenupdate/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+   -> Submit nama, website, ikon, dan sosial Anda di sana.
+   -> Setelah diverifikasi oleh tim BaseScan, DexScreener & GeckoTerminal akan
+      otomatis mengimpor metadata tersebut secara berkala tanpa biaya.
+
+2. Update GeckoTerminal via Support Ticket (100% Gratis):
+   https://support.coingecko.com/hc/en-us/requests/new?ticket_form_id=360000025353
+   -> Pilih: "Update Token Information (Listing on GeckoTerminal)"
+================================================================================

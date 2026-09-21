@@ -1,0 +1,16 @@
+{
+  "chainId": "solana",
+  "tokenAddress": "7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp",
+  "url": "https://solspd-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Sol%20Speed%20Demon%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "header": "https://gateway.pinata.cloud/ipfs/QmZemvHmENcXSGnPzGDpD4my4bCkXrgjWqKoyBTCo86km6",
+  "description": "Sol Speed Demon ($SOLSPD) - Autonomous Web3 Protocol on SOLANA. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://solspd-web3.pages.dev"
+    }
+  ],
+  "generatedAt": "2026-09-18T10:44:53.572Z"
+}

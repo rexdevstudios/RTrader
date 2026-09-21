@@ -1,0 +1,22 @@
+{
+  "network": "base",
+  "tokenAddress": "0x2222222222222222222222222222222222222222",
+  "tokenName": "Viral Meme Coin",
+  "tokenSymbol": "MEMECOIN",
+  "tokenUrl": "https://www.geckoterminal.com/base/tokens/0x2222222222222222222222222222222222222222",
+  "description": "Viral Meme Coin ($MEMECOIN) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Viral%20Meme%20Coin%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://memecoin-web3.pages.dev",
+    "twitter": "https://x.com/MEMECOIN_coin",
+    "telegram": "https://t.me/memecoin_portal",
+    "explorer": "https://basescan.org/tokenupdate/0x2222222222222222222222222222222222222222"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-20T07:12:42.404Z"
+}

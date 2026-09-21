@@ -1,0 +1,81 @@
+{
+  "ticker": "RHFLY",
+  "name": "Robinhood Flywheel",
+  "contractAddress": "0x3333333333333333333333333333333333333333",
+  "chain": "robinhood",
+  "powerTweet": {
+    "index": 0,
+    "title": "⚡ POWER TWEET (Single Tweet - Fast Announcement)",
+    "content": "🚀 $RHFLY (Robinhood Flywheel) is LIVE on #Base!\n🛡️ 0% Tax | 🔥 30% Auto Buyback\n📝 CA: 0x3333333333333333333333333333333333333333\n📊 Chart: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n🌐 DApp: https://rhfly-web3.pages.dev\n#Base #DeFi #RHFLY",
+    "charCount": 275,
+    "fitsSingleTweet": true
+  },
+  "threadTweets": [
+    {
+      "index": 1,
+      "title": "🧵 THREAD 1/3: Official Launch Headline & Verified CA",
+      "content": "1/3 🚀 Introducing $RHFLY (Robinhood Flywheel) — live on Robinhood Chain!\n\nBuilt with a Positive-Sum flywheel. Zero insider dump, 100% community protection.\n\n📝 CA: 0x3333333333333333333333333333333333333333\n🦄 Swap: https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333\n📊 Chart: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n\n#Base #DeFi #CryptoLaunch",
+      "charCount": 451,
+      "fitsSingleTweet": false
+    },
+    {
+      "index": 2,
+      "title": "🧵 THREAD 2/3: The 4-Pillar Positive-Sum Flywheel Mechanics",
+      "content": "2/3 🌪️ THE FLYWHEEL ENGINE:\n\nCreator swap fees recycle back to holders:\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Creator Protocol Kas\n\nVolume pumps the floor. Diamond hands win.\n\n#Tokenomics #Flywheel",
+      "charCount": 264,
+      "fitsSingleTweet": true
+    },
+    {
+      "index": 3,
+      "title": "🧵 THREAD 3/3: Security Audit, Official DApp & Community Links",
+      "content": "3/3 🛡️ AUDITED SECURITY & LINKS:\n\n• 0% Buy / Sell Tax (Clean Standard)\n• Audited Liquidity Pool\n\n🌐 Web3 DApp: https://rhfly-web3.pages.dev\n🤖 Telegram: https://t.me/rhfly_portal\n📊 DexScreener: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n\nRT & spread the alpha! 🚀\n\n#Base #Crypto #DeFi #MemeCoin",
+      "charCount": 330,
+      "fitsSingleTweet": false
+    }
+  ],
+  "telegram": {
+    "htmlCard": "🚀 <b>OFFICIAL LAUNCH ALPHA: $RHFLY (Robinhood Flywheel)</b>\n\n⛓️ <b>Chain:</b> Robinhood Chain\n📝 <b>CA:</b> <code>0x3333333333333333333333333333333333333333</code>\n🛡️ <b>Security:</b> 0% Tax | Audited Liquidity | Minimal Proxy\n\n🌪️ <b>4-PILLAR POSITIVE-SUM FLYWHEEL:</b>\n• 🔥 <b>30% Auto Buyback & Burn:</b> Sends to <code>0x000000000000000000000000000000000000dEaD</code>\n• 💰 <b>20% Passive WETH Yield:</b> Auto-distributed to Diamond Hands\n• ⚡ <b>15% 10-Min FOMO Jackpot:</b> Last buyer takes the prize pool\n• 🏛️ <b>35% Protocol Kas:</b> Autonomous development & maintenance\n\n🔗 <b>OFFICIAL VERIFIED LINKS:</b>\n• 📊 <a href=\"https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\">Live DexScreener Chart</a>\n• 🦄 <a href=\"https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333\">1-Click Swap</a>\n• 🌐 <a href=\"https://rhfly-web3.pages.dev\">Official Web3 DApp</a>\n• 🤖 <a href=\"https://t.me/rhfly_portal\">Community Telegram</a>\n\n💡 <i>Always verify CA before swapping:</i> <code>0x3333333333333333333333333333333333333333</code>",
+    "markdownCard": "🚀 *OFFICIAL LAUNCH ALPHA: $RHFLY (Robinhood Flywheel)*\n\n⛓️ *Chain:* Robinhood Chain\n📝 *CA:* `0x3333333333333333333333333333333333333333`\n🛡️ *Security:* 0% Tax | Audited Liquidity\n\n🌪️ *4-PILLAR FLYWHEEL TOKENOMICS:*\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Protocol Kas\n\n🔗 *OFFICIAL LINKS:*\n• [Live DexScreener Chart](https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333)\n• [1-Click Swap](https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333)\n• [Official Web3 DApp](https://rhfly-web3.pages.dev)\n• [Community Telegram](https://t.me/rhfly_portal)",
+    "plainCard": "🚀 OFFICIAL LAUNCH ALPHA: $RHFLY (Robinhood Flywheel)\nChain: Robinhood Chain\nCA: 0x3333333333333333333333333333333333333333\nSecurity: 0% Tax | Audited Liquidity\nFlywheel: 30% Burn | 20% Dividend | 15% Jackpot | 35% Kas\nChart: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\nSwap: https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333\nDApp: https://rhfly-web3.pages.dev\nTelegram: https://t.me/rhfly_portal",
+    "shareDeepLink": "https://t.me/share/url?url=https%3A%2F%2Frhfly-web3.pages.dev&text=%F0%9F%9A%80%20OFFICIAL%20LAUNCH%3A%20%24RHFLY%20(Robinhood%20Flywheel)%20is%20live%20on%20Robinhood%20Chain!%0A%0ACA%3A%200x3333333333333333333333333333333333333333%0A%0AChart%3A%20https%3A%2F%2Fdexscreener.com%2Frobinhood%2F0x3333333333333333333333333333333333333333%0ADApp%3A%20https%3A%2F%2Frhfly-web3.pages.dev",
+    "inlineKeyboard": [
+      [
+        {
+          "text": "📊 DexScreener Chart",
+          "url": "https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333"
+        },
+        {
+          "text": "🦄 1-Click Swap",
+          "url": "https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333"
+        }
+      ],
+      [
+        {
+          "text": "🌐 Web3 DApp",
+          "url": "https://rhfly-web3.pages.dev"
+        },
+        {
+          "text": "🤖 Telegram Portal",
+          "url": "https://t.me/rhfly_portal"
+        }
+      ]
+    ]
+  },
+  "fullText": "=================================================================\n  [+] OFFICIAL LAUNCH ANNOUNCEMENT PACK FOR TWITTER / X & TELEGRAM [+]\n  Token: $RHFLY (Robinhood Flywheel)\n  Chain: Robinhood Chain\n  CA:    0x3333333333333333333333333333333333333333\n=================================================================\n\n--- [OPTION A: SINGLE POWER TWEET (275 chars)] ---\n🚀 $RHFLY (Robinhood Flywheel) is LIVE on #Base!\n🛡️ 0% Tax | 🔥 30% Auto Buyback\n📝 CA: 0x3333333333333333333333333333333333333333\n📊 Chart: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n🌐 DApp: https://rhfly-web3.pages.dev\n#Base #DeFi #RHFLY\n\n=================================================================\n--- [OPTION B: FULL 3-TWEET LAUNCH THREAD] ---\n\n[TWEET 1/3 - 451 chars]\n1/3 🚀 Introducing $RHFLY (Robinhood Flywheel) — live on Robinhood Chain!\n\nBuilt with a Positive-Sum flywheel. Zero insider dump, 100% community protection.\n\n📝 CA: 0x3333333333333333333333333333333333333333\n🦄 Swap: https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333\n📊 Chart: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n\n#Base #DeFi #CryptoLaunch\n\n-----------------------------------------------------------------\n[TWEET 2/3 - 264 chars]\n2/3 🌪️ THE FLYWHEEL ENGINE:\n\nCreator swap fees recycle back to holders:\n• 🔥 30% Auto Buyback & Burn (0xdead)\n• 💰 20% Passive WETH Yield\n• ⚡ 15% 10-Min FOMO Jackpot\n• 🏛️ 35% Creator Protocol Kas\n\nVolume pumps the floor. Diamond hands win.\n\n#Tokenomics #Flywheel\n\n-----------------------------------------------------------------\n[TWEET 3/3 - 330 chars]\n3/3 🛡️ AUDITED SECURITY & LINKS:\n\n• 0% Buy / Sell Tax (Clean Standard)\n• Audited Liquidity Pool\n\n🌐 Web3 DApp: https://rhfly-web3.pages.dev\n🤖 Telegram: https://t.me/rhfly_portal\n📊 DexScreener: https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n\nRT & spread the alpha! 🚀\n\n#Base #Crypto #DeFi #MemeCoin\n\n=================================================================\n--- [OPTION C: TELEGRAM POST-LAUNCH BLITZ (HTML FORMAT)] ---\n🚀 <b>OFFICIAL LAUNCH ALPHA: $RHFLY (Robinhood Flywheel)</b>\n\n⛓️ <b>Chain:</b> Robinhood Chain\n📝 <b>CA:</b> <code>0x3333333333333333333333333333333333333333</code>\n🛡️ <b>Security:</b> 0% Tax | Audited Liquidity | Minimal Proxy\n\n🌪️ <b>4-PILLAR POSITIVE-SUM FLYWHEEL:</b>\n• 🔥 <b>30% Auto Buyback & Burn:</b> Sends to <code>0x000000000000000000000000000000000000dEaD</code>\n• 💰 <b>20% Passive WETH Yield:</b> Auto-distributed to Diamond Hands\n• ⚡ <b>15% 10-Min FOMO Jackpot:</b> Last buyer takes the prize pool\n• 🏛️ <b>35% Protocol Kas:</b> Autonomous development & maintenance\n\n🔗 <b>OFFICIAL VERIFIED LINKS:</b>\n• 📊 <a href=\"https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\">Live DexScreener Chart</a>\n• 🦄 <a href=\"https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333\">1-Click Swap</a>\n• 🌐 <a href=\"https://rhfly-web3.pages.dev\">Official Web3 DApp</a>\n• 🤖 <a href=\"https://t.me/rhfly_portal\">Community Telegram</a>\n\n💡 <i>Always verify CA before swapping:</i> <code>0x3333333333333333333333333333333333333333</code>\n\n-----------------------------------------------------------------\n[TELEGRAM 1-CLICK SHARE WEB LINK]\nhttps://t.me/share/url?url=https%3A%2F%2Frhfly-web3.pages.dev&text=%F0%9F%9A%80%20OFFICIAL%20LAUNCH%3A%20%24RHFLY%20(Robinhood%20Flywheel)%20is%20live%20on%20Robinhood%20Chain!%0A%0ACA%3A%200x3333333333333333333333333333333333333333%0A%0AChart%3A%20https%3A%2F%2Fdexscreener.com%2Frobinhood%2F0x3333333333333333333333333333333333333333%0ADApp%3A%20https%3A%2F%2Frhfly-web3.pages.dev\n\n=================================================================\n  Official Links Summary:\n  - Web3 DApp:     https://rhfly-web3.pages.dev\n  - DexScreener:   https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333\n  - 1-Click Swap:  https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333\n  - Telegram Bot:  https://t.me/rhfly_portal\n=================================================================",
+  "tags": [
+    "#Base",
+    "#Crypto",
+    "#DeFi",
+    "#MemeCoin",
+    "#RHFLY",
+    "#Web3",
+    "#Gem"
+  ],
+  "metadata": {
+    "websiteUrl": "https://rhfly-web3.pages.dev",
+    "dexScreenerUrl": "https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333",
+    "uniswapUrl": "https://app.uniswap.org/swap?chain=robinhood&inputCurrency=ETH&outputCurrency=0x3333333333333333333333333333333333333333",
+    "telegramUrl": "https://t.me/rhfly_portal",
+    "generatedAt": "2026-09-20T06:56:21.947Z"
+  }
+}

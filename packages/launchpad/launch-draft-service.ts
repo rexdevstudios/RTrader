@@ -10,6 +10,9 @@ export interface LaunchDraftDbAdapter {
   saveDraft(draft: any): Promise<string>;
   saveWhitelist(launchDraftId: string, merkleRoot: string, maxAllocation: bigint): Promise<void>;
   createAuditLog(actorId: string, action: string, entityId?: string, reason?: string): Promise<void>;
+  getDrafts?(): Promise<any[]>;
+  getActiveTokenLaunches?(): Promise<any[]>;
+  getTokenLaunchByAddress?(chain: string, address: string): Promise<any | null>;
 }
 
 export class LaunchDraftService {

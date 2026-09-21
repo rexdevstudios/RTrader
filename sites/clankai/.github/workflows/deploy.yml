@@ -1,0 +1,53 @@
+name: Deploy $CLANKAI Web3 Website
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy-cloudflare:
+    name: Deploy to Cloudflare Pages & R2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy . --project-name="clankai-web3" --branch=main --commit-dirty=true
+
+      - name: Sync Media Assets to Cloudflare R2
+        if: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID != '' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL: ${{ secrets.CLOUDFLARE_R2_ENDPOINT }}
+          AWS_REGION: auto
+        run: |
+          aws s3 sync . s3://clankai-assets/ \
+            --exclude "*" \
+            --include "*.svg" \
+            --include "*.png" \
+            --include "*.jpg" \
+            --include "*.json" \
+            --endpoint-url=${{ secrets.CLOUDFLARE_R2_ENDPOINT }} || true
+
+  deploy-vercel:
+    name: Deploy Fallback Mirror to Vercel
+    runs-on: ubuntu-latest
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'

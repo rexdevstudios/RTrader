@@ -1,0 +1,25 @@
+=================================================================
+  DEXSCREENER ENHANCED PROFILE FAST-TRACK AUTO-FILL DATA
+=================================================================
+Network / Chain:   SOLANA
+Contract (CA):     4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+Official Website:  https://solrun-web3.pages.dev
+Telegram:          None
+Twitter / X:       None
+Discord:           None
+Icon URL (IPFS):   https://image.pollinations.ai/prompt/Solana%20Runner%20crypto%20token%20logo?width=512&height=512&nologo=true
+Header Banner:     https://gateway.pinata.cloud/ipfs/QmZLv4ZSJSeAxmWzD3WkjmZiGkTceJdQcqKxJDpKg869kg
+
+Project Description:
+Solana Runner ($SOLRUN) - Autonomous Web3 Protocol on SOLANA. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.
+=================================================================
+Tautan Pembaruan Profil:
+1. 1-Click Update Portal Link:
+   https://dexscreener.com/solana/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+2. DexScreener Marketplace (Jalur Cepat Resmi):
+   https://marketplace.dexscreener.com/product/token-info
+3. Halaman Chart DexScreener (Tombol 'Update Token Info'):
+   https://dexscreener.com/solana/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+4. Basescan Token Update (Jalur Gratis / Explorer):
+   https://basescan.org/tokenupdate/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz
+=================================================================

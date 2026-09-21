@@ -1,0 +1,25 @@
+{
+  "name": "Solana RPC Test",
+  "ticker": "SOLRPC",
+  "contractAddress": "4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+  "chain": "solana",
+  "sector": "VIRAL_MEME",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://solscan.io/token/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+    "buy": "https://pump.fun/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+    "dexscreener": "https://dexscreener.com/solana/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz"
+  },
+  "generatedAt": "2026-09-20T16:01:36.422Z"
+}

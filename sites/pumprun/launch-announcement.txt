@@ -1,0 +1,91 @@
+=================================================================
+  [+] OFFICIAL LAUNCH ANNOUNCEMENT PACK FOR TWITTER / X & TELEGRAM [+]
+  Token: $PUMPRUN (Pump Hill Runner)
+  Chain: Base Mainnet
+  CA:    0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+=================================================================
+
+--- [OPTION A: SINGLE POWER TWEET (274 chars)] ---
+🚀 $PUMPRUN (Pump Hill Runner) is LIVE on #Base!
+🛡️ 0% Tax | 🔥 30% Auto Buyback
+📝 CA: 0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+📊 Chart: https://dexscreener.com/base/0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+🌐 DApp: https://pumprun-web3.pages.dev
+#Base #DeFi #PUMPRUN
+
+=================================================================
+--- [OPTION B: FULL 3-TWEET LAUNCH THREAD] ---
+
+[TWEET 1/3 - 438 chars]
+1/3 🚀 Introducing $PUMPRUN (Pump Hill Runner) — live on Base Mainnet!
+
+Built with a Positive-Sum flywheel. Zero insider dump, 100% community protection.
+
+📝 CA: 0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+🦄 Swap: https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+📊 Chart: https://dexscreener.com/base/0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+
+#Base #DeFi #CryptoLaunch
+
+-----------------------------------------------------------------
+[TWEET 2/3 - 264 chars]
+2/3 🌪️ THE FLYWHEEL ENGINE:
+
+Creator swap fees recycle back to holders:
+• 🔥 30% Auto Buyback & Burn (0xdead)
+• 💰 20% Passive WETH Yield
+• ⚡ 15% 10-Min FOMO Jackpot
+• 🏛️ 35% Creator Protocol Kas
+
+Volume pumps the floor. Diamond hands win.
+
+#Tokenomics #Flywheel
+
+-----------------------------------------------------------------
+[TWEET 3/3 - 329 chars]
+3/3 🛡️ AUDITED SECURITY & LINKS:
+
+• 0% Buy / Sell Tax (Clean Standard)
+• Audited Liquidity Pool
+
+🌐 Web3 DApp: https://pumprun-web3.pages.dev
+🤖 Telegram: https://t.me/pumprun_portal
+📊 DexScreener: https://dexscreener.com/base/0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+
+RT & spread the alpha! 🚀
+
+#Base #Crypto #DeFi #MemeCoin
+
+=================================================================
+--- [OPTION C: TELEGRAM POST-LAUNCH BLITZ (HTML FORMAT)] ---
+🚀 <b>OFFICIAL LAUNCH ALPHA: $PUMPRUN (Pump Hill Runner)</b>
+
+⛓️ <b>Chain:</b> Base Mainnet
+📝 <b>CA:</b> <code>0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A</code>
+🛡️ <b>Security:</b> 0% Tax | Audited Liquidity | Minimal Proxy
+
+🌪️ <b>4-PILLAR POSITIVE-SUM FLYWHEEL:</b>
+• 🔥 <b>30% Auto Buyback & Burn:</b> Sends to <code>0x000000000000000000000000000000000000dEaD</code>
+• 💰 <b>20% Passive WETH Yield:</b> Auto-distributed to Diamond Hands
+• ⚡ <b>15% 10-Min FOMO Jackpot:</b> Last buyer takes the prize pool
+• 🏛️ <b>35% Protocol Kas:</b> Autonomous development & maintenance
+
+🔗 <b>OFFICIAL VERIFIED LINKS:</b>
+• 📊 <a href="https://dexscreener.com/base/0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A">Live DexScreener Chart</a>
+• 🦄 <a href="https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A">1-Click Swap</a>
+• 🌐 <a href="https://pumprun-web3.pages.dev">Official Web3 DApp</a>
+• 🤖 <a href="https://t.me/pumprun_portal">Community Telegram</a>
+
+💡 <i>Always verify CA before swapping:</i> <code>0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A</code>
+
+-----------------------------------------------------------------
+[TELEGRAM 1-CLICK SHARE WEB LINK]
+https://t.me/share/url?url=https%3A%2F%2Fpumprun-web3.pages.dev&text=%F0%9F%9A%80%20OFFICIAL%20LAUNCH%3A%20%24PUMPRUN%20(Pump%20Hill%20Runner)%20is%20live%20on%20Base%20Mainnet!%0A%0ACA%3A%200x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A%0A%0AChart%3A%20https%3A%2F%2Fdexscreener.com%2Fbase%2F0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A%0ADApp%3A%20https%3A%2F%2Fpumprun-web3.pages.dev
+
+=================================================================
+  Official Links Summary:
+  - Web3 DApp:     https://pumprun-web3.pages.dev
+  - DexScreener:   https://dexscreener.com/base/0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+  - 1-Click Swap:  https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+  - Telegram Bot:  https://t.me/pumprun_portal
+=================================================================

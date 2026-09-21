@@ -2,7 +2,22 @@
 // REAL NEON POSTGRESQL PERSISTENCE & LIFECYCLE TEST (CROSS-PROCESS VERIFICATION)
 // ============================================================================
 
+import fs from 'fs';
 import { defaultDraftDbAdapter, defaultKolDbAdapter, getDbPool, isDatabaseConfigured } from '../packages/shared/db-pool';
+
+if (!process.env.DATABASE_URL && fs.existsSync('.env')) {
+  const envContent = fs.readFileSync('.env', 'utf8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+      const idx = trimmed.indexOf('=');
+      const key = trimmed.slice(0, idx).trim();
+      let val = trimmed.slice(idx + 1).trim();
+      if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+      if (!process.env[key]) process.env[key] = val;
+    }
+  }
+}
 
 async function runPersistenceTest() {
   console.log('================================================================');

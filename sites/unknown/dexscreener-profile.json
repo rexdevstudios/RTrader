@@ -1,0 +1,26 @@
+{
+  "chainId": "base",
+  "tokenAddress": "0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05",
+  "url": "https://unknown-official.vercel.app",
+  "icon": "https://image.pollinations.ai/prompt/Token%200x2a6a%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "header": "https://gateway.pinata.cloud/ipfs/QmbfMRBGguufLXasxW5ZG74W1kvDXvnn6EXrsvikkWwrn2",
+  "description": "Token 0x2a6a ($UNKNOWN) verified on DexScreener.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Website",
+      "url": "https://unknown-official.vercel.app"
+    },
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://unknown-official.vercel.app"
+    },
+    {
+      "type": "docs",
+      "label": "Bankr Agent",
+      "url": "https://bankr.bot/agents/unknown"
+    }
+  ],
+  "generatedAt": "2026-09-14T04:28:58.095Z"
+}

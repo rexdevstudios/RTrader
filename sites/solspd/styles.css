@@ -1,0 +1,132 @@
+/* styles.css — Web3 3D Parallax & Futuristic Styling */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+}
+
+.tilt-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.9);
+}
+
+/* Generative Theme Preset Styling: NEO_BRUTALISM */
+
+/* NEO-BRUTALISM HARD SHADOWS & THICK BORDERS */
+.neo-border {
+  border: 3px solid #000000 !important;
+}
+.neo-shadow {
+  box-shadow: 6px 6px 0px #000000 !important;
+}
+.neo-card {
+  border: 3px solid #000000 !important;
+  box-shadow: 6px 6px 0px #000000 !important;
+  border-radius: 0px !important;
+}
+.neo-btn {
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0px #000000 !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+.neo-btn:hover {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+}
+
+
+/* Conic Gradient Animated Border Beam */
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0turn;
+}
+
+.border-beam-card {
+  position: relative;
+}
+
+.border-beam-card::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 20%,
+    #521ff9 80%,
+    #f94310 95%,
+    transparent
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: spin-beam 4s linear infinite;
+}
+
+@keyframes spin-beam {
+  to {
+    --border-angle: 1turn;
+  }
+}
+
+/* Continuous Marquee Animation */
+.marquee-track {
+  display: inline-flex;
+  animation: marquee-scroll 28s linear infinite;
+}
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Terminal & Logs */
+#terminal-logs::-webkit-scrollbar {
+  width: 4px;
+}
+#terminal-logs::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* Live Buy Toast Animation */
+.buy-toast {
+  animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.buy-toast.fade-out {
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+/* HUD Meter Bar & Gauge Glow */
+.hud-meter-fill {
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
+}
+
+/* Custom Web3 Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #521ff9;
+}

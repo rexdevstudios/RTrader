@@ -1,0 +1,25 @@
+{
+  "name": "Meme Degen Flywheel",
+  "ticker": "MEMEDGEN",
+  "contractAddress": "0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+  "chain": "base",
+  "sector": "VIRAL_MEME",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://basescan.org/token/0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+    "buy": "https://app.uniswap.org/swap?chain=base&inputCurrency=NATIVE&outputCurrency=0x7CE19E4F978009EB644c27946B47221b824C0bA3&exactAmount=0.05",
+    "dexscreener": "https://dexscreener.com/base/0x7CE19E4F978009EB644c27946B47221b824C0bA3"
+  },
+  "generatedAt": "2026-09-18T10:47:00.415Z"
+}

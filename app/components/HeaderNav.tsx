@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Zap, LayoutDashboard, Rocket, Network, LogOut, Wallet, ChevronDown, MonitorDot, BrainCircuit, Award } from 'lucide-react';
+import { ShieldAlert, Zap, LayoutDashboard, Rocket, Network, LogOut, Wallet, MonitorDot, BrainCircuit, Award } from 'lucide-react';
 
 export default function HeaderNav() {
-  const { walletAddress, isConnected, userRole, credits, isConnecting, connectMetaMask, disconnectWallet, switchRole } = useAuth();
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const { walletAddress, isConnected, userRole, credits, isConnecting, connectMetaMask, disconnectWallet } = useAuth();
 
   const truncatedAddress = walletAddress
     ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
@@ -69,71 +68,15 @@ export default function HeaderNav() {
               SIWE ACTIVE ({truncatedAddress})
             </div>
 
-            {/* Role Switcher Pill */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowRoleMenu(!showRoleMenu)}
-                className="btn-secondary"
-                style={{ padding: '4px 8px', fontSize: '12px' }}
-              >
-                <span>Switch Role</span>
-                <ChevronDown size={14} />
-              </button>
-
-              {showRoleMenu && (
-                <div className="bg-panel" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '4px',
-                  borderRadius: '6px',
-                  padding: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  zIndex: 999,
-                  minWidth: '150px',
-                  boxShadow: 'var(--shadow-xl)',
-                }}>
-                  <button
-                    onClick={() => { switchRole('TRADER'); setShowRoleMenu(false); }}
-                    className="btn-secondary"
-                    style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px' }}
-                  >
-                    <Zap size={14} /> Regular Trader
-                  </button>
-                  <button
-                    onClick={() => { switchRole('CREATOR'); setShowRoleMenu(false); }}
-                    className="btn-secondary"
-                    style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px' }}
-                  >
-                    <Rocket size={14} /> Token Creator
-                  </button>
-                  <button
-                    onClick={() => { switchRole('CREATOR'); setShowRoleMenu(false); }}
-                    className="btn-secondary"
-                    style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px', color: '#60A5FA' }}
-                  >
-                    <Award size={14} /> KOL & Influencer
-                  </button>
-                  <button
-                    onClick={() => { switchRole('SYSTEM_ADMIN'); setShowRoleMenu(false); }}
-                    className="btn-secondary"
-                    style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px', color: '#FCA5A5' }}
-                  >
-                    <ShieldAlert size={14} /> System Admin
-                  </button>
-                  <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '4px 0' }}></div>
-                  <button
-                    onClick={() => { disconnectWallet(); setShowRoleMenu(false); }}
-                    className="btn-secondary"
-                    style={{ border: 'none', justifyContent: 'flex-start', width: '100%', fontSize: '12px', color: 'var(--color-destructive)' }}
-                  >
-                    <LogOut size={14} /> Disconnect
-                  </button>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => disconnectWallet()}
+              className="btn-secondary"
+              style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-destructive)' }}
+              title="Disconnect Wallet"
+            >
+              <LogOut size={14} style={{ marginRight: '4px' }} />
+              <span>Disconnect</span>
+            </button>
           </>
         ) : (
           <div className="flex-row items-center gap-sm">

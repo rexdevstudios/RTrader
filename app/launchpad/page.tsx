@@ -30,6 +30,33 @@ export default function LaunchpadPage() {
   const [fundingGoalEth, setFundingGoalEth] = useState('25');
   const [draftResult, setDraftResult] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [activeTokens, setActiveTokens] = useState<any[]>([]);
+  const [isLoadingTokens, setIsLoadingTokens] = useState(false);
+
+  // 4 Launchpad Alignment Dimensions (Chain, Pairing, Degen Mode, Vesting)
+  const [selectedChain, setSelectedChain] = useState<'base' | 'robinhood' | 'arbitrum' | 'arc'>('base');
+  const [poolPairing, setPoolPairing] = useState<'WETH' | 'MORE_TOKENS' | 'STOCKS'>('WETH');
+  const [isDegenMode, setIsDegenMode] = useState<boolean>(true);
+  const [creatorVesting, setCreatorVesting] = useState<'NONE' | '15_PERCENT'>('NONE');
+
+  const fetchActiveTokens = async () => {
+    setIsLoadingTokens(true);
+    try {
+      const res = await fetch('/api/launchpad/tokens');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setActiveTokens(json.data);
+      }
+    } catch {
+      // Graceful fallback
+    } finally {
+      setIsLoadingTokens(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActiveTokens();
+  }, []);
 
   useEffect(() => {
     if (walletAddress) {
@@ -37,11 +64,14 @@ export default function LaunchpadPage() {
     }
   }, [walletAddress]);
 
+  const [draftError, setDraftError] = useState<string | null>(null);
+
   const handleCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tokenName || !tokenSymbol) return;
 
     setIsCreating(true);
+    setDraftError(null);
     try {
       const res = await fetch('/api/launchpad/draft', {
         method: 'POST',
@@ -49,39 +79,41 @@ export default function LaunchpadPage() {
         body: JSON.stringify({
           name: tokenName,
           ticker: tokenSymbol.toUpperCase(),
-          description: `Launch draft for ${tokenName} on ${mode}`,
+          description: `Launch draft for ${tokenName} on ${mode} (${selectedChain.toUpperCase()})`,
           imageUrl: 'https://rtrader.io/token-default.png',
           launchMode: mode,
-          targetChain: 'base-mainnet',
+          targetChain: selectedChain === 'base' ? 'base-mainnet' : `${selectedChain}-mainnet`,
           totalSupply: '1000000000',
-          creatorAllocationPct: 0.0,
+          creatorAllocationPct: creatorVesting === '15_PERCENT' ? 0.15 : 0.0,
           creatorWallet: walletAddress || creatorWallet,
           socialLinks: {
             whitelist_wallets: whitelistWallets,
             fixed_price_eth: fixedPriceEth,
             funding_goal_eth: fundingGoalEth,
+            selected_chain: selectedChain,
+            pool_pairing: poolPairing,
+            degen_mode: isDegenMode ? 'true' : 'false',
+            creator_vesting: creatorVesting,
           },
         }),
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        setDraftResult(json.data);
-      } else {
-        throw new Error('API request failed');
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        const errorMsg = json.error?.message || 'Gagal membuat draft launchpad';
+        if (res.status === 403) {
+          setDraftError('🛡️ Akses Ditolak (403 Forbidden): Akun Anda memerlukan hak akses CREATOR atau ADMIN untuk membuat draft launchpad.');
+        } else if (res.status === 401) {
+          setDraftError('⚠️ Autentikasi Diperlukan (401 Unauthorized): Harap masuk via MetaMask SIWE terlebih dahulu.');
+        } else {
+          setDraftError(`❌ Gagal: ${errorMsg}`);
+        }
+        return;
       }
-    } catch {
-      // Fallback local preview jika offline
-      setDraftResult({
-        draftId: `draft-${Date.now()}`,
-        name: tokenName,
-        symbol: tokenSymbol.toUpperCase(),
-        mode,
-        creatorWallet: walletAddress || creatorWallet,
-        riskPassportScore: 82,
-        status: 'DRAFT_CREATED',
-        createdAt: new Date().toISOString(),
-      });
+
+      setDraftResult(json.data);
+    } catch (err: any) {
+      setDraftError(`Koneksi gagal: ${err.message || 'Tidak dapat menghubungi server'}`);
     } finally {
       setIsCreating(false);
     }
@@ -337,6 +369,170 @@ export default function LaunchpadPage() {
               </div>
             )}
 
+            {/* Target Blockchain & Relayer Gate */}
+            <div className="flex-col gap-xs">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>
+                  Target Blockchain & Gas Relayer
+                </label>
+                <span style={{ fontSize: '10px', color: selectedChain === 'base' ? 'var(--color-accent)' : '#FFAB00', fontWeight: 700 }}>
+                  {selectedChain === 'base' ? '⚡ 100% Gas Sponsored by Bankr' : '⚠️ Gas Sponsorship Policy Active'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChain('base')}
+                  className={selectedChain === 'base' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '8px 4px', justifyContent: 'center', fontSize: '11px', flexDirection: 'column', gap: '2px' }}
+                >
+                  <span style={{ fontWeight: 800 }}>Base L2</span>
+                  <span style={{ fontSize: '9px', color: 'var(--color-accent)' }}>✅ Ready (Sponsored)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChain('robinhood')}
+                  className={selectedChain === 'robinhood' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '8px 4px', justifyContent: 'center', fontSize: '11px', flexDirection: 'column', gap: '2px' }}
+                >
+                  <span style={{ fontWeight: 800 }}>Robinhood</span>
+                  <span style={{ fontSize: '9px', color: '#FF5252' }}>⛔ Blocked in Live</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChain('arbitrum')}
+                  className={selectedChain === 'arbitrum' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '8px 4px', justifyContent: 'center', fontSize: '11px', flexDirection: 'column', gap: '2px' }}
+                >
+                  <span style={{ fontWeight: 800 }}>Arbitrum</span>
+                  <span style={{ fontSize: '9px', color: '#FF5252' }}>⛔ Blocked in Live</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChain('arc')}
+                  className={selectedChain === 'arc' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '8px 4px', justifyContent: 'center', fontSize: '11px', flexDirection: 'column', gap: '2px' }}
+                >
+                  <span style={{ fontWeight: 800 }}>Arc Network</span>
+                  <span style={{ fontSize: '9px', color: '#00E5FF' }}>⚡ ArcPad Ready</span>
+                </button>
+              </div>
+
+              {selectedChain === 'robinhood' && (
+                <div style={{ backgroundColor: '#2A0808', border: '1px solid #FF5252', padding: '8px 10px', borderRadius: '4px', fontSize: '11px', color: '#FF8A80' }}>
+                  ⛔ <strong>Robinhood Live Blocked:</strong> Bankr Relayer hanya mensubsidi gas di Base. Eksekusi on-chain live diblokir (<code>GAS_SPONSORSHIP_POLICY_VIOLATION</code>) untuk melindungi gas wallet operator. Tersedia hanya pada mode simulasi.
+                </div>
+              )}
+              {selectedChain === 'arbitrum' && (
+                <div style={{ backgroundColor: '#2A0808', border: '1px solid #FF5252', padding: '8px 10px', borderRadius: '4px', fontSize: '11px', color: '#FF8A80' }}>
+                  ⛔ <strong>Arbitrum Live Blocked:</strong> Bankr Relayer belum mengaktifkan gas sponsorship di Arbitrum. Eksekusi live diblokir oleh Safety Gate. Tersedia hanya pada mode simulasi.
+                </div>
+              )}
+              {selectedChain === 'arc' && (
+                <div style={{ backgroundColor: '#071A2E', border: '1px solid #00E5FF', padding: '8px 10px', borderRadius: '4px', fontSize: '11px', color: '#80D8FF' }}>
+                  ⚡ <strong>Arc Network Native:</strong> Terhubung dengan smart contract <code>ArcPad.sol</code> di RPC 5042. Jalur Bankr Relayer untuk Arc diblokir secara live tanpa gas sponsorship.
+                </div>
+              )}
+            </div>
+
+            {/* Pool Pairing & Launch Profile */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div className="flex-col gap-xs">
+                <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Pool Pairing</label>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPoolPairing('WETH')}
+                    className={poolPairing === 'WETH' ? 'btn-primary' : 'btn-secondary'}
+                    style={{ flex: 1, padding: '8px 4px', fontSize: '10px', justifyContent: 'center' }}
+                  >
+                    WETH ✅
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPoolPairing('MORE_TOKENS')}
+                    className={poolPairing === 'MORE_TOKENS' ? 'btn-primary' : 'btn-secondary'}
+                    style={{ flex: 1, padding: '8px 4px', fontSize: '10px', justifyContent: 'center' }}
+                    title="Base Quote Tokens: BNKR, ba3Pump, cbHYPE, cbZEC, TAO"
+                  >
+                    Tokens
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="btn-secondary"
+                    style={{ flex: 1, padding: '8px 4px', fontSize: '10px', justifyContent: 'center', opacity: 0.35, cursor: 'not-allowed' }}
+                    title="Stocks belum memiliki mapping contract tokenized-stock di backend."
+                  >
+                    Stocks ⛔
+                  </button>
+                </div>
+                {poolPairing === 'MORE_TOKENS' && (
+                  <span style={{ fontSize: '10px', color: 'var(--color-accent)' }}>
+                    Base Quotes: BNKR, ba3Pump, cbHYPE, cbZEC, TAO.
+                  </span>
+                )}
+              </div>
+
+              {/* Degen Mode Toggle */}
+              <div className="flex-col gap-xs">
+                <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Launch Profile</label>
+                <button
+                  type="button"
+                  onClick={() => setIsDegenMode(!isDegenMode)}
+                  className={isDegenMode ? 'btn-primary' : 'btn-secondary'}
+                  style={{
+                    padding: '8px 10px',
+                    fontSize: '11px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    border: isDegenMode ? '1px solid var(--color-accent)' : undefined,
+                  }}
+                >
+                  <span>🔥 Degen Mode</span>
+                  <span style={{ fontSize: '10px', fontWeight: 800 }}>
+                    {isDegenMode ? 'ON ($2.5k Mcap)' : 'OFF ($69k)'}
+                  </span>
+                </button>
+                <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>
+                  {isDegenMode ? 'Kurva mikro $2,500 mcap awal.' : 'Kurva standar threshold 24 ETH.'}
+                </span>
+              </div>
+            </div>
+
+            {/* Creator Vesting */}
+            <div className="flex-col gap-xs">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>
+                  Creator Vesting (Local Launchpad Contract)
+                </label>
+                <span style={{ fontSize: '10px', color: '#FFAB00', fontWeight: 700 }}>
+                  ℹ️ Smart contract lokal
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setCreatorVesting('NONE')}
+                  className={creatorVesting === 'NONE' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '8px', justifyContent: 'center', fontSize: '11px' }}
+                >
+                  Tanpa Vesting (0%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreatorVesting('15_PERCENT')}
+                  className={creatorVesting === '15_PERCENT' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ padding: '8px', justifyContent: 'center', fontSize: '11px' }}
+                >
+                  15% Creator Vesting
+                </button>
+              </div>
+              <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>
+                * Bankr REST API menggunakan template kurva pabrik bawaan tanpa parameter vesting kustom. Field ini tidak dikirim ke REST API Bankr.
+              </span>
+            </div>
+
             <div className="flex-col gap-xs">
               <label style={{ color: 'var(--color-muted)', fontSize: '12px', fontWeight: 700 }}>Creator Wallet Address</label>
               <input
@@ -373,14 +569,26 @@ export default function LaunchpadPage() {
                 )}
               </div>
             ) : (
-              <button
-                type="submit"
-                disabled={isCreating}
-                className="btn-primary"
-                style={{ padding: '14px', justifyContent: 'center', marginTop: '8px' }}
-              >
-                {isCreating ? 'Validating Risk Passport...' : '🚀 Create Launch Draft'}
-              </button>
+              <>
+                {userRole !== 'CREATOR' && userRole !== 'SYSTEM_ADMIN' && userRole !== 'SUPER_ADMIN' && (
+                  <div style={{ backgroundColor: 'rgba(255, 171, 0, 0.1)', border: '1px solid #FFAB00', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#FFD600', marginTop: '8px' }}>
+                    ℹ️ Peran Anda saat ini: <strong>{userRole}</strong>. Pembuatan draft launchpad memerlukan hak akses <strong>CREATOR</strong> atau <strong>ADMIN</strong>.
+                  </div>
+                )}
+                {draftError && (
+                  <div style={{ backgroundColor: 'rgba(255, 23, 68, 0.1)', border: '1px solid var(--color-destructive)', padding: '10px', borderRadius: '6px', fontSize: '12px', color: 'var(--color-destructive)', marginTop: '8px' }}>
+                    {draftError}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="btn-primary"
+                  style={{ padding: '14px', justifyContent: 'center', marginTop: '8px' }}
+                >
+                  {isCreating ? 'Validating Risk Passport...' : '🚀 Create Launch Draft'}
+                </button>
+              </>
             )}
           </form>
         </div>
@@ -408,6 +616,25 @@ export default function LaunchpadPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span className="text-muted">Creator Wallet:</span>
                 <span style={{ color: 'var(--color-foreground)', fontWeight: 800 }}>{draftResult.creatorWallet.slice(0, 10)}...</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Target Chain:</span>
+                <span style={{ color: selectedChain === 'base' ? 'var(--color-accent)' : '#FFAB00', fontWeight: 800 }}>
+                  {draftResult.targetChain?.toUpperCase() || selectedChain.toUpperCase()}
+                  {selectedChain === 'base' ? ' (SPONSORED)' : ' (POLICY RESTRICTED)'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Pairing / Profile:</span>
+                <span style={{ color: 'var(--color-foreground)', fontWeight: 800 }}>
+                  {poolPairing} ({isDegenMode ? 'Degen $2.5k Mcap' : 'Std $69k Mcap'})
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="text-muted">Creator Allocation:</span>
+                <span style={{ color: 'var(--color-foreground)', fontWeight: 800 }}>
+                  {creatorVesting === '15_PERCENT' ? '15% (Local Contract Only)' : '0% (None)'}
+                </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span className="text-muted">Arkham Risk Passport:</span>
@@ -481,6 +708,115 @@ export default function LaunchpadPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Live Deployed Tokens & Active Bonding Curves (Neon SSOT Stream) */}
+      <div className="bg-panel" style={{ borderRadius: '8px', padding: '24px', border: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: 'var(--color-foreground)', margin: 0, fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Rocket size={18} style={{ color: 'var(--color-accent)' }} /> Live Deployed Tokens & Bonding Curves
+          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="badge" style={{ backgroundColor: '#041E15', color: 'var(--color-accent)', border: '1px solid var(--color-accent)', fontSize: '11px', fontWeight: 800 }}>
+              {activeTokens.length} LIVE ON BASE
+            </span>
+            <button
+              type="button"
+              onClick={fetchActiveTokens}
+              className="btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '11px' }}
+              disabled={isLoadingTokens}
+            >
+              {isLoadingTokens ? 'Refreshing...' : '🔄 Refresh SSOT'}
+            </button>
+          </div>
+        </div>
+
+        {activeTokens.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            {activeTokens.map((token: any) => {
+              const raised = Number(token.raisedAmount || 0);
+              const target = Number(token.graduationThreshold || 69000);
+              const progressPct = Math.min(100, Math.round((raised / target) * 100));
+              const explorerUrl = `https://basescan.org/address/${token.contractAddress}`;
+
+              return (
+                <div
+                  key={token.launchId || token.contractAddress}
+                  className="bg-panel"
+                  style={{
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: '#070C12',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: 900, color: 'var(--color-foreground)', fontSize: '14px' }}>
+                        {token.name}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-accent)', fontSize: '12px' }}>
+                        ${token.ticker}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        backgroundColor: '#071A2E',
+                        color: '#00E5FF',
+                        border: '1px solid #00E5FF',
+                      }}
+                    >
+                      {token.chain?.toUpperCase() || 'BASE'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '12px', fontFamily: 'var(--font-mono)' }}>
+                    CA: {token.contractAddress.slice(0, 8)}...{token.contractAddress.slice(-6)}
+                  </div>
+
+                  {/* Graduation Progress Bar */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-muted)', marginBottom: '4px' }}>
+                      <span>Graduation Progress</span>
+                      <span style={{ color: 'var(--color-foreground)', fontWeight: 700 }}>${raised.toLocaleString()} / ${target.toLocaleString()}</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', backgroundColor: '#1A2332', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${progressPct}%`, height: '100%', backgroundColor: 'var(--color-accent)' }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                    <a
+                      href={explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary"
+                      style={{ flex: 1, padding: '6px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
+                    >
+                      Basescan ↗
+                    </a>
+                    <a
+                      href={`/trading?token=${token.contractAddress}`}
+                      className="btn-primary"
+                      style={{ flex: 1, padding: '6px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
+                    >
+                      Trade Token ⚡
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-muted)', fontSize: '12px' }}>
+            Belum ada token yang terdaftar di PostgreSQL SSOT. Jalankan deployment via Multibot atau buat draft di atas untuk mendaftarkan token pertama!
+          </div>
+        )}
       </div>
 
       {/* Admin Launchpad Governance Console (SYSTEM_ADMIN Exclusive) */}

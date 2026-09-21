@@ -1,0 +1,25 @@
+{
+  "name": "Token 0x2a6a",
+  "ticker": "UNKNOWN",
+  "contractAddress": "0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05",
+  "chain": "base",
+  "sector": "VIRAL_MEME",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://basescan.org/token/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05",
+    "buy": "https://app.uniswap.org/explore/tokens/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05",
+    "dexscreener": "https://dexscreener.com/base/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05"
+  },
+  "generatedAt": "2026-09-14T04:28:56.158Z"
+}

@@ -1,0 +1,22 @@
+{
+  "network": "robinhood",
+  "tokenAddress": "0x3333333333333333333333333333333333333333",
+  "tokenName": "Robinhood Flywheel",
+  "tokenSymbol": "RHFLY",
+  "tokenUrl": "https://www.geckoterminal.com/robinhood/tokens/0x3333333333333333333333333333333333333333",
+  "description": "Robinhood Flywheel ($RHFLY) - Autonomous Web3 Token on ROBINHOOD. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Robinhood%20Flywheel%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://rhfly-web3.pages.dev",
+    "twitter": "https://x.com/RHFLY_coin",
+    "telegram": "https://t.me/rhfly_portal",
+    "explorer": "https://blockscout.com/token/0x3333333333333333333333333333333333333333"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-20T06:56:21.944Z"
+}

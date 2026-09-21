@@ -371,3 +371,13 @@ input data -> feature assembly -> strategy model -> proposal -> risk engine -> e
 
 ### Smart Contracts (contracts/ — LOCKED)
 - `BondingCurveLaunchpad.sol`: Onchain bonding curve launchpad — deployed, immutable
+
+### Active System Phase & Bot Attraction Roadmap
+- **Canonical Compass:** [`docs/ROADMAP_PHASES_AND_EXTERNAL_BOT_CATALYST.md`](file:///c:/Users/a/Downloads/BOT/docs/ROADMAP_PHASES_AND_EXTERNAL_BOT_CATALYST.md)
+- **Current Operational Phase:** **Phase 3 — External Bot Attraction & Momentum Flywheel (LIVE & CONFIRMED ON-CHAIN)**
+  - Phase 0: Contract Hardening (COMPLETE)
+  - Phase 1: On-chain Deploy & Doppler Pool Indexing (COMPLETE)
+  - Phase 2: SSOT State Synchronization (COMPLETE)
+  - Phase 3: External Bot Attraction & Momentum (LIVE — 2x On-Chain Micro-buys Confirmed, 37.77M PUMPRUN Holding, DexScreener Indexed)
+  - Phase 4: Creator Royalty 95% WETH Harvester (READY & ACCRUING WETH)
+  - Phase 5: Multi-Chain Fleet & SocialFi Hub (ROADMAP)

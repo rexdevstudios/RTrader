@@ -1,0 +1,25 @@
+{
+  "name": "Pump Hill Runner",
+  "ticker": "PUMPRUN",
+  "contractAddress": "0x0a99f4251A461e8abC693a56BB837fD815D51BA3",
+  "chain": "base",
+  "sector": "VIRAL_MEME",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://basescan.org/token/0x0a99f4251A461e8abC693a56BB837fD815D51BA3",
+    "buy": "https://app.doppler.lol/tokens/base/0x0a99f4251A461e8abC693a56BB837fD815D51BA3",
+    "dexscreener": "https://dexscreener.com/base/0x0a99f4251A461e8abC693a56BB837fD815D51BA3"
+  },
+  "generatedAt": "2026-09-20T16:01:54.940Z"
+}

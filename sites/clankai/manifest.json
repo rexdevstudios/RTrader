@@ -1,0 +1,17 @@
+{
+  "name": "Clanker AI Bot Protocol",
+  "short_name": "$CLANKAI",
+  "description": "Clanker AI Bot ($CLANKAI) on Base L2 (Clanker v4). Autonomous Web3 Protocol with 0% Tax.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07080b",
+  "theme_color": "#00ff66",
+  "icons": [
+    {
+      "src": "og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

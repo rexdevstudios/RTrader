@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SiweAuthService } from '@packages/auth/siwe';
 import { ApiResponse, WalletVerifyRequest, UserProfileResponse } from '@packages/shared/contracts/api-contracts';
-
-
+import { createSessionToken, resolveUserRoles } from '@packages/auth/session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,20 +34,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(response, { status: 401 });
     }
 
+    const userId = `usr-${body.walletAddress.slice(0, 10).toLowerCase()}`;
+    const { roles, status } = await resolveUserRoles(body.walletAddress, userId);
+
     const data: UserProfileResponse = {
-      userId: `usr-${body.walletAddress.slice(0, 10).toLowerCase()}`,
-      status: 'ACTIVE',
+      userId,
+      status: status || 'ACTIVE',
       kycStatus: 'NOT_REQUIRED',
-      roles: ['TRADER'],
+      roles,
       primaryWallet: body.walletAddress,
     };
 
-    // Generate stateless session token (base64 encoded, validated by Edge Middleware)
-    // Format: base64(<userId>:<walletAddress>:<issuedAt>:<nonce>)
-    const userId = `usr-${body.walletAddress.slice(0, 10).toLowerCase()}`;
-    const issuedAt = Date.now().toString();
-    const rawToken = `${userId}:${body.walletAddress}:${issuedAt}:${body.nonce}`;
-    const sessionToken = Buffer.from(rawToken).toString('base64');
+    // Generate cryptographically signed HMAC session token
+    const sessionToken = createSessionToken({
+      userId,
+      walletAddress: body.walletAddress,
+      nonce: body.nonce,
+    });
 
     const response: ApiResponse<UserProfileResponse & { sessionToken: string }> = {
       success: true,

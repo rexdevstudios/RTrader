@@ -1,0 +1,25 @@
+{
+  "name": "Clanker AI Bot",
+  "ticker": "CLANKAI",
+  "contractAddress": "0x2222222222222222222222222222222222222222",
+  "chain": "clanker",
+  "sector": "AI_AGENT",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://basescan.org/token/0x2222222222222222222222222222222222222222",
+    "buy": "https://clanker.world/clanker/0x2222222222222222222222222222222222222222",
+    "dexscreener": "https://dexscreener.com/clanker/0x2222222222222222222222222222222222222222"
+  },
+  "generatedAt": "2026-09-18T10:47:02.133Z"
+}

@@ -1,0 +1,38 @@
+name: RTrader Smart Contract Keeper Cron
+
+on:
+  schedule:
+    # Run every 30 minutes (100% Free on GitHub Actions public/private runners)
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    # Allow manual on-demand trigger from GitHub Actions dashboard
+
+jobs:
+  trigger-keeper:
+    name: Execute Flywheel Keeper Upkeep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keeper Endpoint on Vercel
+        env:
+          VERCEL_APP_URL: ${{ secrets.VERCEL_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          TARGET_URL="${VERCEL_APP_URL:-https://rtrader.vercel.app}/api/launchpad/keeper"
+          echo "Triggering Keeper Upkeep at: $TARGET_URL"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$TARGET_URL" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            -d '{"source": "github-actions-cron"}')
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "HTTP Response Status: $HTTP_CODE"
+          echo "Response Body: $BODY"
+          
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Keeper Upkeep executed successfully."
+          else
+            echo "⚠️ Keeper returned non-2xx status ($HTTP_CODE). Check secrets or server logs."
+          fi

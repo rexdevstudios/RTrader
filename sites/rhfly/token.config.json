@@ -1,0 +1,25 @@
+{
+  "name": "Robinhood Flywheel",
+  "ticker": "RHFLY",
+  "contractAddress": "0x3333333333333333333333333333333333333333",
+  "chain": "robinhood",
+  "sector": "DEFI_TREASURY",
+  "security": {
+    "isSafe": true,
+    "dexscreenerPaid": false,
+    "buyTax": "0%",
+    "sellTax": "0%"
+  },
+  "tokenomics": {
+    "buybackPct": 30,
+    "dividendPct": 20,
+    "jackpotPct": 15,
+    "treasuryPct": 35
+  },
+  "links": {
+    "explorer": "https://robinhoodchain.blockscout.com/token/0x3333333333333333333333333333333333333333",
+    "buy": "https://pons.fun/token/0x3333333333333333333333333333333333333333",
+    "dexscreener": "https://dexscreener.com/robinhood/0x3333333333333333333333333333333333333333"
+  },
+  "generatedAt": "2026-09-20T06:56:21.346Z"
+}

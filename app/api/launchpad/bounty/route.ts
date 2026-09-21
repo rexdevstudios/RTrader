@@ -1,37 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@packages/shared/contracts/api-contracts';
 import { BountyCampaign } from '@packages/shared/types/domain';
-
-// In-memory SSOT store for campaigns
-const inMemoryCampaigns: BountyCampaign[] = [
-  {
-    id: 'campaign-degen-1',
-    launchId: 'launch-degen-moon',
-    creatorId: 'usr-creator-1',
-    title: 'Degen Moon Viral TikTok & X Raid',
-    requiredHashtag: '#DegenMoon',
-    minFollowers: 500,
-    rewardPerKol: 1000000000000000000000n, // 1,000 tokens (18 dec)
-    maxParticipants: 50,
-    currentParticipants: 12,
-    isActive: true,
-  },
-  {
-    id: 'campaign-cdao-2',
-    launchId: 'launch-creator-dao',
-    creatorId: 'usr-creator-2',
-    title: 'CreatorDAO Community Bounty',
-    requiredHashtag: '#CreatorDAO',
-    minFollowers: 1000,
-    rewardPerKol: 2500000000000000000000n, // 2,500 tokens
-    maxParticipants: 20,
-    currentParticipants: 8,
-    isActive: true,
-  },
-];
+import { defaultBountyDbAdapter } from '@packages/shared/db-pool';
 
 export async function GET() {
-  const serialized = inMemoryCampaigns.map((c) => ({
+  const campaigns = await defaultBountyDbAdapter.listCampaigns();
+  const serialized = campaigns.map((c) => ({
     ...c,
     rewardPerKol: c.rewardPerKol.toString(),
   }));
@@ -71,7 +45,8 @@ export async function POST(req: NextRequest) {
       isActive: true,
     };
 
-    inMemoryCampaigns.unshift(newCampaign);
+    const savedId = await defaultBountyDbAdapter.createCampaign(newCampaign);
+    newCampaign.id = savedId;
 
     const serialized = {
       ...newCampaign,

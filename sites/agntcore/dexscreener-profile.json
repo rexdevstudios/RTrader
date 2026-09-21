@@ -1,0 +1,20 @@
+{
+  "chainId": "base",
+  "tokenAddress": "0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+  "url": "https://agntcore-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Autonomous%20Agent%20Core%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "description": "Autonomous Agent Core ($AGNTCORE) - Autonomous Web3 Protocol on BASE. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://agntcore-web3.pages.dev"
+    },
+    {
+      "type": "docs",
+      "label": "Bankr Agent",
+      "url": "https://bankr.bot/agents/agntcore"
+    }
+  ],
+  "generatedAt": "2026-09-18T10:46:59.370Z"
+}

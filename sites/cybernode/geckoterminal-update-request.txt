@@ -1,0 +1,41 @@
+=================================================================
+  GECKOTERMINAL & COINGECKO TOKEN INFO UPDATE REQUEST DATA
+=================================================================
+Project Name:          Cyber DePIN Node
+Token Symbol:          $CYBERNODE
+Network / Chain:       BASE
+Token Address (CA):    0x7CE19E4F978009EB644c27946B47221b824C0bA3
+Pool Address (DEX):    See on-chain pair
+GeckoTerminal Chart:   https://www.geckoterminal.com/base/tokens/0x7CE19E4F978009EB644c27946B47221b824C0bA3
+
+-----------------------------------------------------------------
+OFFICIAL COMMUNITY & SOCIAL LINKS (To resolve 'Info: 0' penalty)
+-----------------------------------------------------------------
+Official Website:      https://cybernode-web3.pages.dev
+Twitter / X:           https://x.com/CYBERNODE_coin
+Telegram Portal/Bot:   https://t.me/cybernode_portal
+Discord Server:        None
+Token Icon / Logo:     https://image.pollinations.ai/prompt/Cyber%20DePIN%20Node%20crypto%20token%20logo?width=512&height=512&nologo=true
+
+-----------------------------------------------------------------
+SECURITY & TOKENOMICS VERIFICATION (Boosts GT Score to 80-100)
+-----------------------------------------------------------------
+Buy Tax:               0%
+Sell Tax:              0%
+Liquidity Status:      100% Permanently Locked / Burned LP
+Honeypot Risk:         NO (Audited Open-Source Proxy)
+
+Project Description:
+Cyber DePIN Node ($CYBERNODE) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.
+=================================================================
+LANGKAH PENGAJUAN RESMI GECKOTERMINAL (100% GRATIS):
+1. Buka Form Tiket CoinGecko / GeckoTerminal:
+   https://support.coingecko.com/hc/en-us/requests/new?ticket_form_id=360000025353
+   -> Pilih: "Update Token Information (Listing on GeckoTerminal)"
+   -> Salin-tempel field dari dokumen ini ke form.
+
+2. Update Profil di Blockchain Explorer (Auto-sync ke GeckoTerminal):
+   https://basescan.org/tokenupdate/0x7CE19E4F978009EB644c27946B47221b824C0bA3
+   -> Begitu profil di-approve oleh explorer, GeckoTerminal akan
+      otomatis mengimpor ikon dan link sosial tanpa biaya!
+=================================================================

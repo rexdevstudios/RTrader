@@ -1,0 +1,17 @@
+{
+  "name": "DeFi Treasury Vault Protocol",
+  "short_name": "$TREASURY",
+  "description": "DeFi Treasury Vault ($TREASURY) on Base Mainnet L2. Autonomous Web3 Protocol with 0% Tax.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07080b",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

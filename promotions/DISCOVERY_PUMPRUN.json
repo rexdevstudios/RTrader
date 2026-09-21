@@ -1,0 +1,72 @@
+{
+  "tokenInfo": {
+    "name": "Pump Run Autonomous",
+    "symbol": "PUMPRUN",
+    "chain": "base",
+    "contractAddress": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "urls": {
+    "dexScreener": "https://dexscreener.com/base/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "geckoTerminal": "https://www.geckoterminal.com/base/tokens/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "explorer": "https://basescan.org/token/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "telegram": "https://t.me/pumprun_bot",
+    "baseEcosystemForm": "https://forms.gle/hJhc2PqfAsQp86YL8"
+  },
+  "marketMetrics": {
+    "priceUsd": "UNKNOWN",
+    "liquidityUsd": "UNKNOWN",
+    "volume24h": "UNKNOWN",
+    "onChainVerified": true,
+    "verifiedStatus": "PENDING_VERIFICATION"
+  },
+  "discoveryStatus": {
+    "dexScreener": "PENDING_INDEXING",
+    "geckoTerminal": "PENDING_INDEXING",
+    "coinGecko": "SUBMISSION-READY",
+    "baseEcosystem": "SUBMISSION-READY",
+    "communityChannels": "SUBMISSION-READY"
+  },
+  "socialAnnouncement": {
+    "headline": "$PUMPRUN Free Discovery Package (Pump Run Autonomous)",
+    "socialPost": "🚀 $PUMPRUN (Pump Run Autonomous) on Base L2\n0% Tax | Liquidity Locked | Renounced\n📊 Chart: https://dexscreener.com/base/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nCA: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "communityPost": "**NEW TOKEN DISCOVERY PACKAGE: $PUMPRUN (Pump Run Autonomous)**\nNetwork: Base L2 (by Coinbase)\nContract Address: `0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`\nDexScreener: https://dexscreener.com/base/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nGeckoTerminal: https://www.geckoterminal.com/base/tokens/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nExplorer: https://basescan.org/token/0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nTelegram: https://t.me/pumprun_bot\nDescription: Autonomous community meme token.\nPromotion Status: CONDITIONAL (Social presence incomplete (missing official website or X/Twitter link).; No liquidity pool or bonding curve pair detected yet.)"
+  },
+  "submissionMetadata": {
+    "projectName": "Pump Run Autonomous",
+    "tokenSymbol": "PUMPRUN",
+    "contractAddress": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "chain": "base",
+    "description": "Autonomous Pump Run Autonomous community meme token on base.",
+    "officialTelegram": "https://t.me/pumprun_bot",
+    "category": "Meme",
+    "tags": [
+      "base",
+      "meme",
+      "flywheel",
+      "zero-tax"
+    ],
+    "officialSubmissionForm": "https://forms.gle/hJhc2PqfAsQp86YL8"
+  },
+  "eligibility": {
+    "status": "CONDITIONAL",
+    "reasons": [
+      "Social presence incomplete (missing official website or X/Twitter link).",
+      "No liquidity pool or bonding curve pair detected yet."
+    ],
+    "eligiblePlatforms": [],
+    "evaluatedMetrics": {
+      "lifecycleState": "DEPLOY_CONFIRMED",
+      "onChainVerified": true,
+      "hasLiquidity": false,
+      "liquidityUsd": "UNKNOWN",
+      "hasVolume": "UNKNOWN",
+      "volume24h": "UNKNOWN",
+      "metadataComplete": false
+    }
+  },
+  "operatorDecision": {
+    "status": "PENDING_REVIEW",
+    "operator": "local_operator"
+  },
+  "generatedAt": "2026-09-20T16:01:44.738Z"
+}

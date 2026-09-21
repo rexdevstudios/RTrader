@@ -1,0 +1,17 @@
+{
+  "name": "Solana Runner Protocol",
+  "short_name": "$SOLRUN",
+  "description": "Solana Runner ($SOLRUN) on Solana Mainnet. Autonomous Web3 Protocol with 0% Tax.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07080b",
+  "theme_color": "#06b6d4",
+  "icons": [
+    {
+      "src": "og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

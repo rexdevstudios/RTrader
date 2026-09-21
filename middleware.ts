@@ -25,6 +25,8 @@ const PUBLIC_API_PATHS = new Set([
   '/api/system/overview', // Health check is public
   '/api/market/chart',    // Chart data is public read-only
   '/api/market/macro',    // DefiLlama macro TVL signal is public read-only
+  '/api/launchpad/keeper', // Keeper automation handles CRON_SECRET internally
+  '/api/launchpad/webhook', // Webhook receiver handles signature/secret internally
 ]);
 
 // Security headers applied to ALL responses

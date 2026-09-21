@@ -1,0 +1,22 @@
+{
+  "network": "base",
+  "tokenAddress": "0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+  "tokenName": "Autonomous Agent Core",
+  "tokenSymbol": "AGNTCORE",
+  "tokenUrl": "https://www.geckoterminal.com/base/tokens/0x7CE19E4F978009EB644c27946B47221b824C0bA3",
+  "description": "Autonomous Agent Core ($AGNTCORE) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Autonomous%20Agent%20Core%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://agntcore-web3.pages.dev",
+    "twitter": "https://x.com/AGNTCORE_coin",
+    "telegram": "https://t.me/agntcore_portal",
+    "explorer": "https://basescan.org/tokenupdate/0x7CE19E4F978009EB644c27946B47221b824C0bA3"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-18T10:46:59.373Z"
+}

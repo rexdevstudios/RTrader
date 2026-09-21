@@ -1,0 +1,22 @@
+{
+  "network": "solana",
+  "tokenAddress": "7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp",
+  "tokenName": "Sol Speed Demon",
+  "tokenSymbol": "SOLSPD",
+  "tokenUrl": "https://www.geckoterminal.com/solana/tokens/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp",
+  "description": "Sol Speed Demon ($SOLSPD) - Autonomous Web3 Token on SOLANA. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Sol%20Speed%20Demon%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://solspd-web3.pages.dev",
+    "twitter": "https://x.com/SOLSPD_coin",
+    "telegram": "https://t.me/solspd_portal",
+    "explorer": "https://solscan.io/token/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-18T10:44:53.574Z"
+}

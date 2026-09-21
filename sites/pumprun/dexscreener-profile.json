@@ -1,0 +1,31 @@
+{
+  "chainId": "base",
+  "tokenAddress": "0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A",
+  "url": "https://pumprun-web3.pages.dev",
+  "icon": "https://gateway.pinata.cloud/ipfs/QmdiMA7WbFG93SNqizSZYNV5NG37iuPj87k8vaEMZaxp6Y",
+  "header": "https://gateway.pinata.cloud/ipfs/QmdYtknupqBE9cJo7aoH3mN4GU6zSxGoUb4F36UxAmgpkz",
+  "description": "Pump Hill Runner ($PUMPRUN) - Autonomous Web3 Protocol on BASE. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://pumprun-web3.pages.dev"
+    },
+    {
+      "type": "twitter",
+      "label": "Twitter",
+      "url": "https://x.com/search?q=%24PUMPRUN"
+    },
+    {
+      "type": "telegram",
+      "label": "Telegram Portal",
+      "url": "https://t.me/pumprun_portal"
+    },
+    {
+      "type": "docs",
+      "label": "Bankr Agent",
+      "url": "https://bankr.bot/agents/pumprun"
+    }
+  ],
+  "generatedAt": "2026-09-20T22:49:48.035Z"
+}

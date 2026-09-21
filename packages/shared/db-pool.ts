@@ -4,10 +4,12 @@
 
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 import crypto from 'crypto';
+import { ethers } from 'ethers';
 import { LaunchDraftDbAdapter } from '../launchpad/launch-draft-service';
 import { KolDbAdapter } from '../social/kol-service';
-import { BountyDbAdapter } from '../launchpad/bounty-escrow';
+import { BountyDbAdapter, BountyClaimItem } from '../launchpad/bounty-escrow';
 import { KolProfile, BountyCampaign, BountyClaim } from './types/domain';
+import { normalizeTokenIdentifier } from './token-identifier';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -114,6 +116,32 @@ export async function ensureUserEntity(pool: Pool, actorOrWallet: string): Promi
 const inMemoryDrafts: any[] = [];
 const inMemoryKolProfiles: Map<string, KolProfile> = new Map();
 const inMemoryClaims: Map<string, BountyClaim> = new Map();
+const inMemoryCampaigns: BountyCampaign[] = [
+  {
+    id: 'campaign-degen-1',
+    launchId: 'launch-degen-moon',
+    creatorId: 'usr-creator-1',
+    title: 'Degen Moon Viral TikTok & X Raid',
+    requiredHashtag: '#DegenMoon',
+    minFollowers: 500,
+    rewardPerKol: 1000000000000000000000n, // 1,000 tokens
+    maxParticipants: 50,
+    currentParticipants: 12,
+    isActive: true,
+  },
+  {
+    id: 'campaign-cdao-2',
+    launchId: 'launch-creator-dao',
+    creatorId: 'usr-creator-2',
+    title: 'CreatorDAO Community Bounty',
+    requiredHashtag: '#CreatorDAO',
+    minFollowers: 1000,
+    rewardPerKol: 2500000000000000000000n, // 2,500 tokens
+    maxParticipants: 20,
+    currentParticipants: 8,
+    isActive: true,
+  },
+];
 
 // ----------------------------------------------------------------------------
 // POSTGRES DRAFT DB ADAPTER
@@ -227,6 +255,163 @@ export class PostgresDraftDbAdapter implements LaunchDraftDbAdapter {
       }
     }
     return inMemoryDrafts;
+  }
+
+  async getActiveTokenLaunches(): Promise<any[]> {
+    const pool = getDbPool();
+    if (pool) {
+      try {
+        const queryText = `
+          SELECT 
+            tl.id as launch_id,
+            tl.draft_id,
+            tl.contract_address,
+            tl.chain,
+            tl.current_supply,
+            tl.raised_amount,
+            tl.graduation_threshold,
+            tl.is_graduated,
+            tl.dex_pair_address,
+            tl.risk_score,
+            tl.published_at,
+            ld.name,
+            ld.ticker,
+            ld.description,
+            ld.image_url,
+            ld.launch_mode,
+            w.address as creator_wallet
+          FROM token_launches tl
+          JOIN launch_drafts ld ON ld.id = tl.draft_id
+          LEFT JOIN users u ON u.id = ld.creator_id
+          LEFT JOIN wallets w ON w.user_id = u.id AND w.is_primary = true
+          ORDER BY tl.published_at DESC
+          LIMIT 50
+        `;
+        const res = await pool.query(queryText);
+        if (res.rows.length > 0) {
+          return res.rows.map((r) => ({
+            launchId: r.launch_id,
+            draftId: r.draft_id,
+            contractAddress: r.contract_address,
+            chain: r.chain,
+            currentSupply: r.current_supply?.toString() || '1000000000',
+            raisedAmount: Number(r.raised_amount || 0),
+            graduationThreshold: Number(r.graduation_threshold || 69000),
+            isGraduated: Boolean(r.is_graduated),
+            dexPairAddress: r.dex_pair_address,
+            riskScore: r.risk_score ?? 90,
+            publishedAt: r.published_at,
+            name: r.name,
+            ticker: r.ticker,
+            description: r.description,
+            imageUrl: r.image_url,
+            launchMode: r.launch_mode,
+            creatorWallet: r.creator_wallet || '0x000000000000000000000000000000000000dEaD',
+          }));
+        }
+      } catch (err: any) {
+        if (process.env.NODE_ENV === 'production') throw err;
+        console.warn('[PostgresDraftDbAdapter] getActiveTokenLaunches failed:', err.message);
+      }
+    }
+    // Fallback: derive mock active launches from confirmed inMemoryDrafts
+    return inMemoryDrafts
+      .filter((d) => d.status === 'PUBLISHED' || d.status === 'DRAFT_CREATED')
+      .map((d, i) => ({
+        launchId: d.id,
+        draftId: d.id,
+        contractAddress: '0x' + (i + 1).toString().padStart(40, '0'),
+        chain: d.targetChain || 'base-mainnet',
+        currentSupply: d.totalSupply?.toString() || '1000000000',
+        raisedAmount: 12500,
+        graduationThreshold: 69000,
+        isGraduated: false,
+        dexPairAddress: null,
+        riskScore: 92,
+        publishedAt: d.createdAt || new Date(),
+        name: d.name,
+        ticker: d.ticker,
+        description: d.description,
+        imageUrl: d.imageUrl,
+        launchMode: d.launchMode,
+        creatorWallet: d.creatorWallet || '0x000000000000000000000000000000000000dEaD',
+      }));
+  }
+
+  async getTokenLaunchByAddress(chain: string, address: string): Promise<any | null> {
+    const norm = normalizeTokenIdentifier(chain, address);
+    const lookupAddress = norm.contractAddress || address;
+    const pool = getDbPool();
+
+    if (pool && lookupAddress) {
+      try {
+        const queryText = `
+          SELECT 
+            tl.id as launch_id,
+            tl.draft_id,
+            tl.contract_address,
+            tl.chain,
+            tl.current_supply,
+            tl.raised_amount,
+            tl.graduation_threshold,
+            tl.is_graduated,
+            tl.dex_pair_address,
+            tl.risk_score,
+            tl.published_at,
+            ld.name,
+            ld.ticker,
+            ld.description,
+            ld.image_url,
+            ld.launch_mode,
+            w.address as creator_wallet
+          FROM token_launches tl
+          JOIN launch_drafts ld ON ld.id = tl.draft_id
+          LEFT JOIN users u ON u.id = ld.creator_id
+          LEFT JOIN wallets w ON w.user_id = u.id AND w.is_primary = true
+          WHERE LOWER(tl.contract_address) = LOWER($1)
+          ORDER BY CASE WHEN LOWER(tl.chain) LIKE '%' || LOWER($2) || '%' THEN 0 ELSE 1 END, tl.published_at DESC
+          LIMIT 1
+        `;
+        const res = await pool.query(queryText, [lookupAddress, norm.chain]);
+        if (res.rows.length > 0) {
+          const r = res.rows[0];
+          return {
+            launchId: r.launch_id,
+            draftId: r.draft_id,
+            contractAddress: r.contract_address,
+            chain: r.chain,
+            currentSupply: r.current_supply?.toString() || '1000000000',
+            raisedAmount: Number(r.raised_amount || 0),
+            graduationThreshold: Number(r.graduation_threshold || 69000),
+            isGraduated: Boolean(r.is_graduated),
+            dexPairAddress: r.dex_pair_address,
+            riskScore: r.risk_score ?? 90,
+            publishedAt: r.published_at,
+            name: r.name,
+            ticker: r.ticker,
+            description: r.description,
+            imageUrl: r.image_url,
+            launchMode: r.launch_mode,
+            creatorWallet: r.creator_wallet || '0x000000000000000000000000000000000000dEaD',
+            source: 'neon_postgres',
+          };
+        }
+      } catch (err: any) {
+        if (process.env.NODE_ENV === 'production') throw err;
+        console.warn('[PostgresDraftDbAdapter] getTokenLaunchByAddress failed:', err.message);
+      }
+    }
+
+    // In-memory fallback
+    const activeLaunches = await this.getActiveTokenLaunches();
+    const found = activeLaunches.find(
+      (l) => l.contractAddress && l.contractAddress.toLowerCase() === lookupAddress.toLowerCase()
+    );
+    if (found) {
+      return { ...found, source: 'in_memory' };
+    }
+
+    return null;
   }
 }
 
@@ -363,6 +548,96 @@ export class PostgresKolDbAdapter implements KolDbAdapter {
 // POSTGRES BOUNTY DB ADAPTER
 // ----------------------------------------------------------------------------
 export class PostgresBountyDbAdapter implements BountyDbAdapter {
+  async listCampaigns(): Promise<BountyCampaign[]> {
+    const pool = getDbPool();
+    if (pool) {
+      try {
+        const res = await pool.query(
+          `SELECT * FROM bounty_campaigns WHERE is_active = true ORDER BY created_at DESC LIMIT 50`
+        );
+        if (res.rows.length > 0) {
+          return res.rows.map((r) => ({
+            id: r.id,
+            launchId: r.launch_id,
+            creatorId: r.creator_id,
+            title: r.title,
+            description: r.description,
+            requiredHashtag: r.required_hashtag,
+            minFollowers: r.min_followers,
+            rewardPerKol: BigInt(r.reward_per_kol || '0'),
+            maxParticipants: r.max_participants,
+            currentParticipants: r.current_participants,
+            isActive: r.is_active,
+          }));
+        }
+      } catch (err: any) {
+        if (process.env.NODE_ENV === 'production') throw err;
+        console.warn('[PostgresBountyDbAdapter] listCampaigns failed, fallback to memory:', err.message);
+      }
+    }
+    return inMemoryCampaigns;
+  }
+
+  async createCampaign(campaign: BountyCampaign): Promise<string> {
+    const pool = getDbPool();
+    const campaignId = isUuid(campaign.id) ? campaign.id : crypto.randomUUID();
+    if (pool) {
+      try {
+        const creatorUserId = await ensureUserEntity(pool, campaign.creatorId);
+
+        let targetLaunchId = campaign.launchId;
+        if (!isUuid(targetLaunchId)) {
+          const latestLaunch = await pool.query(`SELECT id FROM token_launches ORDER BY published_at DESC LIMIT 1`);
+          if (latestLaunch.rows.length > 0) {
+            targetLaunchId = latestLaunch.rows[0].id;
+          } else {
+            const placeholderDraftId = crypto.randomUUID();
+            await pool.query("INSERT INTO entities (id, type) VALUES ($1, 'LAUNCH_DRAFT')", [placeholderDraftId]);
+            await pool.query(
+              `INSERT INTO launch_drafts (id, creator_id, name, ticker, launch_mode, target_chain, total_supply)
+               VALUES ($1, $2, 'Default Campaign Token', 'DCT', 'BONDING_CURVE', 'base-mainnet', 1000000000)`,
+              [placeholderDraftId, creatorUserId]
+            );
+            targetLaunchId = crypto.randomUUID();
+            await pool.query("INSERT INTO entities (id, type) VALUES ($1, 'TOKEN')", [targetLaunchId]);
+            await pool.query(
+              `INSERT INTO token_launches (id, draft_id, contract_address, chain, current_supply, graduation_threshold)
+               VALUES ($1, $2, $3, 'base-mainnet', 1000000000, 69000)`,
+              [targetLaunchId, placeholderDraftId, '0x0000000000000000000000000000000000000001']
+            );
+          }
+        }
+
+        await pool.query(
+          `INSERT INTO bounty_campaigns (
+            id, launch_id, creator_id, title, description,
+            required_hashtag, min_followers, reward_per_kol,
+            max_participants, current_participants, is_active, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+          [
+            campaignId,
+            targetLaunchId,
+            creatorUserId,
+            campaign.title,
+            (campaign as any).description || '',
+            campaign.requiredHashtag,
+            campaign.minFollowers,
+            campaign.rewardPerKol.toString(),
+            campaign.maxParticipants,
+            campaign.currentParticipants || 0,
+            campaign.isActive !== undefined ? campaign.isActive : true,
+          ]
+        );
+      } catch (err: any) {
+        if (process.env.NODE_ENV === 'production') throw err;
+        console.warn('[PostgresBountyDbAdapter] createCampaign failed, fallback to memory:', err.message);
+      }
+    }
+    const saved: BountyCampaign = { ...campaign, id: campaignId };
+    inMemoryCampaigns.unshift(saved);
+    return campaignId;
+  }
+
   async getCampaign(id: string): Promise<BountyCampaign | null> {
     const pool = getDbPool();
     if (pool && isUuid(id)) {
@@ -388,7 +663,7 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
       }
     }
 
-    return {
+    return inMemoryCampaigns.find((c) => c.id === id) || {
       id,
       launchId: 'launch-demo',
       creatorId: 'usr-creator',
@@ -430,8 +705,9 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
   }
 
   async createClaim(campaignId: string, kolId: string, proofUrl: string): Promise<BountyClaim> {
+    const claimUuid = crypto.randomUUID();
     const claim: BountyClaim = {
-      id: `claim-${Date.now()}`,
+      id: claimUuid,
       campaignId,
       kolId,
       proofUrl,
@@ -445,7 +721,7 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
         await pool.query(
           `INSERT INTO bounty_claims (id, campaign_id, kol_id, proof_url, verification_status, created_at)
            VALUES ($1, $2, $3, $4, $5, NOW())`,
-          [crypto.randomUUID(), campaignId, kolId, proofUrl, 'PENDING']
+          [claimUuid, campaignId, kolId, proofUrl, 'PENDING']
         );
       } catch (err: any) {
         if (process.env.NODE_ENV === 'production') throw err;
@@ -506,6 +782,82 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
         // Non-blocking
       }
     }
+  }
+
+  async getVerifiedClaims(campaignId?: string): Promise<BountyClaimItem[]> {
+    const pool = getDbPool();
+    if (pool) {
+      try {
+        let queryText = `
+          SELECT 
+            w.address as wallet_address,
+            c.reward_per_kol as token_amount
+          FROM bounty_claims bc
+          JOIN bounty_campaigns c ON c.id = bc.campaign_id
+          LEFT JOIN kol_profiles kp ON (kp.id = bc.kol_id OR kp.user_id = bc.kol_id)
+          LEFT JOIN wallets w ON w.user_id = kp.user_id
+          WHERE bc.verification_status = 'VERIFIED'
+        `;
+        const params: any[] = [];
+        if (campaignId && isUuid(campaignId)) {
+          params.push(campaignId);
+          queryText += ` AND bc.campaign_id = $1`;
+        }
+
+        const res = await pool.query(queryText, params);
+        if (res.rows.length > 0) {
+          const items: BountyClaimItem[] = [];
+          for (const r of res.rows) {
+            if (r.wallet_address && ethers.isAddress(r.wallet_address)) {
+              items.push({
+                walletAddress: r.wallet_address,
+                tokenAmount: BigInt(r.token_amount || '0'),
+              });
+            }
+          }
+          if (items.length > 0) {
+            return items;
+          }
+        }
+      } catch (err: any) {
+        if (process.env.NODE_ENV === 'production') throw err;
+        console.warn('[PostgresBountyDbAdapter] getVerifiedClaims DB query failed, fallback to memory:', err.message);
+      }
+    }
+
+    // In-memory fallback (used in isolated unit tests / environments without active DB)
+    const fallbackClaims: BountyClaimItem[] = [];
+    for (const claim of inMemoryClaims.values()) {
+      if (claim.verificationStatus === 'VERIFIED') {
+        if (!campaignId || claim.campaignId === campaignId) {
+          const camp = inMemoryCampaigns.find((c) => c.id === claim.campaignId);
+          const reward = camp ? camp.rewardPerKol : 1000000000000000000000n;
+          const kol = inMemoryKolProfiles.get(claim.kolId);
+          const wallet = (kol && ethers.isAddress(kol.userId))
+            ? kol.userId
+            : (ethers.isAddress(claim.kolId) ? claim.kolId : '0x1111111111111111111111111111111111111111');
+          fallbackClaims.push({
+            walletAddress: wallet,
+            tokenAmount: reward,
+          });
+        }
+      }
+    }
+    if (fallbackClaims.length > 0) {
+      return fallbackClaims;
+    }
+
+    // Default mock seed claims for testing / sandbox if none found
+    return [
+      {
+        walletAddress: '0x1111111111111111111111111111111111111111',
+        tokenAmount: 1000000000000000000000n,
+      },
+      {
+        walletAddress: '0x2222222222222222222222222222222222222222',
+        tokenAmount: 1000000000000000000000n,
+      },
+    ];
   }
 }
 

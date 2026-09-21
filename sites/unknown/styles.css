@@ -1,0 +1,25 @@
+/* styles.css — Web3 3D Parallax & Futuristic Styling */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+}
+
+.tilt-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(255, 0, 122, 0.4);
+}
+
+/* Custom Web3 Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff007a;
+}

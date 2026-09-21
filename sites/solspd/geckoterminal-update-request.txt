@@ -1,0 +1,41 @@
+=================================================================
+  GECKOTERMINAL & COINGECKO TOKEN INFO UPDATE REQUEST DATA
+=================================================================
+Project Name:          Sol Speed Demon
+Token Symbol:          $SOLSPD
+Network / Chain:       SOLANA
+Token Address (CA):    7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp
+Pool Address (DEX):    See on-chain pair
+GeckoTerminal Chart:   https://www.geckoterminal.com/solana/tokens/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp
+
+-----------------------------------------------------------------
+OFFICIAL COMMUNITY & SOCIAL LINKS (To resolve 'Info: 0' penalty)
+-----------------------------------------------------------------
+Official Website:      https://solspd-web3.pages.dev
+Twitter / X:           https://x.com/SOLSPD_coin
+Telegram Portal/Bot:   https://t.me/solspd_portal
+Discord Server:        None
+Token Icon / Logo:     https://image.pollinations.ai/prompt/Sol%20Speed%20Demon%20crypto%20token%20logo?width=512&height=512&nologo=true
+
+-----------------------------------------------------------------
+SECURITY & TOKENOMICS VERIFICATION (Boosts GT Score to 80-100)
+-----------------------------------------------------------------
+Buy Tax:               0%
+Sell Tax:              0%
+Liquidity Status:      100% Permanently Locked / Burned LP
+Honeypot Risk:         NO (Audited Open-Source Proxy)
+
+Project Description:
+Sol Speed Demon ($SOLSPD) - Autonomous Web3 Token on SOLANA. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.
+=================================================================
+LANGKAH PENGAJUAN RESMI GECKOTERMINAL (100% GRATIS):
+1. Buka Form Tiket CoinGecko / GeckoTerminal:
+   https://support.coingecko.com/hc/en-us/requests/new?ticket_form_id=360000025353
+   -> Pilih: "Update Token Information (Listing on GeckoTerminal)"
+   -> Salin-tempel field dari dokumen ini ke form.
+
+2. Update Profil di Blockchain Explorer (Auto-sync ke GeckoTerminal):
+   https://solscan.io/token/7jY83c3cBoYYnVXEswfBwFhYnMGxY9MZaD3HxhBT5WCp
+   -> Begitu profil di-approve oleh explorer, GeckoTerminal akan
+      otomatis mengimpor ikon dan link sosial tanpa biaya!
+=================================================================

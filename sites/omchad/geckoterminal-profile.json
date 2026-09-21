@@ -1,0 +1,22 @@
+{
+  "network": "base",
+  "tokenAddress": "0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05",
+  "tokenName": "Omni Chain Chad",
+  "tokenSymbol": "OMCHAD",
+  "tokenUrl": "https://www.geckoterminal.com/base/tokens/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05",
+  "description": "Omni Chain Chad ($OMCHAD) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Omni%20Chain%20Chad%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://omchad-web3.pages.dev",
+    "twitter": "https://x.com/OMCHAD_coin",
+    "telegram": "https://t.me/omchad_portal",
+    "explorer": "https://basescan.org/tokenupdate/0x2a6afc7fcecf70e955085a1b19ed215c5aa08b05"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-18T10:44:43.911Z"
+}

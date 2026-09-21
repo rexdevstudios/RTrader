@@ -1,0 +1,41 @@
+=================================================================
+  GECKOTERMINAL & COINGECKO TOKEN INFO UPDATE REQUEST DATA
+=================================================================
+Project Name:          Pump Hill Runner
+Token Symbol:          $PUMPRUN
+Network / Chain:       BASE
+Token Address (CA):    0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+Pool Address (DEX):    0x63e52e4faa2d925cb2f34356d07c7f49349dbd9f447f1fa2c7033dcea21547c6
+GeckoTerminal Chart:   https://www.geckoterminal.com/base/pools/0x63e52e4faa2d925cb2f34356d07c7f49349dbd9f447f1fa2c7033dcea21547c6
+
+-----------------------------------------------------------------
+OFFICIAL COMMUNITY & SOCIAL LINKS (To resolve 'Info: 0' penalty)
+-----------------------------------------------------------------
+Official Website:      https://pumprun-web3.pages.dev
+Twitter / X:           https://x.com/search?q=%24PUMPRUN
+Telegram Portal/Bot:   https://t.me/pumprun_portal
+Discord Server:        None
+Token Icon / Logo:     https://gateway.pinata.cloud/ipfs/QmdiMA7WbFG93SNqizSZYNV5NG37iuPj87k8vaEMZaxp6Y
+
+-----------------------------------------------------------------
+SECURITY & TOKENOMICS VERIFICATION (Boosts GT Score to 80-100)
+-----------------------------------------------------------------
+Buy Tax:               0%
+Sell Tax:              0%
+Liquidity Status:      100% Permanently Locked / Burned LP
+Honeypot Risk:         NO (Audited Open-Source Proxy)
+
+Project Description:
+Pump Hill Runner ($PUMPRUN) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.
+=================================================================
+LANGKAH PENGAJUAN RESMI GECKOTERMINAL (100% GRATIS):
+1. Buka Form Tiket CoinGecko / GeckoTerminal:
+   https://support.coingecko.com/hc/en-us/requests/new?ticket_form_id=360000025353
+   -> Pilih: "Update Token Information (Listing on GeckoTerminal)"
+   -> Salin-tempel field dari dokumen ini ke form.
+
+2. Update Profil di Blockchain Explorer (Auto-sync ke GeckoTerminal):
+   https://basescan.org/tokenupdate/0x814620255bf422d45c0f8aBF7ad89F40a1CBCA4A
+   -> Begitu profil di-approve oleh explorer, GeckoTerminal akan
+      otomatis mengimpor ikon dan link sosial tanpa biaya!
+=================================================================

@@ -1,0 +1,22 @@
+{
+  "network": "base",
+  "tokenAddress": "0x1111111111111111111111111111111111111111",
+  "tokenName": "Agent AI Core",
+  "tokenSymbol": "AGENTAI",
+  "tokenUrl": "https://www.geckoterminal.com/base/tokens/0x1111111111111111111111111111111111111111",
+  "description": "Agent AI Core ($AGENTAI) - Autonomous Web3 Token on BASE. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Agent%20AI%20Core%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://agentai-web3.pages.dev",
+    "twitter": "https://x.com/AGENTAI_coin",
+    "telegram": "https://t.me/agentai_portal",
+    "explorer": "https://basescan.org/tokenupdate/0x1111111111111111111111111111111111111111"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-20T07:12:41.140Z"
+}

@@ -1,8 +1,30 @@
 {
   "version": 2,
-  "name": "rtrader-degen-platform",
+  "name": "rtrader",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "functions": {
+    "app/api/**/*": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/launchpad/keeper",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }

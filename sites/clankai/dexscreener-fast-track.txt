@@ -1,0 +1,25 @@
+=================================================================
+  DEXSCREENER ENHANCED PROFILE FAST-TRACK AUTO-FILL DATA
+=================================================================
+Network / Chain:   BASE
+Contract (CA):     0x2222222222222222222222222222222222222222
+Official Website:  https://clankai-web3.pages.dev
+Telegram:          None
+Twitter / X:       None
+Discord:           None
+Icon URL (IPFS):   https://image.pollinations.ai/prompt/Clanker%20AI%20Bot%20crypto%20token%20logo?width=512&height=512&nologo=true
+Header Banner:     Direct SVG / PNG upload
+
+Project Description:
+Clanker AI Bot ($CLANKAI) - Autonomous Web3 Protocol on BASE. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.
+=================================================================
+Tautan Pembaruan Profil:
+1. 1-Click Update Portal Link:
+   https://dexscreener.com/base/0x2222222222222222222222222222222222222222
+2. DexScreener Marketplace (Jalur Cepat Resmi):
+   https://marketplace.dexscreener.com/product/token-info
+3. Halaman Chart DexScreener (Tombol 'Update Token Info'):
+   https://dexscreener.com/base/0x2222222222222222222222222222222222222222
+4. Basescan Token Update (Jalur Gratis / Explorer):
+   https://basescan.org/tokenupdate/0x2222222222222222222222222222222222222222
+=================================================================

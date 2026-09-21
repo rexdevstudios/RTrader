@@ -3,8 +3,7 @@ import { TradingRiskGate } from '@packages/trading/risk-gate';
 import { rateLimiter } from '@packages/auth/rate-limiter';
 import { ApiResponse, CreateTradeIntentRequest } from '@packages/shared/contracts/api-contracts';
 import { TradeIntentInput, UserRiskLimits } from '@packages/shared/types/domain';
-
-
+import { requireCapability } from '@packages/auth/session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,10 +20,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(response, { status: 429 });
     }
 
-    const body = (await req.json()) as CreateTradeIntentRequest & { userId?: string };
+    // Require TRADE_MANUALLY capability
+    const auth = await requireCapability(req, 'TRADE_MANUALLY');
+
+    const body = (await req.json()) as CreateTradeIntentRequest;
     
     const intent: TradeIntentInput = {
-      userId: body.userId || 'usr-anonymous',
+      userId: auth.user.userId,
       stage: body.stage || 'PAPER',
       symbol: body.symbol || 'DEGEN/USDT',
       side: body.side || 'BUY',
@@ -64,10 +66,29 @@ export async function POST(req: NextRequest) {
     };
 
     return NextResponse.json(response, { status: decision.isApproved ? 200 : 400 });
-  } catch (err) {
+  } catch (err: any) {
+    const message = err?.message || 'Trade intent creation failed';
+    if (message.includes('DATABASE_UNAVAILABLE')) {
+      return NextResponse.json(
+        { success: false, error: { code: 'SERVICE_UNAVAILABLE', message }, timestamp: new Date().toISOString() },
+        { status: 503 }
+      );
+    }
+    if (message.startsWith('RBAC_FORBIDDEN') || message.startsWith('AUTH_ACCOUNT_')) {
+      return NextResponse.json(
+        { success: false, error: { code: 'FORBIDDEN', message }, timestamp: new Date().toISOString() },
+        { status: 403 }
+      );
+    }
+    if (message.startsWith('UNAUTHORIZED')) {
+      return NextResponse.json(
+        { success: false, error: { code: 'UNAUTHORIZED', message }, timestamp: new Date().toISOString() },
+        { status: 401 }
+      );
+    }
     const response: ApiResponse<null> = {
       success: false,
-      error: { code: 'SERVER_ERROR', message: (err as Error).message },
+      error: { code: 'SERVER_ERROR', message },
       timestamp: new Date().toISOString(),
     };
     return NextResponse.json(response, { status: 500 });

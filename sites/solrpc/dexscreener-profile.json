@@ -1,0 +1,15 @@
+{
+  "chainId": "solana",
+  "tokenAddress": "4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+  "url": "https://solrpc-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Solana%20RPC%20Test%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "description": "Solana RPC Test ($SOLRPC) - Autonomous Web3 Protocol on SOLANA. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://solrpc-web3.pages.dev"
+    }
+  ],
+  "generatedAt": "2026-09-20T16:01:36.720Z"
+}

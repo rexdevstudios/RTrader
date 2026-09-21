@@ -114,6 +114,7 @@ export class TweetQualityScorer {
     if (sentiment === 'POSITIVE') score += 20;
     if (sentiment === 'NEGATIVE') score -= 40;
     if (cleanWords.length >= 10) score += 10;
+    if (cleanWords.length < 5) score -= 20;
     if (isSpam) score -= 50;
 
     score = Math.max(0, Math.min(100, score));

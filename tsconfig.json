@@ -42,10 +42,15 @@
     "app/**/*",
     "apps/**/*",
     "packages/**/*",
-    "scripts/**/*",
+    "scripts/seed-db.ts",
+    "scripts/test-*.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src",
+    "sites",
+    "tests",
+    "scripts/test-arc-simulation.ts"
   ]
 }

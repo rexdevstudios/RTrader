@@ -1,14 +1,28 @@
-# Environment & Secrets
-.env
-.env*.local
-.env.production
-.env.development
-
-# Node Dependencies
+# Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.pnp
+.pnp.js
+
+# Environment variables & Private Keys (STRICT INVARIANT: NEVER COMMIT SECRETS)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+*.key
+
+# Local Databases & State
+*.db
+*.db*
+*.backup*
+*.db-journal
+*.db-shm
+*.db-wal
+vault.db
+vault.db*
+.eliza/
 
 # Next.js Build Output
 .next/
@@ -16,11 +30,30 @@ out/
 build/
 dist/
 
-# System Files
-.DS_Store
-Thumbs.db
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun.log*
 
-.vercel
-.env*
-*.tsbuildinfo
-.neon
+# Vercel Project Info
+.vercel/
+
+# Operating System & IDE Files
+.DS_Store
+*.pem
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary / Scratch scripts & Wallets export
+scratch/
+scripts/scratch*
+wallets/
+*.csv
+.tempmediaStorage/

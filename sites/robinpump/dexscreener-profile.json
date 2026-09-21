@@ -1,0 +1,20 @@
+{
+  "chainId": "robinhood",
+  "tokenAddress": "0x1111111111111111111111111111111111111111",
+  "url": "https://robinpump-web3.pages.dev",
+  "icon": "https://image.pollinations.ai/prompt/Robinhood%20Pump%20Token%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "description": "Robinhood Pump Token ($ROBINPUMP) - Autonomous Web3 Protocol on ROBINHOOD. Features 0% trading tax, 30% perpetual auto buyback & burn, and 20% passive native dividends.",
+  "links": [
+    {
+      "type": "website",
+      "label": "Official Website",
+      "url": "https://robinpump-web3.pages.dev"
+    },
+    {
+      "type": "docs",
+      "label": "Bankr Agent",
+      "url": "https://bankr.bot/agents/robinpump"
+    }
+  ],
+  "generatedAt": "2026-09-18T10:47:01.551Z"
+}

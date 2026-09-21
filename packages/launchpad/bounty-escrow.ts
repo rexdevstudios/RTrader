@@ -15,11 +15,14 @@ export interface BountyClaimItem {
 
 export interface BountyDbAdapter {
   getCampaign(campaignId: string): Promise<BountyCampaign | null>;
+  listCampaigns?(): Promise<BountyCampaign[]>;
+  createCampaign?(campaign: BountyCampaign): Promise<string>;
   getClaim(campaignId: string, kolId: string): Promise<BountyClaim | null>;
   createClaim(campaignId: string, kolId: string, proofUrl: string): Promise<BountyClaim>;
   updateClaimStatus(claimId: string, status: 'VERIFIED' | 'REJECTED' | 'CLAIMED'): Promise<void>;
   incrementCampaignParticipant(campaignId: string): Promise<void>;
   createAuditLog(actorId: string, action: string, entityId?: string, reason?: string): Promise<void>;
+  getVerifiedClaims?(campaignId?: string): Promise<BountyClaimItem[]>;
 }
 
 export class BountyEscrowService {

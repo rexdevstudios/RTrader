@@ -1,0 +1,22 @@
+{
+  "network": "solana",
+  "tokenAddress": "4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+  "tokenName": "Solana Runner",
+  "tokenSymbol": "SOLRUN",
+  "tokenUrl": "https://www.geckoterminal.com/solana/tokens/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz",
+  "description": "Solana Runner ($SOLRUN) - Autonomous Web3 Token on SOLANA. Verified 0% trading tax, unruggable liquidity pool, and community-driven treasury mechanics.",
+  "iconUrl": "https://image.pollinations.ai/prompt/Solana%20Runner%20crypto%20token%20logo?width=512&height=512&nologo=true",
+  "links": {
+    "website": "https://solrun-web3.pages.dev",
+    "twitter": "https://x.com/SOLRUN_coin",
+    "telegram": "https://t.me/solrun_portal",
+    "explorer": "https://solscan.io/token/4znm13bnfx9cj8V8TSXSH7FbD3anij5RF8QQiAU2BJzz"
+  },
+  "security": {
+    "buyTax": "0%",
+    "sellTax": "0%",
+    "lpStatus": "100% Permanently Locked / Burned LP",
+    "honeypot": false
+  },
+  "generatedAt": "2026-09-20T06:56:23.435Z"
+}
