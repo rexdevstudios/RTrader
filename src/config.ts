@@ -34,7 +34,7 @@ const envSchema = z.object({
   BASE_RPC_URL: z.string().url().default("https://mainnet.base.org"),
   BSC_RPC_URL: z.string().url().default("https://bsc-dataseed.binance.org"),
   ETH_RPC_URL: z.string().url().default("https://eth.llamarpc.com"),
-  ROBINHOOD_RPC_URL: z.string().url().default("https://rpc.robinhoodchain.com"),
+  ROBINHOOD_RPC_URL: z.string().url().default("https://rpc.mainnet.chain.robinhood.com"),
   ARBITRUM_RPC_URL: z.string().url().default("https://arb1.arbitrum.io/rpc"),
 
   // Bankr

@@ -147,6 +147,13 @@ export default async function TokenPortalPage({ params }: PageProps) {
           { name: 'Trojan Bot', url: `https://t.me/solana_trojanbot?start=r-bot-${lookupAddress}` },
         ]
       : [
+          {
+            name: 'Doppler AMM',
+            url:
+              norm.chain === 'robinhood'
+                ? `https://app.doppler.lol/tokens/robinhood/${lookupAddress}`
+                : `https://app.doppler.lol/tokens/base/${lookupAddress}`,
+          },
           { name: 'Banana Gun', url: `https://t.me/BananaGunSniper_bot?start=${lookupAddress}` },
           { name: 'Maestro', url: `https://t.me/MaestroSniperBot?start=${lookupAddress}` },
         ]),

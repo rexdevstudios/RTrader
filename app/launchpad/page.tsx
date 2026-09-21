@@ -779,8 +779,29 @@ export default function LaunchpadPage() {
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '12px', fontFamily: 'var(--font-mono)' }}>
-                    CA: {token.contractAddress.slice(0, 8)}...{token.contractAddress.slice(-6)}
+                  <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '12px', fontFamily: 'var(--font-mono)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>CA: {token.contractAddress.slice(0, 8)}...{token.contractAddress.slice(-6)}</span>
+                    <a
+                      href={`https://gmgn.ai/${isRobinhood ? 'robinhood' : 'base'}/token/${token.contractAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                        color: '#F59E0B',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                      }}
+                      title="Buka Chart & Live Orderbook di GMGN.ai"
+                    >
+                      GMGN ↗
+                    </a>
                   </div>
 
                   {/* Graduation Progress Bar */}

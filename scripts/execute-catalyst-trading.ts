@@ -77,7 +77,11 @@ export interface ResolvedTokenTarget {
  * Resolves target token dynamically by index number (1, 2, 3...), contract address, or defaults to latest live token.
  */
 export function resolveTargetToken(input?: string): ResolvedTokenTarget {
-  const liveFleet = getLiveDeployments("base");
+  const chainArg = process.argv.find((a) => a.startsWith("--chain="));
+  const specifiedChain = chainArg ? chainArg.split("=")[1]?.toLowerCase() : (process.env.BANKR_CHAIN === "robinhood" ? "robinhood" : undefined);
+  const targetChain = specifiedChain || "base";
+
+  const liveFleet = getLiveDeployments(targetChain);
 
   // 1. If input is a 1-based index (e.g. "1", "2")
   if (input && /^\d+$/.test(input.trim())) {
@@ -88,6 +92,7 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
         address: match.contractAddr!,
         ticker: match.ticker || "TOKEN",
         name: match.tokenName || "Token",
+        chain: match.chain || targetChain,
         poolId: match.poolId || undefined,
         walletId: match.walletId || undefined,
         index: idx + 1,
@@ -109,7 +114,7 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
           address: row.contract_addr,
           ticker: row.ticker || "TOKEN",
           name: row.token_name || "Token",
-          chain: row.chain || "base",
+          chain: specifiedChain || row.chain || "base",
           poolId: row.pool_id || undefined,
           walletId: row.wallet_id || undefined,
         };
@@ -118,15 +123,12 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
       // Fails safe
     }
 
-    const chainArg = process.argv.find((a) => a.startsWith("--chain="));
-    const specifiedChain = chainArg ? chainArg.split("=")[1]?.toLowerCase() : (process.env.BANKR_CHAIN === "robinhood" ? "robinhood" : "base");
-
     const isKnownPumprun = KNOWN_PUMPRUN_TOKENS.includes(addr.toLowerCase());
     return {
       address: addr,
       ticker: isKnownPumprun ? "PUMPRUN" : "CUSTOM",
       name: isKnownPumprun ? "Pump Hill Runner" : "Custom Token",
-      chain: specifiedChain,
+      chain: targetChain,
       poolId: isKnownPumprun ? DEFAULT_POOL_ID : undefined,
     };
   }
@@ -138,6 +140,7 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
       address: latest.contractAddr!,
       ticker: latest.ticker || "TOKEN",
       name: latest.tokenName || "Token",
+      chain: latest.chain || targetChain,
       poolId: latest.poolId || undefined,
       walletId: latest.walletId || undefined,
       index: liveFleet.length,
@@ -145,11 +148,23 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
   }
 
   // 4. Fallback default
+  if (targetChain === "robinhood") {
+    return {
+      address: "0xa5f832390447b050955d7b734a9a2fa861b4d3ab",
+      ticker: "NOIR",
+      name: "NoirPay",
+      chain: "robinhood",
+      walletId: "default-operator",
+      index: 1,
+    };
+  }
+
   logger.warn(`⚠️  [CATALYST] Tidak ada token live di fleet Base. Menggunakan fallback token $PUMPRUN: ${DEFAULT_BASE_TOKEN}`);
   return {
     address: DEFAULT_BASE_TOKEN,
     ticker: "PUMPRUN",
     name: "Pump Hill Runner",
+    chain: "base",
     poolId: DEFAULT_POOL_ID,
     walletId: "default-operator",
     index: 1,
@@ -157,28 +172,35 @@ export function resolveTargetToken(input?: string): ResolvedTokenTarget {
 }
 
 /**
- * Lists all live tokens deployed on Base with indexes and details.
+ * Lists all live tokens deployed with indexes and details.
  */
-export function listLiveTokens(): void {
-  const liveFleet = getLiveDeployments("base");
+export function listLiveTokens(chain?: string): void {
+  const chainArg = process.argv.find((a) => a.startsWith("--chain="));
+  const specifiedChain = chain || (chainArg ? chainArg.split("=")[1]?.toLowerCase() : "base");
+  const liveFleet = getLiveDeployments(specifiedChain);
 
   console.log(`
 =================================================================
-  [+] DAFTAR TOKEN LIVE BASE UNTUK CATALYST TRADING [+]
+  [+] DAFTAR TOKEN LIVE (${specifiedChain.toUpperCase()}) UNTUK CATALYST TRADING [+]
 =================================================================
   Total Live Deployments: ${liveFleet.length}
 =================================================================
 `);
 
   if (liveFleet.length === 0) {
-    console.log(`  (Belum ada token live di fleet. Menggunakan default $PUMPRUN: ${DEFAULT_BASE_TOKEN})`);
+    console.log(`  (Belum ada token live di fleet ${specifiedChain}.)`);
   } else {
     liveFleet.forEach((d, idx) => {
       console.log(`  [${idx + 1}] $${d.ticker} (${d.tokenName})`);
       console.log(`      CA:       ${d.contractAddr}`);
       console.log(`      Pool ID:  ${d.poolId ?? "N/A"}`);
       console.log(`      Wallet:   ${d.walletId ?? "default-operator"}`);
-      console.log(`      1-Click:  ${UNISWAP_1CLICK_BASE}${d.contractAddr}`);
+      if (specifiedChain === "robinhood") {
+        console.log(`      GMGN:     ${GMGN_ROBINHOOD_BASE}${d.contractAddr}`);
+        console.log(`      Doppler:  ${DOPPLER_BUY_ROBINHOOD}${d.contractAddr}`);
+      } else {
+        console.log(`      1-Click:  ${UNISWAP_1CLICK_BASE}${d.contractAddr}`);
+      }
       console.log(`  -------------------------------------------------------------`);
     });
   }
@@ -188,6 +210,31 @@ async function checkStatus(targetInput?: string): Promise<void> {
   const cfg = getConfig();
   const tokenInfo = resolveTargetToken(targetInput);
   const operatorAddress = deriveEvmAddress(cfg.EVM_PRIVATE_KEY);
+  const isRobinhood = tokenInfo.chain?.toLowerCase() === "robinhood";
+  const chainName = isRobinhood ? "robinhood" : "base";
+
+  // If token ticker is CUSTOM or generic, try reading ERC20 name & symbol on-chain
+  if (tokenInfo.ticker === "CUSTOM") {
+    try {
+      const publicClient = getEvmPublicClient(chainName);
+      if (publicClient) {
+        const symbol = (await publicClient.readContract({
+          address: tokenInfo.address as `0x${string}`,
+          abi: [{ name: "symbol", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] }],
+          functionName: "symbol",
+        })) as string;
+        const name = (await publicClient.readContract({
+          address: tokenInfo.address as `0x${string}`,
+          abi: [{ name: "name", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] }],
+          functionName: "name",
+        })) as string;
+        if (symbol) tokenInfo.ticker = symbol;
+        if (name) tokenInfo.name = name;
+      }
+    } catch {
+      // Fails safe
+    }
+  }
 
   console.log(`
 =================================================================
@@ -195,21 +242,22 @@ async function checkStatus(targetInput?: string): Promise<void> {
 =================================================================
   Target Token:      $${tokenInfo.ticker} - ${tokenInfo.name}
   Contract Address:  ${tokenInfo.address}
+  Network / Chain:   ${isRobinhood ? "Robinhood Chain L2 (Chain ID 4663)" : "Base Mainnet L2 (Chain ID 8453)"}
   Deployer Wallet:   ${tokenInfo.walletId ?? "default-operator"}
   Operator Wallet:   ${operatorAddress ?? "N/A"}
 =================================================================
 `);
 
-  // 1. Check Operator ETH Balance on Base
+  // 1. Check Operator ETH Balance on relevant chain
   let ethBalance = 0;
   if (operatorAddress) {
-    const client = getEvmPublicClient("base");
+    const client = getEvmPublicClient(chainName);
     if (client) {
       try {
         const rawBal = await client.getBalance({ address: operatorAddress as `0x${string}` });
         ethBalance = parseFloat(formatEther(rawBal));
         const ethUsd = ethBalance * 2450; // approximate
-        console.log(`  Wallet Balance:    ${ethBalance.toFixed(6)} ETH (±$${ethUsd.toFixed(2)} USD)`);
+        console.log(`  Wallet Balance:    ${ethBalance.toFixed(6)} ETH (±$${ethUsd.toFixed(2)} USD) [${chainName.toUpperCase()}]`);
         if (ethBalance < 0.00045) {
           console.log(`  Status Saldo:      ⚠️  Saldo di bawah 0.00045 ETH (~$1.10 USD).`);
           console.log(`                     Perlu top-up ~$1.50 - $2.00 ETH ke ${operatorAddress}`);
@@ -225,9 +273,10 @@ async function checkStatus(targetInput?: string): Promise<void> {
 
   // 2. Check GeckoTerminal Pool Status
   console.log(`\n  --- GECKOTERMINAL STATUS ---`);
+  const geckoNetwork = isRobinhood ? "robinhood-chain" : "base";
   let geckoUrl = tokenInfo.poolId
-    ? `https://api.geckoterminal.com/api/v2/networks/base/pools/${tokenInfo.poolId}`
-    : `https://api.geckoterminal.com/api/v2/networks/base/tokens/${tokenInfo.address}`;
+    ? `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/pools/${tokenInfo.poolId}`
+    : `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/tokens/${tokenInfo.address}`;
 
   try {
     const geckoRes = await axios.get(geckoUrl, { timeout: 8000 });
@@ -273,18 +322,37 @@ async function checkStatus(targetInput?: string): Promise<void> {
   }
 
   const geckoPoolLink = tokenInfo.poolId
-    ? `${GECKOTERMINAL_BASE}${tokenInfo.poolId}`
-    : `https://www.geckoterminal.com/base/tokens/${tokenInfo.address}`;
+    ? (isRobinhood ? `${GECKOTERMINAL_ROBINHOOD}${tokenInfo.poolId}` : `${GECKOTERMINAL_BASE}${tokenInfo.poolId}`)
+    : (isRobinhood ? `https://www.geckoterminal.com/robinhood-chain/tokens/${tokenInfo.address}` : `https://www.geckoterminal.com/base/tokens/${tokenInfo.address}`);
+
+  const gmgnLink = isRobinhood
+    ? `${GMGN_ROBINHOOD_BASE}${tokenInfo.address}`
+    : `https://gmgn.ai/base/token/${tokenInfo.address}`;
+
+  const dopplerLink = isRobinhood
+    ? `${DOPPLER_BUY_ROBINHOOD}${tokenInfo.address}`
+    : `${DOPPLER_BUY_BASE}${tokenInfo.address}`;
+
+  const dexscreenerLink = isRobinhood
+    ? `${DEXSCREENER_ROBINHOOD}${tokenInfo.address}`
+    : `${DEXSCREENER_BASE}${tokenInfo.address}`;
+
+  const explorerLink = isRobinhood
+    ? `https://robinhoodchain.blockscout.com/address/${tokenInfo.address}`
+    : `https://basescan.org/token/${tokenInfo.address}`;
 
   console.log(`
 -----------------------------------------------------------------
   Tautan Terminal Pembelian & Aktivasi Grafik:
-  1. DexScreener (Grafik & Swap)   : ${DEXSCREENER_BASE}${tokenInfo.address}
-  2. GeckoTerminal (Pool Live)      : ${geckoPoolLink}
-  3. Bankr Terminal (ETH masukan)   : ${BANKR_1CLICK_BASE}${tokenInfo.address}
-  4. Bankr Terminal (WETH masukan)  : ${BANKR_WETH_BASE}${tokenInfo.address}
+  1. GMGN AI (Sniper & Chart)       : ${gmgnLink}
+  2. Doppler AMM (Bonding Curve)    : ${dopplerLink}
+  3. DexScreener (Grafik & Swap)    : ${dexscreenerLink}
+  4. GeckoTerminal (Pool Live)       : ${geckoPoolLink}
+  5. Block Explorer (${isRobinhood ? "Blockscout" : "Basescan"}): ${explorerLink}
+${!isRobinhood ? `  6. Bankr Terminal (ETH masukan)   : ${BANKR_1CLICK_BASE}${tokenInfo.address}
+  7. Bankr Terminal (WETH masukan)  : ${BANKR_WETH_BASE}${tokenInfo.address}
      ⚡ Gunakan opsi WETH jika ETH memberikan "Quote failed"
-  5. Uniswap (Routing Base)         : ${UNISWAP_1CLICK_BASE}${tokenInfo.address}
+  8. Uniswap (Routing Base)         : ${UNISWAP_1CLICK_BASE}${tokenInfo.address}` : ""}
 =================================================================
 `);
 }
@@ -293,6 +361,8 @@ export async function registerManualBuy(targetInput?: string, txHash?: string, e
   const cfg = getConfig();
   const tokenInfo = resolveTargetToken(targetInput);
   const operatorAddress = deriveEvmAddress(cfg.EVM_PRIVATE_KEY);
+  const isRobinhood = tokenInfo.chain?.toLowerCase() === "robinhood";
+  const chainName = isRobinhood ? "robinhood" : "base";
 
   if (!txHash || !/^0x[a-fA-F0-9]{64}$/.test(txHash.trim())) {
     logger.error(`❌ [CATALYST] Transaction Hash tidak valid: '${txHash ?? ""}'. Harap masukkan txHash EVM 66-karakter hex riil (0x...).`);
@@ -302,23 +372,23 @@ export async function registerManualBuy(targetInput?: string, txHash?: string, e
   const actualTx = txHash.trim();
 
   logger.info(`📝 [CATALYST] Mendaftarkan pembelian manual untuk $${tokenInfo.ticker} (${tokenInfo.address})...`);
-  logger.info(`🔍 [CATALYST] Memverifikasi transaksi on-chain di Base: ${actualTx}...`);
+  logger.info(`🔍 [CATALYST] Memverifikasi transaksi on-chain di ${chainName.toUpperCase()}: ${actualTx}...`);
 
-  const verification = await verifyEvmTransactionReceipt(actualTx, "base");
+  const verification = await verifyEvmTransactionReceipt(actualTx, chainName);
   if (verification.status === "failed") {
-    logger.error(`❌ [CATALYST] Transaksi ${actualTx} ditemukan REVERTED (gagal) di Base! Pendaftaran dibatalkan.`);
+    logger.error(`❌ [CATALYST] Transaksi ${actualTx} ditemukan REVERTED (gagal) di ${chainName.toUpperCase()}! Pendaftaran dibatalkan.`);
     return false;
   }
   if (verification.status === "not_found") {
-    logger.warn(`⚠️  [CATALYST] Transaksi ${actualTx} belum tertambang di Base (masih pending di mempool).`);
+    logger.warn(`⚠️  [CATALYST] Transaksi ${actualTx} belum tertambang di ${chainName.toUpperCase()} (masih pending di mempool).`);
   } else if (verification.status === "confirmed") {
-    logger.success(`✅ [CATALYST] Transaksi ${actualTx} terkonfirmasi di Base (Block #${verification.blockNumber})!`);
+    logger.success(`✅ [CATALYST] Transaksi ${actualTx} terkonfirmasi di ${chainName.toUpperCase()} (Block #${verification.blockNumber})!`);
   } else {
     logger.info(`ℹ️  [CATALYST] Status verifikasi on-chain: ${verification.status}`);
   }
 
   // Fetch current price from DEX
-  const currentPrice = await fetchPriceUsd("base", tokenInfo.address);
+  const currentPrice = await fetchPriceUsd(chainName, tokenInfo.address);
   const entryPrice = currentPrice && currentPrice > 0 ? currentPrice : undefined;
 
   // Check if position already exists
@@ -334,7 +404,7 @@ export async function registerManualBuy(targetInput?: string, txHash?: string, e
 
   const registered = createPendingPosition({
     deployLogId: 0,
-    chain: "base",
+    chain: chainName,
     contractAddr: tokenInfo.address,
     ticker: tokenInfo.ticker,
     snipeAmount: ethAmount,
@@ -368,15 +438,17 @@ export async function executeAutoBuy(targetInput?: string, customAmountEth?: num
   const cfg = getConfig();
   const tokenInfo = resolveTargetToken(targetInput);
   const operatorAddress = deriveEvmAddress(cfg.EVM_PRIVATE_KEY);
+  const isRobinhood = tokenInfo.chain?.toLowerCase() === "robinhood";
+  const chainName = isRobinhood ? "robinhood" : "base";
 
   if (!operatorAddress) {
     logger.error("❌ EVM_PRIVATE_KEY tidak ditemukan di environment.");
     return false;
   }
 
-  const client = getEvmPublicClient("base");
+  const client = getEvmPublicClient(chainName);
   if (!client) {
-    logger.error("❌ RPC Base tidak dapat dihubungi.");
+    logger.error(`❌ RPC ${chainName.toUpperCase()} tidak dapat dihubungi.`);
     return false;
   }
 
@@ -384,19 +456,25 @@ export async function executeAutoBuy(targetInput?: string, customAmountEth?: num
   const ethBalance = parseFloat(formatEther(rawBal));
 
   const baseEth = customAmountEth && customAmountEth > 0 ? customAmountEth : 0.00015;
-  const minRequired = baseEth + 0.00005; // Buffer for Base L2 gas (~0.00002 ETH)
+  const minRequired = baseEth + 0.00005; // Buffer for L2 gas (~0.00002 ETH)
 
   if (ethBalance < minRequired) {
     logger.warn(`\n⚠️  [SALDO DOMPET BELUM MENCUKUPI UNTUK AUTO-BUY]`);
     logger.warn(`   Alamat Wallet : ${operatorAddress}`);
-    logger.warn(`   Saldo Saat Ini: ${ethBalance.toFixed(6)} ETH (~$${(ethBalance * 2400).toFixed(2)} USD).`);
+    logger.warn(`   Saldo Saat Ini: ${ethBalance.toFixed(6)} ETH (~$${(ethBalance * 2400).toFixed(2)} USD) [${chainName.toUpperCase()}].`);
     logger.warn(`   Dibutuhkan    : Minimal ${minRequired.toFixed(6)} ETH untuk pembelian + gas.\n`);
     logger.info(`💡 SOLUSI (PILIH SALAH SATU):`);
-    logger.info(`   1. Top-up saldo 0.0005 - 0.001 ETH (~$1.50 - $2.50 USD) ke alamat operator di jaringan Base:`);
+    logger.info(`   1. Top-up saldo 0.0005 - 0.001 ETH (~$1.50 - $2.50 USD) ke alamat operator di jaringan ${chainName.toUpperCase()}:`);
     logger.info(`      👉 ${operatorAddress}`);
-    logger.info(`   2. ATAU beli token ~$1 secara manual dari dompet pribadi (MetaMask/Rabby/Coinbase):`);
-    logger.info(`      🔗 DexScreener    : ${DEXSCREENER_BASE}${tokenInfo.address}`);
-    logger.info(`      🔗 Bankr Terminal : ${BANKR_1CLICK_BASE}${tokenInfo.address}`);
+    logger.info(`   2. ATAU beli token ~$1 secara manual dari dompet pribadi:`);
+    if (isRobinhood) {
+      logger.info(`      🔗 GMGN AI       : ${GMGN_ROBINHOOD_BASE}${tokenInfo.address}`);
+      logger.info(`      🔗 Doppler AMM   : ${DOPPLER_BUY_ROBINHOOD}${tokenInfo.address}`);
+      logger.info(`      🔗 DexScreener   : ${DEXSCREENER_ROBINHOOD}${tokenInfo.address}`);
+    } else {
+      logger.info(`      🔗 DexScreener    : ${DEXSCREENER_BASE}${tokenInfo.address}`);
+      logger.info(`      🔗 Bankr Terminal : ${BANKR_1CLICK_BASE}${tokenInfo.address}`);
+    }
     logger.info(`   3. Setelah swap di browser berhasil, catat transaksi di Menu [3] untuk auto take-profit.\n`);
     return false;
   }
@@ -407,14 +485,14 @@ export async function executeAutoBuy(targetInput?: string, customAmountEth?: num
 
   logger.info(`🤖 [AUTO-BUY] Mempersiapkan pembelian pancingan terukur: ${targetEth.toFixed(6)} ETH (~$${(targetEth * 2400).toFixed(2)} USD)...`);
   logger.info(`   Wallet Operator: ${operatorAddress} (Organic Buyer Role)`);
-  logger.info(`   Target Token:    $${tokenInfo.ticker} (${tokenInfo.address})`);
+  logger.info(`   Target Token:    $${tokenInfo.ticker} (${tokenInfo.address}) [${chainName.toUpperCase()}]`);
 
   // Periksa apakah BasedBot Telegram terkonfigurasi untuk eksekusi swap otomatis
   const hasBasedBot = Boolean(cfg.TELEGRAM_BOT_TOKEN && cfg.BASEDBOT_CHAT_ID);
 
   if (hasBasedBot) {
     logger.info(`🚀 [AUTO-BUY] Mengirim instruksi eksekusi /buy ke BasedBot on-chain...`);
-    const snipeOk = await snipeNewToken(tokenInfo.address, "base", tokenInfo.ticker, {
+    const snipeOk = await snipeNewToken(tokenInfo.address, chainName, tokenInfo.ticker, {
       snipeAmount: targetEth,
       enforceSafeCap: true,
     });
@@ -425,8 +503,8 @@ export async function executeAutoBuy(targetInput?: string, customAmountEth?: num
     }
 
     logger.success(`✅ [AUTO-BUY] Order swap on-chain berhasil dikirim via BasedBot!`);
-  } else {
-    logger.info(`⚡ [AUTO-BUY] BasedBot Telegram tidak aktif. Mengeksekusi swap langsung on-chain via dompet operator...`);
+  } else if (!isRobinhood) {
+    logger.info(`⚡ [AUTO-BUY] BasedBot Telegram tidak aktif. Mengeksekusi swap langsung on-chain via dompet operator di Base...`);
     const { executeDirectSwap } = await import("./execute-direct-swap.ts");
     const swapResult = await executeDirectSwap({
       amountEth: targetEth.toFixed(6),
@@ -438,32 +516,40 @@ export async function executeAutoBuy(targetInput?: string, customAmountEth?: num
     }
     logger.success(`✅ [AUTO-BUY] Swap on-chain berhasil dikonfirmasi di Base: ${swapResult.txHash}`);
     return true;
+  } else {
+    logger.info(`⚡ [AUTO-BUY] Untuk Robinhood Chain, silakan lakukan 1-click swap di terminal Doppler/GMGN:`);
+    logger.info(`   GMGN:    ${GMGN_ROBINHOOD_BASE}${tokenInfo.address}`);
+    logger.info(`   Doppler: ${DOPPLER_BUY_ROBINHOOD}${tokenInfo.address}`);
+    logger.info(`   Lalu catat txHash: bun run scripts/execute-catalyst-trading.ts register ${tokenInfo.address} <0xTxHash> --chain=robinhood`);
+    return false;
   }
 
-    const registered = createPendingPosition({
-      deployLogId: 0,
-      chain: "base",
-      contractAddr: tokenInfo.address,
-      ticker: tokenInfo.ticker,
-      snipeAmount: targetEth,
-      takeProfitX: 1.5,
-      stopLossPct: 0.30,
-      walletAddress: operatorAddress,
-      walletId: tokenInfo.walletId ?? undefined,
-    });
+  const registered = createPendingPosition({
+    deployLogId: 0,
+    chain: chainName,
+    contractAddr: tokenInfo.address,
+    ticker: tokenInfo.ticker,
+    snipeAmount: targetEth,
+    takeProfitX: 1.5,
+    stopLossPct: 0.30,
+    walletAddress: operatorAddress,
+    walletId: tokenInfo.walletId ?? undefined,
+  });
 
-    if (registered) {
-      logger.success(`✅ Posisi pancingan tercatat di database dengan status OPEN.`);
-      logger.info(`   Target Take-Profit: 1.5x (+50%) dengan Laddered 50% Exit.`);
-      logger.info(`   Mulai memantau pasar: bun run scripts/execute-catalyst-trading.ts monitor ${tokenInfo.address}`);
-      return true;
-    }
-    return false;
+  if (registered) {
+    logger.success(`✅ Posisi pancingan tercatat di database dengan status OPEN.`);
+    logger.info(`   Target Take-Profit: 1.5x (+50%) dengan Laddered 50% Exit.`);
+    logger.info(`   Mulai memantau pasar: bun run scripts/execute-catalyst-trading.ts monitor ${tokenInfo.address}`);
+    return true;
+  }
+  return false;
 }
 
 export async function runLiveMonitor(targetInput?: string, maxIterations?: number): Promise<void> {
   const tokenInfo = resolveTargetToken(targetInput);
-  logger.info(`👁️  [MONITOR] Memulai loop pemantau live harga $${tokenInfo.ticker} (${tokenInfo.address}) di Base...`);
+  const isRobinhood = tokenInfo.chain?.toLowerCase() === "robinhood";
+  const chainName = isRobinhood ? "robinhood" : "base";
+  logger.info(`👁️  [MONITOR] Memulai loop pemantau live harga $${tokenInfo.ticker} (${tokenInfo.address}) di ${chainName.toUpperCase()}...`);
   logger.info(`   Tekan Ctrl + C untuk keluar dari monitor kapan saja.\n`);
 
   let iteration = 0;
@@ -474,7 +560,7 @@ export async function runLiveMonitor(targetInput?: string, maxIterations?: numbe
       break;
     }
     try {
-      const price = await fetchPriceUsd("base", tokenInfo.address);
+      const price = await fetchPriceUsd(chainName, tokenInfo.address);
       const openPositions = getOpenPositions().filter((p) => p.contractAddr.toLowerCase() === tokenInfo.address.toLowerCase());
 
       const timestamp = new Date().toLocaleTimeString();
@@ -497,12 +583,12 @@ export async function runLiveMonitor(targetInput?: string, maxIterations?: numbe
             logger.info(`💰 [LADDERED EXIT] Menjual 50% token untuk mengamankan modal $1.00 + profit bersih.`);
             logger.info(`🚀 [MOONBAG] Sisa 50% token tetap disimpan untuk menjaga chart hijau dan memanen 95% creator fee WETH.`);
 
-            const sold = await sellToken(tokenInfo.address, "base", tokenInfo.ticker, "take_profit", 50);
+            const sold = await sellToken(tokenInfo.address, chainName, tokenInfo.ticker, "take_profit", 50);
             if (sold) {
               logger.success(`✅ [ON-CHAIN EXIT] Order jual 50% laddered take-profit berhasil dikirim!`);
             } else {
-              logger.warn(`⚠️  [ON-CHAIN EXIT] Order jual via bot tidak terkirim. Silakan jual manual di Uniswap:`);
-              logger.info(`   🔗 ${UNISWAP_1CLICK_BASE}${tokenInfo.address}`);
+              logger.warn(`⚠️  [ON-CHAIN EXIT] Order jual via bot tidak terkirim. Silakan jual manual di terminal:`);
+              logger.info(`   🔗 ${isRobinhood ? `${DOPPLER_BUY_ROBINHOOD}${tokenInfo.address}` : `${UNISWAP_1CLICK_BASE}${tokenInfo.address}`}`);
             }
 
             transitionPositionState(tokenInfo.address, "open", "closing", {
@@ -513,12 +599,12 @@ export async function runLiveMonitor(targetInput?: string, maxIterations?: numbe
           } else if (price <= slPrice) {
             logger.warn(`\n🛑 [STOP LOSS TRIGGERED] Harga turun ${(pos.stopLossPct * 100).toFixed(0)}% ($${price.toFixed(8)}).`);
 
-            const sold = await sellToken(tokenInfo.address, "base", tokenInfo.ticker, "stop_loss", 100);
+            const sold = await sellToken(tokenInfo.address, chainName, tokenInfo.ticker, "stop_loss", 100);
             if (sold) {
               logger.success(`✅ [ON-CHAIN EXIT] Order jual 100% stop-loss berhasil dikirim!`);
             } else {
-              logger.warn(`⚠️  [ON-CHAIN EXIT] Order jual via bot tidak terkirim. Silakan jual manual di Uniswap:`);
-              logger.info(`   🔗 ${UNISWAP_1CLICK_BASE}${tokenInfo.address}`);
+              logger.warn(`⚠️  [ON-CHAIN EXIT] Order jual via bot tidak terkirim. Silakan jual manual di terminal:`);
+              logger.info(`   🔗 ${isRobinhood ? `${DOPPLER_BUY_ROBINHOOD}${tokenInfo.address}` : `${UNISWAP_1CLICK_BASE}${tokenInfo.address}`}`);
             }
 
             transitionPositionState(tokenInfo.address, "open", "closing", {
@@ -543,7 +629,8 @@ export async function runLiveMonitor(targetInput?: string, maxIterations?: numbe
 
 // ─── CLI Dispatcher ──────────────────────────────────────────
 async function main() {
-  const args = process.argv.slice(2);
+  const rawArgs = process.argv.slice(2);
+  const args = rawArgs.filter((a) => !a.startsWith("--chain="));
   const command = args[0]?.toLowerCase() || "check";
   const targetToken = args[1];
 
