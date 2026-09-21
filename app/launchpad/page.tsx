@@ -570,11 +570,11 @@ export default function LaunchpadPage() {
               </div>
             ) : (
               <>
-                {userRole !== 'CREATOR' && userRole !== 'SYSTEM_ADMIN' && userRole !== 'SUPER_ADMIN' && (
-                  <div style={{ backgroundColor: 'rgba(255, 171, 0, 0.1)', border: '1px solid #FFAB00', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#FFD600', marginTop: '8px' }}>
-                    ℹ️ Peran Anda saat ini: <strong>{userRole}</strong>. Pembuatan draft launchpad memerlukan hak akses <strong>CREATOR</strong> atau <strong>ADMIN</strong>.
+                {!isConnected ? (
+                  <div style={{ backgroundColor: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#86EFAC', marginTop: '8px' }}>
+                    💡 Hubungkan dompet Web3 MetaMask Anda untuk membuat draft dan memvalidasi skor kurva.
                   </div>
-                )}
+                ) : null}
                 {draftError && (
                   <div style={{ backgroundColor: 'rgba(255, 23, 68, 0.1)', border: '1px solid var(--color-destructive)', padding: '10px', borderRadius: '6px', fontSize: '12px', color: 'var(--color-destructive)', marginTop: '8px' }}>
                     {draftError}
@@ -586,7 +586,7 @@ export default function LaunchpadPage() {
                   className="btn-primary"
                   style={{ padding: '14px', justifyContent: 'center', marginTop: '8px' }}
                 >
-                  {isCreating ? 'Validating Risk Passport...' : '🚀 Create Launch Draft'}
+                  {isCreating ? 'Validating Risk Passport...' : isConnected ? '🚀 Create Launch Draft' : '⚡ Connect Wallet & Create Draft'}
                 </button>
               </>
             )}
@@ -790,22 +790,30 @@ export default function LaunchpadPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '12px' }}>
                     <a
                       href={explorerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary"
-                      style={{ flex: 1, padding: '6px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
+                      style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
                     >
                       Basescan ↗
                     </a>
                     <a
                       href={`/trading?token=${token.contractAddress}`}
                       className="btn-primary"
-                      style={{ flex: 1, padding: '6px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
+                      style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
                     >
-                      Trade Token ⚡
+                      Trade ⚡
+                    </a>
+                    <a
+                      href={`/kol`}
+                      className="btn-secondary"
+                      style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center', borderColor: 'rgba(168, 85, 247, 0.4)', color: '#C084FC' }}
+                      title="Ikuti Bounties, Kampanye Share & Staking di KOL Hub"
+                    >
+                      Campaigns 🎯
                     </a>
                   </div>
                 </div>

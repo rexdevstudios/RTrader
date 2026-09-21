@@ -8,7 +8,8 @@
   --color-accent: #22C55E; /* Neon Green */
   --color-background: #020617; /* Very Dark Blue/Black */
   --color-foreground: #F8FAFC;
-  --color-muted: #1A1E2F;
+  --color-muted: #94A3B8; /* High-contrast readable muted text */
+  --color-muted-bg: #1A1E2F; /* Muted container background */
   --color-border: #334155;
   --color-destructive: #EF4444;
   --color-ring: #0F172A;

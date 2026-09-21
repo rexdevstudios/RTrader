@@ -233,6 +233,8 @@ export interface BountyCampaign {
   launchId: string;
   creatorId: string;
   title: string;
+  description?: string;
+  campaignType?: 'SHARE' | 'HOLD' | 'STAKE';
   requiredHashtag: string;
   minFollowers: number;
   rewardPerKol: bigint;

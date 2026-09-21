@@ -25,6 +25,9 @@ const PUBLIC_API_PATHS = new Set([
   '/api/system/overview', // Health check is public
   '/api/market/chart',    // Chart data is public read-only
   '/api/market/macro',    // DefiLlama macro TVL signal is public read-only
+  '/api/launchpad/tokens', // Public active token list from Neon SSOT
+  '/api/launchpad/bounty', // Public bounty campaigns list from Neon SSOT
+  '/api/launchpad/curve-volatility', // Public curve slope parameters
   '/api/launchpad/keeper', // Keeper automation handles CRON_SECRET internally
   '/api/launchpad/webhook', // Webhook receiver handles signature/secret internally
 ]);

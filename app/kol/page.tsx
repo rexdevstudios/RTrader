@@ -67,6 +67,7 @@ export default function KolHubPage() {
 
   // Bounties
   const [campaigns, setCampaigns] = useState<BountyCampaignView[]>([]);
+  const [campaignTypeFilter, setCampaignTypeFilter] = useState<'ALL' | 'SHARE' | 'HOLD' | 'STAKE'>('ALL');
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>('');
   const [tweetProofUrl, setTweetProofUrl] = useState('');
   const [isVerifyingProof, setIsVerifyingProof] = useState(false);
@@ -601,53 +602,133 @@ export default function KolHubPage() {
       )}
 
       {/* TAB 2: BOUNTIES MARKETPLACE */}
-      {activeTab === 'MARKET' && (
-        <div style={{ marginTop: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-            {campaigns.map((c) => (
-              <div key={c.id} className="bg-panel" style={{ padding: '20px', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span className="badge badge-trader" style={{ fontSize: '11px' }}>
-                    AKTIF ({c.currentParticipants}/{c.maxParticipants} slots)
-                  </span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#10B981' }}>
-                    {Number(BigInt(c.rewardPerKol) / 10n ** 18n).toLocaleString()} TOKENS
-                  </span>
-                </div>
+      {activeTab === 'MARKET' && (() => {
+        const filteredCampaigns = campaigns.filter((c) => {
+          if (campaignTypeFilter === 'ALL') return true;
+          const t = c.title.toLowerCase();
+          if (campaignTypeFilter === 'STAKE') return t.includes('stake') || t.includes('staking') || t.includes('yield');
+          if (campaignTypeFilter === 'HOLD') return t.includes('hold') || t.includes('hodl') || t.includes('loyalty');
+          if (campaignTypeFilter === 'SHARE') return !t.includes('stake') && !t.includes('hold') && !t.includes('hodl');
+          return true;
+        });
 
-                <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '12px 0 6px 0' }}>{c.title}</h3>
-                <p className="text-muted" style={{ fontSize: '13px', margin: 0 }}>
-                  Wajib menyertakan hashtag: <strong style={{ color: '#60A5FA' }}>{c.requiredHashtag}</strong>
-                </p>
+        return (
+          <div style={{ marginTop: '24px' }}>
+            {/* Category Filter Bar */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setCampaignTypeFilter('ALL')}
+                className={campaignTypeFilter === 'ALL' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '20px' }}
+              >
+                Semua Kampanye ({campaigns.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setCampaignTypeFilter('SHARE')}
+                className={campaignTypeFilter === 'SHARE' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '20px' }}
+              >
+                📢 Share & Raid
+              </button>
+              <button
+                type="button"
+                onClick={() => setCampaignTypeFilter('HOLD')}
+                className={campaignTypeFilter === 'HOLD' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '20px' }}
+              >
+                💎 HODL Loyalty
+              </button>
+              <button
+                type="button"
+                onClick={() => setCampaignTypeFilter('STAKE')}
+                className={campaignTypeFilter === 'STAKE' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 14px', fontSize: '12px', borderRadius: '20px' }}
+              >
+                🥩 Liquid Staking
+              </button>
+            </div>
 
-                {c.requiresHumanityProof && (
-                  <div style={{ marginTop: '8px' }}>
-                    <span className="badge" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#C084FC', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '10px' }}>
-                      🛡️ Sybil-Proof (World ID / Gitcoin)
-                    </span>
-                  </div>
-                )}
+            {filteredCampaigns.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+                {filteredCampaigns.map((c) => {
+                  const t = c.title.toLowerCase();
+                  const isStake = t.includes('stake') || t.includes('staking') || t.includes('yield');
+                  const isHold = t.includes('hold') || t.includes('hodl') || t.includes('loyalty');
 
-                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="text-muted" style={{ fontSize: '12px' }}>
-                    Min. Follower: {c.minFollowers.toLocaleString()}
-                  </span>
-                  <button
-                    onClick={() => {
-                      setSelectedCampaignId(c.id);
-                      setActiveTab('CLAIM');
-                    }}
-                    className="btn-primary"
-                    style={{ padding: '6px 12px', fontSize: '12px' }}
-                  >
-                    Kerjakan Bounty
-                  </button>
-                </div>
+                  return (
+                    <div key={c.id} className="bg-panel" style={{ padding: '20px', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          <span className="badge badge-trader" style={{ fontSize: '11px' }}>
+                            AKTIF ({c.currentParticipants}/{c.maxParticipants} slots)
+                          </span>
+                          {isStake ? (
+                            <span className="badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#86EFAC', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '10px' }}>
+                              🥩 Liquid Staking (4.2% APY)
+                            </span>
+                          ) : isHold ? (
+                            <span className="badge" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#C084FC', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '10px' }}>
+                              💎 HODL Loyalty
+                            </span>
+                          ) : (
+                            <span className="badge" style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.3)', fontSize: '10px' }}>
+                              📢 Share & Raid
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '14px', fontWeight: 800, color: '#10B981', whiteSpace: 'nowrap' }}>
+                          {Number(BigInt(c.rewardPerKol) / 10n ** 18n).toLocaleString()} TOKENS
+                        </span>
+                      </div>
+
+                      <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '12px 0 6px 0' }}>{c.title}</h3>
+                      <p className="text-muted" style={{ fontSize: '13px', margin: 0 }}>
+                        {isStake ? (
+                          <span>Stake token di Yield Vault untuk panen fee Flywheel + bonus booster.</span>
+                        ) : isHold ? (
+                          <span>Pegang token minimal di wallet tanpa menjual selama periode kampanye.</span>
+                        ) : (
+                          <span>Wajib menyertakan hashtag resmi: <strong style={{ color: '#60A5FA' }}>{c.requiredHashtag}</strong></span>
+                        )}
+                      </p>
+
+                      {c.requiresHumanityProof && (
+                        <div style={{ marginTop: '8px' }}>
+                          <span className="badge" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#C084FC', border: '1px solid rgba(168, 85, 247, 0.3)', fontSize: '10px' }}>
+                            🛡️ Sybil-Proof (World ID / Gitcoin)
+                          </span>
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className="text-muted" style={{ fontSize: '12px' }}>
+                          Min. Follower: {c.minFollowers.toLocaleString()}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedCampaignId(c.id);
+                            setActiveTab('CLAIM');
+                          }}
+                          className="btn-primary"
+                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                        >
+                          {isStake ? 'Mulai Staking' : isHold ? 'Ikuti Hold Loyalty' : 'Kerjakan Bounty'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            ) : (
+              <div style={{ textAlign: 'center', padding: '36px', color: 'var(--color-muted)', backgroundColor: 'var(--color-primary)', borderRadius: '12px', border: '1px dashed var(--color-border)' }}>
+                Belum ada kampanye aktif untuk kategori ini. Pilih kategori lain atau buat kampanye baru di tab <strong>Creator Escrow</strong>!
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* TAB 3: SUBMIT PROOF & ON-CHAIN CLAIM */}
       {activeTab === 'CLAIM' && (
