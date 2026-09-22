@@ -27,6 +27,8 @@ const PUBLIC_API_PATHS = new Set([
   '/api/market/macro',    // DefiLlama macro TVL signal is public read-only
   '/api/launchpad/tokens', // Public active token list from Neon SSOT
   '/api/launchpad/bounty', // Public bounty campaigns list from Neon SSOT
+  '/api/launchpad/bounty/claim', // Public bounty claim & Merkle proof evaluation
+  '/api/launchpad/bounty/verify-hodl', // Public HODL status & verification engine
   '/api/launchpad/curve-volatility', // Public curve slope parameters
   '/api/launchpad/keeper', // Keeper automation handles CRON_SECRET internally
   '/api/launchpad/webhook', // Webhook receiver handles signature/secret internally
