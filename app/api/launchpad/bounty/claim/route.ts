@@ -3,7 +3,7 @@ import { ApiResponse } from '@packages/shared/contracts/api-contracts';
 import { BountyEscrowService, BountyClaimItem } from '@packages/launchpad/bounty-escrow';
 import { FirecrawlScraperService } from '@packages/intelligence/firecrawl-scraper';
 import { BountyCampaign, BountyClaim, KolProfile } from '@packages/shared/types/domain';
-import { defaultBountyDbAdapter, defaultKolDbAdapter } from '@packages/shared/db-pool';
+import { defaultBountyDbAdapter, defaultKolDbAdapter, getDbPool } from '@packages/shared/db-pool';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -60,9 +60,26 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { campaignId, proofUrl, walletAddress, twitterHandle, followersCount } = body;
+    const {
+      campaignId,
+      proofUrl,
+      walletAddress,
+      twitterHandle,
+      followersCount,
+      claimType,
+      tokenAddress,
+      chain,
+    } = body;
 
-    if (!campaignId || !proofUrl || !walletAddress) {
+    const finalProofUrl =
+      proofUrl ||
+      (claimType === 'HOLD'
+        ? `hodl://${walletAddress}`
+        : claimType === 'STAKE'
+        ? `vault-staking://${walletAddress}`
+        : '');
+
+    if (!campaignId || !finalProofUrl || !walletAddress) {
       const res: ApiResponse<null> = {
         success: false,
         error: { code: 'INVALID_INPUT', message: 'campaignId, proofUrl, and walletAddress are required' },
@@ -83,9 +100,38 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Resolve token contract address & chain from campaign launch if not supplied
+    let resolvedTokenAddress = tokenAddress;
+    let resolvedChain = chain;
+
+    if (!resolvedTokenAddress) {
+      const pool = getDbPool();
+      if (pool) {
+        try {
+          const cRes = await pool.query(
+            `SELECT tl.contract_address, tl.chain 
+             FROM bounty_campaigns bc 
+             JOIN token_launches tl ON tl.id = bc.launch_id 
+             WHERE bc.id = $1 LIMIT 1`,
+            [campaignId]
+          );
+          if (cRes.rows.length > 0) {
+            resolvedTokenAddress = cRes.rows[0].contract_address;
+            resolvedChain = cRes.rows[0].chain;
+          }
+        } catch {
+          // Graceful fallback
+        }
+      }
+    }
+
     const service = new BountyEscrowService(defaultBountyDbAdapter);
 
-    const result = await service.submitAndVerifyClaim(campaignId, kol, proofUrl);
+    const result = await service.submitAndVerifyClaim(campaignId, kol, finalProofUrl, {
+      claimType,
+      tokenAddress: resolvedTokenAddress,
+      chain: resolvedChain,
+    });
 
     if (result.success && result.claim) {
       const response: ApiResponse<typeof result> = {

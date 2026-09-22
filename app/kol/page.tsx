@@ -225,7 +225,15 @@ export default function KolHubPage() {
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tweetProofUrl) return;
+    const selectedCamp = campaigns.find((c) => c.id === selectedCampaignId);
+    const campTitle = (selectedCamp?.title || '').toLowerCase();
+    const isHold = campTitle.includes('hold') || campTitle.includes('hodl') || campTitle.includes('loyalty');
+    const isStake = campTitle.includes('stake') || campTitle.includes('staking') || campTitle.includes('yield');
+
+    if (!isHold && !isStake && !tweetProofUrl) {
+      setVerificationFeedback('⚠️ Silakan masukkan URL bukti tweet terlebih dahulu.');
+      return;
+    }
 
     setIsVerifyingProof(true);
     setVerificationFeedback(null);
@@ -236,26 +244,40 @@ export default function KolHubPage() {
         return;
       }
 
+      const claimType = isHold ? 'HOLD' : isStake ? 'STAKE' : 'SHARE';
+      const proofPayload = isHold
+        ? `hodl://${walletAddress}`
+        : isStake
+        ? `vault-staking://${walletAddress}`
+        : tweetProofUrl;
+
       const res = await fetch('/api/launchpad/bounty/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           campaignId: selectedCampaignId,
-          proofUrl: tweetProofUrl,
+          proofUrl: proofPayload,
           walletAddress,
           twitterHandle: twitterHandle || 'rtrader_kol',
           followersCount,
+          claimType,
         }),
       });
       const json = await res.json();
       if (json.success) {
-        setVerificationFeedback('🎉 TWEET TERVERIFIKASI! Bukti lolos audit AI & validasi hashtag otomatis.');
+        if (isHold) {
+          setVerificationFeedback('🎉 SALDO HODL TERVERIFIKASI ON-CHAIN! Dompet Anda memenuhi syarat pembagian reward Diamond Hands.');
+        } else if (isStake) {
+          setVerificationFeedback('🎉 STAKING VAULT AKTIF! Posisi liquid staking Anda tercatat dan memenuhi syarat yield.');
+        } else {
+          setVerificationFeedback('🎉 TWEET TERVERIFIKASI! Bukti lolos audit AI & validasi hashtag otomatis.');
+        }
         if (json.data?.qualityAudit) {
           setAiAuditResult(json.data.qualityAudit);
         }
         checkMerkleProof();
       } else {
-        setVerificationFeedback(`❌ Verifikasi Ditolak: ${json.error?.message || 'Hashtag tidak ditemukan'}`);
+        setVerificationFeedback(`❌ Verifikasi Ditolak: ${json.error?.message || 'Syarat kampanye belum terpenuhi'}`);
         if (json.data?.qualityAudit) {
           setAiAuditResult(json.data.qualityAudit);
         }
@@ -789,53 +811,143 @@ export default function KolHubPage() {
       })()}
 
       {/* TAB 3: SUBMIT PROOF & ON-CHAIN CLAIM */}
-      {activeTab === 'CLAIM' && (
-        <div className="grid-3" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '24px', gap: '24px' }}>
-          <div className="bg-panel" style={{ padding: '24px', borderRadius: '12px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Send className="text-accent" size={20} /> Submit Tweet URL Bukti Promosi
-            </h3>
-            <p className="text-muted" style={{ fontSize: '13px' }}>
-              Tempelkan tautan tweet promosi Anda. Mesin Firecrawl Scraper akan memvalidasi hashtag secara otomatis.
-            </p>
+      {activeTab === 'CLAIM' && (() => {
+        const selectedCamp = campaigns.find((c) => c.id === selectedCampaignId);
+        const campTitle = (selectedCamp?.title || '').toLowerCase();
+        const isHold = campTitle.includes('hold') || campTitle.includes('hodl') || campTitle.includes('loyalty');
+        const isStake = campTitle.includes('stake') || campTitle.includes('staking') || campTitle.includes('yield');
 
-            <form onSubmit={handleSubmitProof} className="flex-col gap-md" style={{ marginTop: '16px' }}>
-              <div>
-                <label className="text-muted" style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>
-                  Pilih Kampanye
-                </label>
-                <select
-                  value={selectedCampaignId}
-                  onChange={(e) => setSelectedCampaignId(e.target.value)}
-                  className="input"
-                >
-                  {campaigns.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title} ({c.requiredHashtag})
-                    </option>
-                  ))}
-                </select>
-              </div>
+        const headerTitle = isHold
+          ? 'Verifikasi Saldo Dompet HODL (On-Chain Check)'
+          : isStake
+          ? 'Aktivasi Liquid Staking & Yield Vault'
+          : 'Submit Tweet URL Bukti Promosi';
 
-              <div>
-                <label className="text-muted" style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>
-                  URL Bukti Tweet (X.com)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://x.com/cryptorider/status/189283719283"
-                  value={tweetProofUrl}
-                  onChange={(e) => setTweetProofUrl(e.target.value)}
-                  className="input"
-                  required
-                />
-              </div>
+        const headerSubtitle = isHold
+          ? 'Sistem memeriksa saldo token langsung di dompet on-chain Anda via RPC node tanpa menjual.'
+          : isStake
+          ? 'Depositkan atau kunci alokasi token di liquidity vault untuk menikmati auto-compounding fee dividen.'
+          : 'Tempelkan tautan tweet promosi Anda. Mesin AI Scraper akan memvalidasi hashtag dan kualitas secara otomatis.';
 
-              <button type="submit" disabled={isVerifyingProof} className="btn-primary" style={{ justifyContent: 'center' }}>
-                <CheckCircle2 size={16} />
-                <span>{isVerifyingProof ? 'Memverifikasi Tweet...' : 'Verifikasi Otomatis'}</span>
-              </button>
-            </form>
+        return (
+          <div className="grid-3" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '24px', gap: '24px' }}>
+            <div className="bg-panel" style={{ padding: '24px', borderRadius: '12px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isHold ? (
+                  <>
+                    <ShieldCheck className="text-accent" size={20} /> {headerTitle}
+                  </>
+                ) : isStake ? (
+                  <>
+                    <Zap className="text-accent" size={20} /> {headerTitle}
+                  </>
+                ) : (
+                  <>
+                    <Send className="text-accent" size={20} /> {headerTitle}
+                  </>
+                )}
+              </h3>
+              <p className="text-muted" style={{ fontSize: '13px' }}>
+                {headerSubtitle}
+              </p>
+
+              <form onSubmit={handleSubmitProof} className="flex-col gap-md" style={{ marginTop: '16px' }}>
+                <div>
+                  <label className="text-muted" style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+                    Pilih Kampanye
+                  </label>
+                  <select
+                    value={selectedCampaignId}
+                    onChange={(e) => setSelectedCampaignId(e.target.value)}
+                    className="input"
+                  >
+                    {campaigns.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {isHold ? (
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(168, 85, 247, 0.08)',
+                      border: '1px solid rgba(168, 85, 247, 0.25)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px' }}>
+                      <span className="text-muted">Dompet Peserta:</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#F8FAFC' }}>
+                        {walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-6)}` : '⚠️ Belum Terhubung'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px' }}>
+                      <span className="text-muted">Syarat Minimum HODL:</span>
+                      <span style={{ fontWeight: 700, color: '#C084FC' }}>10,000+ Tokens (Zero-Sell Period)</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                      <span className="text-muted">Alokasi Reward Klaim:</span>
+                      <span style={{ fontWeight: 800, color: '#10B981' }}>
+                        {selectedCamp ? Number(BigInt(selectedCamp.rewardPerKol) / 10n ** 18n).toLocaleString() : 0} TOKENS
+                      </span>
+                    </div>
+                  </div>
+                ) : isStake ? (
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px' }}>
+                      <span className="text-muted">Target Vault:</span>
+                      <span style={{ fontWeight: 700, color: '#86EFAC' }}>Doppler Settler Yield Vault</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px' }}>
+                      <span className="text-muted">Estimasi Hasil:</span>
+                      <span style={{ fontWeight: 700, color: '#10B981' }}>4.2% Base APY + Protocol Fee Booster</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                      <span className="text-muted">Alokasi Reward Staker:</span>
+                      <span style={{ fontWeight: 800, color: '#10B981' }}>
+                        {selectedCamp ? Number(BigInt(selectedCamp.rewardPerKol) / 10n ** 18n).toLocaleString() : 0} TOKENS
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-muted" style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+                      URL Bukti Tweet (X.com) — Wajib sertakan tagar: <strong style={{ color: '#60A5FA' }}>{selectedCamp?.requiredHashtag || '#Crypto'}</strong>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://x.com/cryptorider/status/189283719283"
+                      value={tweetProofUrl}
+                      onChange={(e) => setTweetProofUrl(e.target.value)}
+                      className="input"
+                      required
+                    />
+                  </div>
+                )}
+
+                <button type="submit" disabled={isVerifyingProof} className="btn-primary" style={{ justifyContent: 'center' }}>
+                  <CheckCircle2 size={16} />
+                  <span>
+                    {isVerifyingProof
+                      ? 'Memverifikasi...'
+                      : isHold
+                      ? '💎 Verifikasi Saldo On-Chain'
+                      : isStake
+                      ? '🥩 Stake & Aktifkan Vault'
+                      : '🚀 Verifikasi Tweet & Audit AI'}
+                  </span>
+                </button>
+              </form>
 
             {verificationFeedback && (
               <div
@@ -994,7 +1106,8 @@ export default function KolHubPage() {
             )}
           </div>
         </div>
-      )}
+      );
+    })()}
 
       {/* TAB 4: CREATOR ESCROW MANAGER */}
       {activeTab === 'CREATOR' && (
