@@ -90,10 +90,13 @@ export default function TokenActionsClient({
   const bankrHref = `https://bankr.bot/terminal/trade?in=ETH&chain=base&out=${contractAddress}`;
   const uniswapHref = `https://app.uniswap.org/swap?chain=base&inputCurrency=NATIVE&outputCurrency=${contractAddress}&exactAmount=${swapAmount}`;
 
+  const isRobinhood = chain === 'robinhood' || chain === 'robinhood-mainnet';
   const primarySwapHref = isSolana
     ? `https://pump.fun/${contractAddress}`
     : chain === 'base'
     ? dopplerHref
+    : isRobinhood
+    ? `https://dexscreener.com/robinhood/${contractAddress}`
     : `https://app.uniswap.org/swap?chain=mainnet&inputCurrency=NATIVE&outputCurrency=${contractAddress}&exactAmount=${swapAmount}`;
 
   return (

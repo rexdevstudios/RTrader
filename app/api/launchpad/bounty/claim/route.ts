@@ -11,12 +11,13 @@ export async function GET(req: NextRequest) {
   const campaignId = searchParams.get('campaignId') || undefined;
   let tokenAddress = searchParams.get('tokenAddress') || undefined;
 
+  let resolvedChain = 'base-mainnet';
   if (!tokenAddress && campaignId) {
     const pool = getDbPool();
     if (pool) {
       try {
         const cRes = await pool.query(
-          `SELECT tl.contract_address 
+          `SELECT tl.contract_address, tl.chain 
            FROM bounty_campaigns bc 
            JOIN token_launches tl ON tl.id = bc.launch_id 
            WHERE bc.id = $1 LIMIT 1`,
@@ -24,6 +25,9 @@ export async function GET(req: NextRequest) {
         );
         if (cRes.rows.length > 0) {
           tokenAddress = cRes.rows[0].contract_address;
+          if (cRes.rows[0].chain) {
+            resolvedChain = cRes.rows[0].chain;
+          }
         }
       } catch {
         // Non-blocking
@@ -61,6 +65,7 @@ export async function GET(req: NextRequest) {
     tokenAddress: string;
     walletAddress: string;
     tokenAmount: string;
+    chain: string;
     isEligible: boolean;
     merkleRoot: string;
     merkleProof: string[];
@@ -70,6 +75,7 @@ export async function GET(req: NextRequest) {
       tokenAddress,
       walletAddress,
       tokenAmount,
+      chain: resolvedChain,
       isEligible: !!targetItem,
       merkleRoot: tree.root,
       merkleProof: proof,

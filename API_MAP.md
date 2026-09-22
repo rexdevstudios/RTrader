@@ -123,6 +123,16 @@ Responsibilities:
 - `GET /api/billing/plans` — List available subscription plans
 - `POST /api/billing/subscribe` — Subscribe user to plan (protected)
 
+### Launchpad & SocialFi Routes (Public / Non-Custodial)
+- `GET /api/launchpad/drafts` — Fetch launch drafts and configurations
+- `POST /api/launchpad/drafts` — Create new multi-chain launch draft
+- `POST /api/launchpad/publish` — Finalize on-chain deployment record
+- `GET /api/launchpad/bounty/claim` — Fetch Merkle proof and claim eligibility (Base / Robinhood)
+- `POST /api/launchpad/bounty/claim` — Submit or verify social bounty claim
+- `POST /api/launchpad/bounty/verify-hodl` — Live on-chain HODL balance verification
+- `POST /api/launchpad/seed-whitelist` — Verify angel/seed whitelist Merkle proofs
+- `POST /api/launchpad/webhook` — Process external telemetry and indexing webhooks
+
 ## Security Layer (Edge Middleware)
 - All `/api/*` routes (except PUBLIC_API_PATHS whitelist) require `rtrader_session` cookie or `Authorization: Bearer <token>` header
 - 6 security headers applied universally: `X-Frame-Options: DENY`, `HSTS`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`

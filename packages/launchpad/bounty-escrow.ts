@@ -23,6 +23,7 @@ export interface BountyDbAdapter {
   incrementCampaignParticipant(campaignId: string): Promise<void>;
   createAuditLog(actorId: string, action: string, entityId?: string, reason?: string): Promise<void>;
   getVerifiedClaims?(campaignId?: string): Promise<BountyClaimItem[]>;
+  recordBountyAllocation?(userId: string, claimId: string, amount: string, currency: string): Promise<void>;
 }
 
 export interface ClaimVerificationOptions {
@@ -185,8 +186,20 @@ export class BountyEscrowService {
       }
     }
 
-    // 1. Create initial claim record
+    // 0.5 Idempotent Pre-Check: Prevent duplicate claims for the same campaign & KOL
+    const existingClaim = await this.db.getClaim(campaignId, kol.id);
+    if (existingClaim && existingClaim.verificationStatus === 'VERIFIED') {
+      return {
+        success: true,
+        claim: existingClaim,
+        reason: 'CLAIM_ALREADY_VERIFIED',
+      };
+    }
+
+    // 1. Create or retrieve initial claim record
     const claim = await this.db.createClaim(campaignId, kol.id, proofUrl);
+    const isNewParticipant = !existingClaim || existingClaim.verificationStatus !== 'VERIFIED';
+    const rewardFormatted = ethers.formatUnits(campaign.rewardPerKol, 18);
 
     // 2. Branch A: HODL Loyalty On-Chain Verification
     if (isHoldCampaign) {
@@ -218,15 +231,21 @@ export class BountyEscrowService {
       }
 
       await this.db.updateClaimStatus(claim.id, 'VERIFIED');
-      await this.db.incrementCampaignParticipant(campaignId);
-      await this.db.createAuditLog(targetWallet || kol.userId, 'HODL_CLAIM_VERIFIED', claim.id, `Balance: ${balanceFormatted}`);
+      if (isNewParticipant) {
+        await this.db.incrementCampaignParticipant(campaignId);
+      }
+      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS');
+      await this.db.createAuditLog(kol.userId, 'HODL_CLAIM_VERIFIED', claim.id, `Balance: ${balanceFormatted}`);
       return { success: true, claim, reason: 'HODL_BALANCE_VERIFIED', onChainBalance: balanceFormatted };
     }
 
     // 3. Branch B: Liquid Staking & Yield Vault Verification
     if (isStakeCampaign) {
       await this.db.updateClaimStatus(claim.id, 'VERIFIED');
-      await this.db.incrementCampaignParticipant(campaignId);
+      if (isNewParticipant) {
+        await this.db.incrementCampaignParticipant(campaignId);
+      }
+      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS');
       await this.db.createAuditLog(kol.userId, 'LIQUID_STAKE_VERIFIED', claim.id, `Proof: ${proofUrl}`);
       return { success: true, claim, reason: 'LIQUID_STAKING_VERIFIED' };
     }
@@ -252,7 +271,10 @@ export class BountyEscrowService {
 
     if (audit.passedQualityGate) {
       await this.db.updateClaimStatus(claim.id, 'VERIFIED');
-      await this.db.incrementCampaignParticipant(campaignId);
+      if (isNewParticipant) {
+        await this.db.incrementCampaignParticipant(campaignId);
+      }
+      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS');
       await this.db.createAuditLog(kol.userId, 'BOUNTY_CLAIM_VERIFIED', claim.id, proofUrl);
       return { success: true, claim, qualityAudit: audit };
     } else {

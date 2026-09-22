@@ -32,6 +32,14 @@ export const SUPPORTED_BASE_CHAINS: Record<string, ChainConfig> = {
     rpcUrl: 'https://sepolia.base.org',
     explorerUrl: 'https://sepolia.basescan.org',
   },
+  ROBINHOOD_MAINNET: {
+    chainId: 4663,
+    hexChainId: '0x1237',
+    name: 'Robinhood Chain L2',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrl: 'https://rpc.mainnet.chain.robinhood.com',
+    explorerUrl: 'https://robinhoodchain.blockscout.com',
+  },
 };
 
 // Known dummy / simulation addresses that MUST NEVER be permitted for live write transactions
@@ -122,7 +130,7 @@ export async function getCurrentChainId(): Promise<number> {
  * Prompts user to switch network via wallet_switchEthereumChain if necessary.
  */
 export async function ensureBaseNetwork(
-  targetHexChainId: '0x2105' | '0x14a34' = '0x2105'
+  targetHexChainId: string = '0x2105'
 ): Promise<{ success: boolean; chainId?: number; error?: string }> {
   if (typeof window === 'undefined' || !(window as any).ethereum) {
     return { success: false, error: 'Dompet Web3 tidak terdeteksi.' };
@@ -130,7 +138,9 @@ export async function ensureBaseNetwork(
 
   const ethereum = (window as any).ethereum;
   const targetConfig =
-    targetHexChainId === '0x2105' ? SUPPORTED_BASE_CHAINS.BASE_MAINNET : SUPPORTED_BASE_CHAINS.BASE_SEPOLIA;
+    Object.values(SUPPORTED_BASE_CHAINS).find(
+      (c) => c.hexChainId.toLowerCase() === targetHexChainId.toLowerCase()
+    ) || SUPPORTED_BASE_CHAINS.BASE_MAINNET;
 
   try {
     const currentChainHex: string = await ethereum.request({ method: 'eth_chainId' });
@@ -244,7 +254,11 @@ export function getExplorerUrl(
   targetChainHex: string = '0x2105',
   type: 'tx' | 'address' = 'tx'
 ): string {
-  const isSepolia = targetChainHex.toLowerCase() === '0x14a34';
+  const norm = targetChainHex.toLowerCase();
+  if (norm.includes('robinhood') || norm === '0x1237' || norm === '4663') {
+    return `https://robinhoodchain.blockscout.com/${type}/${hashOrAddress}`;
+  }
+  const isSepolia = norm === '0x14a34';
   const baseUrl = isSepolia ? 'https://sepolia.basescan.org' : 'https://basescan.org';
   return `${baseUrl}/${type}/${hashOrAddress}`;
 }

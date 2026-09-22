@@ -532,10 +532,21 @@ export class PostgresKolDbAdapter implements KolDbAdapter {
     const pool = getDbPool();
     if (pool) {
       try {
+        let validActorId = actorId;
+        if (!isUuid(validActorId)) {
+          validActorId = await ensureUserEntity(pool, actorId);
+        }
+        let validEntityId: string | null = null;
+        if (entityId && isUuid(entityId)) {
+          const entityCheck = await pool.query('SELECT id FROM entities WHERE id = $1', [entityId]);
+          if (entityCheck.rows.length > 0) {
+            validEntityId = entityId;
+          }
+        }
         await pool.query(
           `INSERT INTO audit_logs (actor_id, action, entity_id, reason, created_at)
            VALUES ($1, $2, $3, $4, NOW())`,
-          [actorId, action, entityId || null, reason || null]
+          [validActorId, action, validEntityId, reason || null]
         );
       } catch {
         // Non-blocking
@@ -727,11 +738,28 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
     const pool = getDbPool();
     if (pool && isUuid(campaignId) && isUuid(kolId)) {
       try {
-        await pool.query(
+        const res = await pool.query(
           `INSERT INTO bounty_claims (id, campaign_id, kol_id, proof_url, verification_status, created_at)
-           VALUES ($1, $2, $3, $4, $5, NOW())`,
-          [claimUuid, campaignId, kolId, proofUrl, 'PENDING']
+           VALUES ($1, $2, $3, $4, 'PENDING', NOW())
+           ON CONFLICT (campaign_id, kol_id) DO UPDATE SET
+             proof_url = EXCLUDED.proof_url
+           RETURNING id, campaign_id, kol_id, proof_url, verification_status, created_at, claimed_at`,
+          [claimUuid, campaignId, kolId, proofUrl]
         );
+        if (res.rows.length > 0) {
+          const r = res.rows[0];
+          const dbClaim: BountyClaim = {
+            id: r.id,
+            campaignId: r.campaign_id,
+            kolId: r.kol_id,
+            proofUrl: r.proof_url,
+            verificationStatus: r.verification_status,
+            createdAt: r.created_at,
+            claimedAt: r.claimed_at,
+          };
+          inMemoryClaims.set(`${campaignId}:${kolId}`, dbClaim);
+          return dbClaim;
+        }
       } catch (err: any) {
         if (process.env.NODE_ENV === 'production') throw err;
       }
@@ -784,13 +812,48 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
     const pool = getDbPool();
     if (pool) {
       try {
+        let validActorId = actorId;
+        if (!isUuid(validActorId)) {
+          validActorId = await ensureUserEntity(pool, actorId);
+        }
+        let validEntityId: string | null = null;
+        if (entityId && isUuid(entityId)) {
+          const entityCheck = await pool.query('SELECT id FROM entities WHERE id = $1', [entityId]);
+          if (entityCheck.rows.length > 0) {
+            validEntityId = entityId;
+          }
+        }
         await pool.query(
           `INSERT INTO audit_logs (actor_id, action, entity_id, reason, created_at)
            VALUES ($1, $2, $3, $4, NOW())`,
-          [actorId, action, entityId || null, reason || null]
+          [validActorId, action, validEntityId, reason || null]
         );
       } catch {
         // Non-blocking
+      }
+    }
+  }
+
+  async recordBountyAllocation(userId: string, claimId: string, amount: string, currency: string): Promise<void> {
+    const pool = getDbPool();
+    if (pool) {
+      try {
+        let validUserId = userId;
+        if (!isUuid(validUserId)) {
+          validUserId = await ensureUserEntity(pool, userId);
+        }
+        const numericAmount = isNaN(Number(amount)) ? '1000.0000' : Number(amount).toFixed(4);
+        const description = `Bounty Reward Allocation for claim ${claimId}`;
+        await pool.query(
+          `INSERT INTO ledger_entries (user_id, amount, currency, type, reference_id, description, created_at)
+           SELECT $1::uuid, $2::numeric, $3::varchar, 'BOUNTY_REWARD_ALLOCATED', $4::varchar, $5::text, NOW()
+           WHERE NOT EXISTS (
+             SELECT 1 FROM ledger_entries WHERE reference_id = $4::varchar
+           )`,
+          [validUserId, numericAmount, currency, claimId, description]
+        );
+      } catch (err: any) {
+        console.error('[DB] recordBountyAllocation error:', err?.message || err);
       }
     }
   }
@@ -800,7 +863,7 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
     if (pool) {
       try {
         let queryText = `
-          SELECT 
+          SELECT DISTINCT ON (COALESCE(w.address, kp.user_id::text, bc.kol_id::text))
             COALESCE(w.address, kp.user_id::text, bc.kol_id::text) as wallet_address,
             c.reward_per_kol as token_amount
           FROM bounty_claims bc

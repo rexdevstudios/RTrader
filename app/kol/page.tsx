@@ -343,10 +343,19 @@ export default function KolHubPage() {
         return;
       }
 
-      // 2. Base Network Validation & Switching (Rule 8)
-      const networkCheck = await ensureBaseNetwork('0x2105');
+      // 2. Multi-Chain Network Validation & Switching
+      const selectedCamp = campaigns.find((c) => c.id === selectedCampaignId);
+      const isRobinhood =
+        merkleProofData?.chain?.toLowerCase().includes('robinhood') ||
+        selectedCamp?.title?.toLowerCase().includes('noir') ||
+        merkleProofData?.tokenAddress?.toLowerCase() === '0xa5f832390447b050955d7b734a9a2fa861b4d3ab';
+      const targetChainHex = isRobinhood ? '0x1237' : '0x2105';
+      const chainName = isRobinhood ? 'Robinhood Chain L2' : 'Base';
+      const explorerName = isRobinhood ? 'Blockscout' : 'BaseScan';
+
+      const networkCheck = await ensureBaseNetwork(targetChainHex);
       if (!networkCheck.success) {
-        setClaimFeedback(`❌ ${networkCheck.error || 'Harap beralih ke jaringan Base'}`);
+        setClaimFeedback(`❌ ${networkCheck.error || `Harap beralih ke jaringan ${chainName}`}`);
         return;
       }
 
@@ -377,16 +386,16 @@ export default function KolHubPage() {
         merkleProofData.merkleProof
       );
 
-      setClaimFeedback(`📡 Transaksi terkirim ke mempool: ${tx.hash}. Menunggu konfirmasi blok Base...`);
+      setClaimFeedback(`📡 Transaksi terkirim ke mempool: ${tx.hash}. Menunggu konfirmasi blok ${chainName}...`);
       const receipt = await tx.wait(1);
 
       if (receipt && receipt.status === 1) {
-        const explorerLink = getExplorerUrl(tx.hash, '0x2105', 'tx');
+        const explorerLink = getExplorerUrl(tx.hash, targetChainHex, 'tx');
         setClaimFeedback(
-          `✅ 1,000 TOKEN REWARD BERHASIL DIKLAIM ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di BaseScan: ${explorerLink}`
+          `✅ REWARD BERHASIL DIKLAIM ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di ${explorerName}: ${explorerLink}`
         );
       } else {
-        setClaimFeedback('❌ Transaksi gagal dieksekusi di blockchain Base.');
+        setClaimFeedback(`❌ Transaksi gagal dieksekusi di blockchain ${chainName}.`);
       }
     } catch (err: any) {
       setClaimFeedback(`❌ Gagal klaim on-chain: ${normalizeWeb3Error(err)}`);
