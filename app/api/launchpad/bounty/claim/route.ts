@@ -9,7 +9,30 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const walletAddress = searchParams.get('walletAddress');
   const campaignId = searchParams.get('campaignId') || undefined;
-  const tokenAddress = searchParams.get('tokenAddress') || '0x0000000000000000000000000000000000000000';
+  let tokenAddress = searchParams.get('tokenAddress') || undefined;
+
+  if (!tokenAddress && campaignId) {
+    const pool = getDbPool();
+    if (pool) {
+      try {
+        const cRes = await pool.query(
+          `SELECT tl.contract_address 
+           FROM bounty_campaigns bc 
+           JOIN token_launches tl ON tl.id = bc.launch_id 
+           WHERE bc.id = $1 LIMIT 1`,
+          [campaignId]
+        );
+        if (cRes.rows.length > 0) {
+          tokenAddress = cRes.rows[0].contract_address;
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
+  }
+  if (!tokenAddress) {
+    tokenAddress = '0x0000000000000000000000000000000000000000';
+  }
 
   if (!walletAddress) {
     const res: ApiResponse<null> = {
@@ -131,6 +154,7 @@ export async function POST(req: NextRequest) {
       claimType,
       tokenAddress: resolvedTokenAddress,
       chain: resolvedChain,
+      walletAddress,
     });
 
     if (result.success && result.claim) {

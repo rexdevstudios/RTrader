@@ -266,7 +266,8 @@ export default function KolHubPage() {
       const json = await res.json();
       if (json.success) {
         if (isHold) {
-          setVerificationFeedback('🎉 SALDO HODL TERVERIFIKASI ON-CHAIN! Dompet Anda memenuhi syarat pembagian reward Diamond Hands.');
+          const bal = json.data?.onChainBalance ? ` (Saldo On-Chain: ${json.data.onChainBalance})` : '';
+          setVerificationFeedback(`🎉 SALDO HODL TERVERIFIKASI ON-CHAIN! Dompet Anda memenuhi syarat pembagian reward Diamond Hands.${bal}`);
         } else if (isStake) {
           setVerificationFeedback('🎉 STAKING VAULT AKTIF! Posisi liquid staking Anda tercatat dan memenuhi syarat yield.');
         } else {
@@ -292,7 +293,8 @@ export default function KolHubPage() {
   const checkMerkleProof = async () => {
     if (!walletAddress) return;
     try {
-      const res = await fetch(`/api/launchpad/bounty/claim?walletAddress=${walletAddress}`);
+      const campaignParam = selectedCampaignId ? `&campaignId=${encodeURIComponent(selectedCampaignId)}` : '';
+      const res = await fetch(`/api/launchpad/bounty/claim?walletAddress=${walletAddress}${campaignParam}`);
       const json = await res.json();
       if (json.success && json.data) {
         setMerkleProofData(json.data);

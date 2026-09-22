@@ -746,9 +746,11 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
     if (pool && isUuid(claimId)) {
       try {
         await pool.query(
-          `UPDATE bounty_claims SET verification_status = $1, claimed_at = CASE WHEN $1 = 'CLAIMED' THEN NOW() ELSE claimed_at END
-           WHERE id = $2`,
-          [status, claimId]
+          `UPDATE bounty_claims 
+           SET verification_status = $1, 
+               claimed_at = CASE WHEN $2 = true THEN NOW() ELSE claimed_at END
+           WHERE id = $3`,
+          [status, status === 'CLAIMED', claimId]
         );
       } catch (err: any) {
         if (process.env.NODE_ENV === 'production') throw err;
@@ -799,7 +801,7 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
       try {
         let queryText = `
           SELECT 
-            w.address as wallet_address,
+            COALESCE(w.address, kp.user_id::text, bc.kol_id::text) as wallet_address,
             c.reward_per_kol as token_amount
           FROM bounty_claims bc
           JOIN bounty_campaigns c ON c.id = bc.campaign_id

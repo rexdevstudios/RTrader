@@ -29,6 +29,7 @@ export interface ClaimVerificationOptions {
   claimType?: 'HOLD' | 'STAKE' | 'SHARE';
   tokenAddress?: string;
   chain?: string;
+  walletAddress?: string;
   tweetTextContent?: string;
   sybilProof?: {
     gitcoinScore?: number;
@@ -192,9 +193,9 @@ export class BountyEscrowService {
       let userBalance = 0n;
       let balanceFormatted = '0';
       const tokenAddr = options.tokenAddress;
-      const targetWallet = kol.userId;
+      const targetWallet = options.walletAddress || (ethers.isAddress(kol.userId) ? kol.userId : undefined);
 
-      if (tokenAddr && ethers.isAddress(tokenAddr) && ethers.isAddress(targetWallet)) {
+      if (tokenAddr && ethers.isAddress(tokenAddr) && targetWallet && ethers.isAddress(targetWallet)) {
         try {
           const isRh = String(options.chain || '').toLowerCase().includes('robinhood');
           const rpcUrl = isRh ? 'https://rpc.mainnet.chain.robinhood.com' : 'https://mainnet.base.org';
@@ -218,7 +219,7 @@ export class BountyEscrowService {
 
       await this.db.updateClaimStatus(claim.id, 'VERIFIED');
       await this.db.incrementCampaignParticipant(campaignId);
-      await this.db.createAuditLog(kol.userId, 'HODL_CLAIM_VERIFIED', claim.id, `Balance: ${balanceFormatted}`);
+      await this.db.createAuditLog(targetWallet || kol.userId, 'HODL_CLAIM_VERIFIED', claim.id, `Balance: ${balanceFormatted}`);
       return { success: true, claim, reason: 'HODL_BALANCE_VERIFIED', onChainBalance: balanceFormatted };
     }
 

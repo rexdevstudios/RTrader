@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         c.title as campaign_title,
         tl.contract_address,
         tl.chain,
-        w.address as wallet_address
+        COALESCE(w.address, kp.user_id::text, bc.kol_id::text) as wallet_address
       FROM bounty_claims bc
       JOIN bounty_campaigns c ON c.id = bc.campaign_id
       JOIN token_launches tl ON tl.id = c.launch_id
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         bc.kol_id,
         tl.contract_address,
         tl.chain,
-        COALESCE(w.address, kp.user_id, bc.kol_id) as wallet_address
+        COALESCE(w.address, kp.user_id::text, bc.kol_id::text) as wallet_address
       FROM bounty_claims bc
       JOIN bounty_campaigns c ON c.id = bc.campaign_id
       JOIN token_launches tl ON tl.id = c.launch_id
