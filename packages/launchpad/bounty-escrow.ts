@@ -15,7 +15,7 @@ export interface BountyClaimItem {
 
 export interface BountyDbAdapter {
   getCampaign(campaignId: string): Promise<BountyCampaign | null>;
-  listCampaigns?(): Promise<BountyCampaign[]>;
+  listCampaigns?(launchId?: string): Promise<BountyCampaign[]>;
   createCampaign?(campaign: BountyCampaign): Promise<string>;
   getClaim(campaignId: string, kolId: string): Promise<BountyClaim | null>;
   createClaim(campaignId: string, kolId: string, proofUrl: string): Promise<BountyClaim>;

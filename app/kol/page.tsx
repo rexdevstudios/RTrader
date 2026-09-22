@@ -68,6 +68,7 @@ export default function KolHubPage() {
   // Bounties
   const [campaigns, setCampaigns] = useState<BountyCampaignView[]>([]);
   const [campaignTypeFilter, setCampaignTypeFilter] = useState<'ALL' | 'SHARE' | 'HOLD' | 'STAKE'>('ALL');
+  const [activeLaunchFilter, setActiveLaunchFilter] = useState<string | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>('');
   const [tweetProofUrl, setTweetProofUrl] = useState('');
   const [isVerifyingProof, setIsVerifyingProof] = useState(false);
@@ -88,9 +89,28 @@ export default function KolHubPage() {
   const [requiresHumanityProof, setRequiresHumanityProof] = useState(false);
   const [creatorFeedback, setCreatorFeedback] = useState<string | null>(null);
 
-  // Load existing profile & campaigns
+  // Load existing profile & campaigns with URL deep-linking support
   useEffect(() => {
-    fetchCampaigns();
+    let urlLaunchId: string | null = null;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      const launchIdParam = params.get('launchId');
+      const campaignIdParam = params.get('campaignId');
+
+      if (tabParam && ['PASSPORT', 'MARKET', 'CLAIM', 'CREATOR'].includes(tabParam.toUpperCase())) {
+        setActiveTab(tabParam.toUpperCase() as any);
+      }
+      if (launchIdParam) {
+        urlLaunchId = launchIdParam;
+        setActiveLaunchFilter(launchIdParam);
+      }
+      if (campaignIdParam) {
+        setSelectedCampaignId(campaignIdParam);
+      }
+    }
+
+    fetchCampaigns(urlLaunchId || undefined);
     if (walletAddress) {
       fetchProfile(walletAddress);
     }
@@ -111,9 +131,12 @@ export default function KolHubPage() {
     }
   };
 
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = async (targetLaunchId?: string) => {
     try {
-      const res = await fetch('/api/launchpad/bounty');
+      const url = targetLaunchId
+        ? `/api/launchpad/bounty?launchId=${encodeURIComponent(targetLaunchId)}`
+        : '/api/launchpad/bounty';
+      const res = await fetch(url);
       const json = await res.json();
       if (json.success && json.data) {
         setCampaigns(json.data);
@@ -614,6 +637,41 @@ export default function KolHubPage() {
 
         return (
           <div style={{ marginTop: '24px' }}>
+            {/* Active Launch Filter Indicator */}
+            {activeLaunchFilter && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 16px',
+                  backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                  fontSize: '12px',
+                  color: '#38BDF8',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                }}
+              >
+                <span>
+                  🎯 Memfilter kampanye untuk token ID: <code style={{ color: '#F8FAFC' }}>{activeLaunchFilter.slice(0, 8)}...</code>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveLaunchFilter(null);
+                    fetchCampaigns();
+                  }}
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: '11px', color: '#F8FAFC' }}
+                >
+                  Tampilkan Semua Kampanye ✕
+                </button>
+              </div>
+            )}
+
             {/* Category Filter Bar */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
               <button

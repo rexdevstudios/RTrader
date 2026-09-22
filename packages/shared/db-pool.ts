@@ -548,13 +548,19 @@ export class PostgresKolDbAdapter implements KolDbAdapter {
 // POSTGRES BOUNTY DB ADAPTER
 // ----------------------------------------------------------------------------
 export class PostgresBountyDbAdapter implements BountyDbAdapter {
-  async listCampaigns(): Promise<BountyCampaign[]> {
+  async listCampaigns(launchId?: string): Promise<BountyCampaign[]> {
     const pool = getDbPool();
     if (pool) {
       try {
-        const res = await pool.query(
-          `SELECT * FROM bounty_campaigns WHERE is_active = true ORDER BY created_at DESC LIMIT 50`
-        );
+        let query = `SELECT * FROM bounty_campaigns WHERE is_active = true`;
+        const params: any[] = [];
+        if (launchId && isUuid(launchId)) {
+          params.push(launchId);
+          query += ` AND launch_id = $1`;
+        }
+        query += ` ORDER BY created_at DESC LIMIT 50`;
+
+        const res = await pool.query(query, params);
         if (res.rows.length > 0) {
           return res.rows.map((r) => ({
             id: r.id,
@@ -574,6 +580,9 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
         if (process.env.NODE_ENV === 'production') throw err;
         console.warn('[PostgresBountyDbAdapter] listCampaigns failed, fallback to memory:', err.message);
       }
+    }
+    if (launchId) {
+      return inMemoryCampaigns.filter((c) => c.launchId === launchId);
     }
     return inMemoryCampaigns;
   }

@@ -3,8 +3,11 @@ import { ApiResponse } from '@packages/shared/contracts/api-contracts';
 import { BountyCampaign } from '@packages/shared/types/domain';
 import { defaultBountyDbAdapter } from '@packages/shared/db-pool';
 
-export async function GET() {
-  const campaigns = await defaultBountyDbAdapter.listCampaigns();
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const launchId = searchParams.get('launchId') || undefined;
+
+  const campaigns = await defaultBountyDbAdapter.listCampaigns(launchId);
   const serialized = campaigns.map((c) => ({
     ...c,
     rewardPerKol: c.rewardPerKol.toString(),

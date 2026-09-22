@@ -718,7 +718,7 @@ export default function LaunchpadPage() {
           </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="badge" style={{ backgroundColor: '#041E15', color: 'var(--color-accent)', border: '1px solid var(--color-accent)', fontSize: '11px', fontWeight: 800 }}>
-              {activeTokens.length} LIVE ON BASE
+              {activeTokens.length} LIVE TOKENS (MULTI-CHAIN)
             </span>
             <button
               type="button"
@@ -739,6 +739,8 @@ export default function LaunchpadPage() {
               const target = Number(token.graduationThreshold || 69000);
               const progressPct = Math.min(100, Math.round((raised / target) * 100));
               const isRobinhood = String(token.chain || '').toLowerCase().includes('robinhood');
+              const tokenChainSlug = isRobinhood ? 'robinhood' : 'base';
+              const portalUrl = `/token/${tokenChainSlug}/${token.contractAddress}`;
               const explorerUrl = isRobinhood
                 ? `https://robinhoodchain.blockscout.com/address/${token.contractAddress}`
                 : `https://basescan.org/address/${token.contractAddress}`;
@@ -757,12 +759,19 @@ export default function LaunchpadPage() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                     <div>
-                      <div style={{ fontWeight: 900, color: 'var(--color-foreground)', fontSize: '14px' }}>
-                        {token.name}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-accent)', fontSize: '12px' }}>
-                        ${token.ticker}
-                      </div>
+                      <a
+                        href={portalUrl}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                        title={`Buka Portal Token ${token.name}`}
+                      >
+                        <div style={{ fontWeight: 900, color: 'var(--color-foreground)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {token.name}
+                          <span style={{ fontSize: '11px', color: '#38BDF8' }}>↗</span>
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-accent)', fontSize: '12px' }}>
+                          ${token.ticker}
+                        </div>
+                      </a>
                     </div>
                     <span
                       style={{
@@ -779,7 +788,7 @@ export default function LaunchpadPage() {
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '12px', fontFamily: 'var(--font-mono)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '8px', fontFamily: 'var(--font-mono)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>CA: {token.contractAddress.slice(0, 8)}...{token.contractAddress.slice(-6)}</span>
                     <a
                       href={`https://gmgn.ai/${isRobinhood ? 'robinhood' : 'base'}/token/${token.contractAddress}`}
@@ -804,6 +813,56 @@ export default function LaunchpadPage() {
                     </a>
                   </div>
 
+                  {/* SocialFi Programs Strip */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '10px', color: '#64748B', fontFamily: 'monospace' }}>SocialFi:</span>
+                    <a
+                      href={`/kol?launchId=${token.launchId || ''}&tab=MARKET`}
+                      style={{
+                        fontSize: '9px',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(168, 85, 247, 0.12)',
+                        color: '#C084FC',
+                        border: '1px solid rgba(168, 85, 247, 0.3)',
+                        textDecoration: 'none',
+                      }}
+                      title="Diamond Hands HODL Loyalty"
+                    >
+                      💎 HODL
+                    </a>
+                    <a
+                      href={`/kol?launchId=${token.launchId || ''}&tab=MARKET`}
+                      style={{
+                        fontSize: '9px',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        color: '#6EE7B7',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        textDecoration: 'none',
+                      }}
+                      title="Liquid Staking Vault"
+                    >
+                      🥩 Staking
+                    </a>
+                    <a
+                      href={`/kol?launchId=${token.launchId || ''}&tab=MARKET`}
+                      style={{
+                        fontSize: '9px',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
+                        backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                        color: '#7DD3FC',
+                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        textDecoration: 'none',
+                      }}
+                      title="Viral Community & X Raid"
+                    >
+                      🚀 Raid
+                    </a>
+                  </div>
+
                   {/* Graduation Progress Bar */}
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-muted)', marginBottom: '4px' }}>
@@ -815,30 +874,38 @@ export default function LaunchpadPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '6px', marginTop: '12px' }}>
+                  <div style={{ display: 'flex', gap: '4px', marginTop: '12px', flexWrap: 'wrap' }}>
+                    <a
+                      href={portalUrl}
+                      className="btn-secondary"
+                      style={{ flex: '1 1 21%', padding: '6px 2px', textAlign: 'center', fontSize: '11px', justifyContent: 'center', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+                      title="Buka Portal Detail Token"
+                    >
+                      Portal 🌐
+                    </a>
+                    <a
+                      href={`/trading?token=${token.contractAddress}`}
+                      className="btn-primary"
+                      style={{ flex: '1 1 21%', padding: '6px 2px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
+                    >
+                      Trade ⚡
+                    </a>
+                    <a
+                      href={`/kol?launchId=${token.launchId || ''}&tab=MARKET`}
+                      className="btn-secondary"
+                      style={{ flex: '1 1 21%', padding: '6px 2px', textAlign: 'center', fontSize: '11px', justifyContent: 'center', borderColor: 'rgba(168, 85, 247, 0.4)', color: '#C084FC' }}
+                      title="Ikuti Bounties, Kampanye Share & Staking di KOL Hub"
+                    >
+                      SocialFi 🎯
+                    </a>
                     <a
                       href={explorerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-secondary"
-                      style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
+                      style={{ flex: '1 1 21%', padding: '6px 2px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
                     >
                       {explorerLabel}
-                    </a>
-                    <a
-                      href={`/trading?token=${token.contractAddress}`}
-                      className="btn-primary"
-                      style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center' }}
-                    >
-                      Trade ⚡
-                    </a>
-                    <a
-                      href={`/kol`}
-                      className="btn-secondary"
-                      style={{ flex: 1, padding: '6px 4px', textAlign: 'center', fontSize: '11px', justifyContent: 'center', borderColor: 'rgba(168, 85, 247, 0.4)', color: '#C084FC' }}
-                      title="Ikuti Bounties, Kampanye Share & Staking di KOL Hub"
-                    >
-                      Campaigns 🎯
                     </a>
                   </div>
                 </div>

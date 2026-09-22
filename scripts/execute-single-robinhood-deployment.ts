@@ -272,6 +272,9 @@ async function runSingleRobinhoodDeployment(): Promise<void> {
       if (neonRes.success) {
         logger.success(`   🐘 [NEON CLOUD] Robinhood token '${neonRes.dbName}' tersinkronisasi di Neon PostgreSQL SSOT!`);
       }
+      // Ensure 3 SocialFi Campaigns and launchpad visibility
+      const { syncRobinhoodTokenToNeon } = await import("./sync-robinhood-to-neon.ts");
+      await syncRobinhoodTokenToNeon(tokenAddress, poolId !== "N/A" ? poolId : undefined);
     }
   } catch (neonErr: any) {
     logger.warn(`   🐘 [NEON CLOUD] Notice Neon cloud sync: ${neonErr?.message || neonErr}`);
