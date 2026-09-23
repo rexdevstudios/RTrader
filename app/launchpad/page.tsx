@@ -148,10 +148,16 @@ export default function LaunchpadPage() {
         return;
       }
 
-      // 3. Base Network Validation (Rule 8)
-      const networkCheck = await ensureBaseNetwork('0x2105');
+      // 3. Multi-Chain Network Switching & Validation (Rule 8)
+      const isRobinhood = selectedChain === 'robinhood';
+      const targetChainHex = isRobinhood ? '0x1237' : '0x2105';
+      const targetChainKey = isRobinhood ? 'robinhood-mainnet' : 'base-mainnet';
+      const chainName = isRobinhood ? 'Robinhood Chain L2' : 'Base';
+      const explorerName = isRobinhood ? 'Blockscout' : 'BaseScan';
+
+      const networkCheck = await ensureBaseNetwork(targetChainHex);
       if (!networkCheck.success) {
-        setOnChainFeedback(`❌ ${networkCheck.error || 'Harap beralih ke jaringan Base'}`);
+        setOnChainFeedback(`❌ ${networkCheck.error || `Harap beralih ke jaringan ${chainName}`}`);
         return;
       }
 
@@ -166,7 +172,7 @@ export default function LaunchpadPage() {
       const modeInt = modeMap[draftResult.mode] ?? 1;
 
       // 5. Real Contract Call via MetaMask Signer
-      setOnChainFeedback('⏳ Menyiapkan pendaftaran token on-chain di Base...');
+      setOnChainFeedback(`⏳ Menyiapkan pendaftaran token on-chain di ${chainName}...`);
       const signer = await getBrowserSigner();
       const contract = getLaunchpadContract(signer);
 
@@ -190,17 +196,38 @@ export default function LaunchpadPage() {
         merkleRoot
       );
 
-      setOnChainFeedback(`📡 Transaksi terkirim: ${tx.hash}. Menunggu konfirmasi blok Base...`);
+      setOnChainFeedback(`📡 Transaksi terkirim: ${tx.hash}. Menunggu konfirmasi blok ${chainName}...`);
       const receipt = await tx.wait(1);
 
       if (receipt && receipt.status === 1) {
         setPublishedTxHash(tx.hash);
-        const explorerLink = getExplorerUrl(tx.hash, '0x2105', 'tx');
+        const explorerLink = getExplorerUrl(tx.hash, targetChainHex, 'tx');
+
+        // Persist token launch to PostgreSQL SSOT via /api/launchpad/publish
+        try {
+          await fetch('/api/launchpad/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              draftId: draftResult.id,
+              contractAddress: derivedTokenAddress,
+              chain: targetChainKey,
+              txHash: tx.hash,
+              currentSupply: '1000000000',
+              graduationThreshold: 69000,
+            }),
+          });
+          // Refresh active token fleet in UI
+          fetchActiveTokens();
+        } catch {
+          // Non-blocking SSOT sync
+        }
+
         setOnChainFeedback(
-          `✅ Token $${draftResult.symbol} BERHASIL DIDAFTARKAN ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di BaseScan: ${explorerLink}`
+          `✅ Token $${draftResult.symbol} BERHASIL DIDAFTARKAN ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di ${explorerName}: ${explorerLink}`
         );
       } else {
-        setOnChainFeedback('❌ Transaksi gagal dieksekusi di blockchain Base.');
+        setOnChainFeedback(`❌ Transaksi gagal dieksekusi di blockchain ${chainName}.`);
       }
     } catch (err: any) {
       setOnChainFeedback(`❌ Gagal pendaftaran on-chain: ${normalizeWeb3Error(err)}`);
@@ -647,7 +674,7 @@ export default function LaunchpadPage() {
               {/* On-Chain Registration Action & Status */}
               <div style={{ marginBottom: '16px', padding: '14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: '#0B1017' }}>
                 <div style={{ fontSize: '12px', fontWeight: 800, marginBottom: '8px', color: '#00E5FF', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Zap size={14} /> Settlement Layer: Base Blockchain
+                  <Zap size={14} /> Settlement Layer: {selectedChain === 'robinhood' ? 'Robinhood Chain L2' : 'Base Blockchain'}
                 </div>
                 {userRole === 'SYSTEM_ADMIN' || userRole === 'SUPER_ADMIN' ? (
                   <div>
@@ -661,7 +688,11 @@ export default function LaunchpadPage() {
                       disabled={isRegisteringOnChain || !!publishedTxHash}
                       style={{ padding: '10px', fontSize: '12px', justifyContent: 'center' }}
                     >
-                      {isRegisteringOnChain ? '⏳ Memproses di Blockchain Base...' : publishedTxHash ? '✅ Terdaftar On-Chain' : '⚡ Register Token Launch On-Chain'}
+                      {isRegisteringOnChain
+                        ? `⏳ Memproses di Blockchain ${selectedChain === 'robinhood' ? 'Robinhood L2' : 'Base'}...`
+                        : publishedTxHash
+                        ? '✅ Terdaftar On-Chain'
+                        : '⚡ Register Token Launch On-Chain'}
                     </button>
                   </div>
                 ) : (

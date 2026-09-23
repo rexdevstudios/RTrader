@@ -13,6 +13,15 @@ export interface LaunchDraftDbAdapter {
   getDrafts?(): Promise<any[]>;
   getActiveTokenLaunches?(): Promise<any[]>;
   getTokenLaunchByAddress?(chain: string, address: string): Promise<any | null>;
+  publishLaunchDraft?(params: {
+    draftId: string;
+    contractAddress: string;
+    chain: string;
+    txHash?: string;
+    currentSupply?: string;
+    graduationThreshold?: number;
+    riskScore?: number;
+  }): Promise<{ launchId: string; contractAddress: string }>;
 }
 
 export class LaunchDraftService {

@@ -4,6 +4,7 @@ import { rateLimiter } from '@packages/auth/rate-limiter';
 import { ApiResponse, CreateTradeIntentRequest } from '@packages/shared/contracts/api-contracts';
 import { TradeIntentInput, UserRiskLimits } from '@packages/shared/types/domain';
 import { requireCapability } from '@packages/auth/session';
+import { saveTradeIntent } from '@packages/shared/db-pool';
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,8 +53,27 @@ export async function POST(req: NextRequest) {
       []
     );
 
+    // Persist Trade Intent to PostgreSQL SSOT
+    let persistedIntentId = intent.idempotencyKey;
+    try {
+      persistedIntentId = await saveTradeIntent({
+        userId: auth.user.userId,
+        stage: intent.stage as any,
+        symbol: intent.symbol,
+        side: intent.side as any,
+        type: intent.type as any,
+        quantity: intent.quantity,
+        price: intent.price,
+        idempotencyKey: intent.idempotencyKey,
+        status: decision.isApproved ? 'APPROVED' : 'REJECTED',
+        riskDecisionReason: decision.reason,
+      });
+    } catch (dbErr: any) {
+      console.warn('[POST /api/trade-intents] DB persistence warning (non-blocking):', dbErr?.message);
+    }
+
     const data = {
-      tradeIntentId: intent.idempotencyKey,
+      tradeIntentId: persistedIntentId,
       status,
       decision,
     };

@@ -114,7 +114,7 @@ Responsibilities:
 - `GET /api/market/macro` — DefiLlama chain TVL snapshot + macroSentiment (`s-maxage=60`)
 
 ### Trading Routes (Protected — requires session token)
-- `POST /api/trade-intents` — Create trade intent, evaluated by TradingRiskGate
+- `POST /api/trade-intents` — Create trade intent, evaluated by TradingRiskGate and persisted to PostgreSQL trade_intents table
 
 ### Agent Routes (Protected — requires session token)
 - `POST /api/agent/proposals/intelligence` — Generate AI proposal with IntelligenceSignal + DefiLlama macro enrichment
@@ -124,9 +124,10 @@ Responsibilities:
 - `POST /api/billing/subscribe` — Subscribe user to plan (protected)
 
 ### Launchpad & SocialFi Routes (Public / Non-Custodial)
-- `GET /api/launchpad/drafts` — Fetch launch drafts and configurations
-- `POST /api/launchpad/drafts` — Create new multi-chain launch draft
-- `POST /api/launchpad/publish` — Finalize on-chain deployment record
+- `GET /api/launchpad/draft` — Fetch launch drafts and configurations
+- `POST /api/launchpad/draft` — Create new multi-chain launch draft
+- `POST /api/launchpad/publish` — Finalize on-chain deployment record into token_launches SSOT & mark draft PUBLISHED
+- `GET /api/launchpad/tokens` — List active token launches from PostgreSQL SSOT
 - `GET /api/launchpad/bounty/claim` — Fetch Merkle proof and claim eligibility (Base / Robinhood)
 - `POST /api/launchpad/bounty/claim` — Submit or verify social bounty claim
 - `POST /api/launchpad/bounty/verify-hodl` — Live on-chain HODL balance verification

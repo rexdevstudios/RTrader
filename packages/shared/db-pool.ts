@@ -110,6 +110,68 @@ export async function ensureUserEntity(pool: Pool, actorOrWallet: string): Promi
   return newUserId;
 }
 
+/**
+ * Ensures a network ID exists in the PostgreSQL networks table to satisfy foreign key constraints.
+ */
+export async function ensureNetworkInPool(pool: Pool, chainInput: string): Promise<string> {
+  const lower = (chainInput || 'base-mainnet').toLowerCase();
+  let networkId = lower.includes('robinhood')
+    ? 'robinhood-mainnet'
+    : lower.includes('solana')
+    ? 'solana-mainnet'
+    : lower.includes('arbitrum')
+    ? 'arbitrum-mainnet'
+    : lower.includes('arc')
+    ? 'arc-mainnet'
+    : lower.includes('ethereum')
+    ? 'ethereum-mainnet'
+    : 'base-mainnet';
+
+  let chainId: number | null = 8453;
+  let name = 'Base Mainnet';
+  let family = 'EVM';
+  let symbol = 'ETH';
+  let decimals = 18;
+  let explorer = 'https://basescan.org';
+
+  if (networkId === 'robinhood-mainnet') {
+    chainId = 4663;
+    name = 'Robinhood Chain L2';
+    explorer = 'https://robinhoodchain.blockscout.com';
+  } else if (networkId === 'arbitrum-mainnet') {
+    chainId = 42161;
+    name = 'Arbitrum One';
+    explorer = 'https://arbiscan.io';
+  } else if (networkId === 'arc-mainnet') {
+    chainId = 5042;
+    name = 'Arc Mainnet';
+    explorer = 'https://arcscan.io';
+  } else if (networkId === 'ethereum-mainnet') {
+    chainId = 1;
+    name = 'Ethereum Mainnet';
+    explorer = 'https://etherscan.io';
+  } else if (networkId === 'solana-mainnet') {
+    chainId = null;
+    name = 'Solana Mainnet';
+    family = 'SOLANA';
+    symbol = 'SOL';
+    decimals = 9;
+    explorer = 'https://solscan.io';
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO networks (id, chain_id, name, network_family, native_currency_symbol, native_currency_decimals, explorer_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (id) DO NOTHING`,
+      [networkId, chainId, name, family, symbol, decimals, explorer]
+    );
+  } catch {
+    // Non-blocking fallback
+  }
+  return networkId;
+}
+
 // ----------------------------------------------------------------------------
 // IN-MEMORY FALLBACK STORES (DEV / TEST / SIMULATION)
 // ----------------------------------------------------------------------------
@@ -412,6 +474,101 @@ export class PostgresDraftDbAdapter implements LaunchDraftDbAdapter {
     }
 
     return null;
+  }
+
+  async publishLaunchDraft(params: {
+    draftId: string;
+    contractAddress: string;
+    chain: string;
+    txHash?: string;
+    currentSupply?: string;
+    graduationThreshold?: number;
+    riskScore?: number;
+  }): Promise<{ launchId: string; contractAddress: string }> {
+    const pool = getDbPool();
+    const cleanAddress = ethers.isAddress(params.contractAddress)
+      ? ethers.getAddress(params.contractAddress)
+      : params.contractAddress;
+
+    if (pool && isUuid(params.draftId)) {
+      try {
+        const resolvedChain = await ensureNetworkInPool(pool, params.chain || 'base-mainnet');
+
+        // Check if launch already exists for this draft or contract address
+        const existingLaunch = await pool.query(
+          `SELECT id, contract_address FROM token_launches WHERE draft_id = $1 OR contract_address = $2 LIMIT 1`,
+          [params.draftId, cleanAddress]
+        );
+
+        let launchId: string;
+        if (existingLaunch.rows.length > 0) {
+          launchId = existingLaunch.rows[0].id;
+          await pool.query(
+            `UPDATE token_launches 
+             SET contract_address = $1, chain = $2, current_supply = COALESCE($3, current_supply)
+             WHERE id = $4`,
+            [cleanAddress, resolvedChain, params.currentSupply || '1000000000', launchId]
+          );
+        } else {
+          launchId = crypto.randomUUID();
+          await pool.query("INSERT INTO entities (id, type) VALUES ($1, 'TOKEN') ON CONFLICT (id) DO NOTHING", [launchId]);
+          await pool.query(
+            `INSERT INTO token_launches (
+              id, draft_id, contract_address, chain, current_supply,
+              raised_amount, graduation_threshold, risk_score, published_at
+            ) VALUES ($1, $2, $3, $4, $5, 0, $6, $7, NOW())`,
+            [
+              launchId,
+              params.draftId,
+              cleanAddress,
+              resolvedChain,
+              params.currentSupply || '1000000000',
+              params.graduationThreshold || 69000,
+              params.riskScore || 92,
+            ]
+          );
+        }
+
+        // Update draft status to PUBLISHED
+        await pool.query(
+          `UPDATE launch_drafts SET status = 'PUBLISHED', updated_at = NOW() WHERE id = $1`,
+          [params.draftId]
+        );
+
+        // Fetch draft creator to create audit log
+        const draftRes = await pool.query(`SELECT creator_id FROM launch_drafts WHERE id = $1 LIMIT 1`, [params.draftId]);
+        const creatorId = draftRes.rows[0]?.creator_id;
+        if (creatorId) {
+          await pool.query(
+            `INSERT INTO audit_logs (actor_id, action, entity_id, reason, created_at)
+             VALUES ($1, 'TOKEN_LAUNCH_PUBLISHED', $2, $3, NOW())`,
+            [creatorId, launchId, `Contract: ${cleanAddress}${params.txHash ? ` Tx: ${params.txHash}` : ''}`]
+          );
+        }
+
+        // Update memory store if present
+        const memDraft = inMemoryDrafts.find((d) => d.id === params.draftId);
+        if (memDraft) {
+          memDraft.status = 'PUBLISHED';
+          memDraft.contractAddress = cleanAddress;
+          memDraft.chain = resolvedChain;
+        }
+
+        return { launchId, contractAddress: cleanAddress };
+      } catch (err: any) {
+        console.error('[PostgresDraftDbAdapter] publishLaunchDraft error:', err?.message || err);
+        throw err;
+      }
+    }
+
+    // In-memory fallback
+    const memDraft = inMemoryDrafts.find((d) => d.id === params.draftId);
+    if (memDraft) {
+      memDraft.status = 'PUBLISHED';
+      memDraft.contractAddress = cleanAddress;
+      memDraft.chain = params.chain;
+    }
+    return { launchId: params.draftId, contractAddress: cleanAddress };
   }
 }
 
@@ -1023,3 +1180,72 @@ export class PostgresBountyDbAdapter implements BountyDbAdapter {
 export const defaultDraftDbAdapter = new PostgresDraftDbAdapter();
 export const defaultKolDbAdapter = new PostgresKolDbAdapter();
 export const defaultBountyDbAdapter = new PostgresBountyDbAdapter();
+
+export interface SaveTradeIntentParams {
+  userId: string;
+  stage: 'PAPER' | 'TESTNET' | 'LIVE';
+  symbol: string;
+  side: 'BUY' | 'SELL';
+  type: 'LIMIT' | 'MARKET' | 'STOP_LOSS' | 'TAKE_PROFIT';
+  quantity: number;
+  price?: number;
+  idempotencyKey: string;
+  status: 'PENDING_RISK' | 'APPROVED' | 'REJECTED' | 'EXECUTED' | 'CANCELLED';
+  riskDecisionReason?: string;
+}
+
+export async function saveTradeIntent(params: SaveTradeIntentParams): Promise<string> {
+  const pool = getDbPool();
+  const intentId = crypto.randomUUID();
+
+  if (pool) {
+    try {
+      const validUserId = await ensureUserEntity(pool, params.userId);
+      await pool.query("INSERT INTO entities (id, type) VALUES ($1, 'ORDER') ON CONFLICT (id) DO NOTHING", [intentId]);
+
+      const res = await pool.query(
+        `INSERT INTO trade_intents (
+          id, user_id, stage, symbol, side, type,
+          quantity, price, idempotency_key, status, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+        ON CONFLICT (idempotency_key) DO UPDATE SET
+          status = EXCLUDED.status
+        RETURNING id`,
+        [
+          intentId,
+          validUserId,
+          params.stage,
+          params.symbol,
+          params.side,
+          params.type,
+          params.quantity,
+          params.price ?? null,
+          params.idempotencyKey,
+          params.status,
+        ]
+      );
+
+      const savedId = res.rows[0]?.id || intentId;
+
+      if (params.status === 'APPROVED' || params.status === 'REJECTED') {
+        await pool.query(
+          `INSERT INTO audit_logs (actor_id, action, entity_id, reason, created_at)
+           VALUES ($1, $2, $3, $4, NOW())`,
+          [
+            validUserId,
+            `TRADE_INTENT_${params.status}`,
+            savedId,
+            params.riskDecisionReason || `Stage: ${params.stage}, Symbol: ${params.symbol}`,
+          ]
+        );
+      }
+
+      return savedId;
+    } catch (err: any) {
+      console.error('[DB] saveTradeIntent error:', err?.message || err);
+    }
+  }
+
+  return intentId;
+}
+
