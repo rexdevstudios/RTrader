@@ -28,6 +28,7 @@ const PUBLIC_API_PATHS = new Set([
   '/api/launchpad/tokens', // Public active token list from Neon SSOT
   '/api/launchpad/bounty', // Public bounty campaigns list from Neon SSOT
   '/api/launchpad/bounty/claim', // Public bounty claim & Merkle proof evaluation
+  '/api/launchpad/bounty/settle', // Public on-chain claim settlement (verified via RPC tx receipt)
   '/api/launchpad/bounty/verify-hodl', // Public HODL status & verification engine
   '/api/launchpad/curve-volatility', // Public curve slope parameters
   '/api/launchpad/keeper', // Keeper automation handles CRON_SECRET internally
