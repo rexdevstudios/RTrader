@@ -394,6 +394,26 @@ export default function KolHubPage() {
         setClaimFeedback(
           `✅ REWARD BERHASIL DIKLAIM ON-CHAIN! Blok #${receipt.blockNumber}. Hash: ${tx.hash} — Lihat di ${explorerName}: ${explorerLink}`
         );
+
+        // Call settlement API to synchronize off-chain SSOT state and audit logs
+        if (merkleProofData?.claimId) {
+          try {
+            await fetch('/api/launchpad/bounty/settle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                claimId: merkleProofData.claimId,
+                txHash: tx.hash,
+                blockNumber: receipt.blockNumber,
+                chain: targetChainHex,
+              }),
+            });
+            // Refresh proof and eligibility status
+            checkMerkleProof();
+          } catch {
+            // Non-blocking settlement call
+          }
+        }
       } else {
         setClaimFeedback(`❌ Transaksi gagal dieksekusi di blockchain ${chainName}.`);
       }
@@ -1013,8 +1033,12 @@ export default function KolHubPage() {
 
             <div style={{ marginTop: '16px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
               <span className="text-muted" style={{ fontSize: '12px', display: 'block' }}>Status Kelayakan Dompet:</span>
-              <strong style={{ fontSize: '16px', color: merkleProofData?.isEligible ? '#10B981' : '#F59E0B' }}>
-                {merkleProofData?.isEligible ? '✅ Terdaftar di Merkle Tree' : 'Belum Ada Klaim Terverifikasi'}
+              <strong style={{ fontSize: '16px', color: merkleProofData?.isClaimed ? '#3B82F6' : merkleProofData?.isEligible ? '#10B981' : '#F59E0B' }}>
+                {merkleProofData?.isClaimed
+                  ? '🎉 Sudah Diklaim On-Chain (Settled)'
+                  : merkleProofData?.isEligible
+                  ? '✅ Terdaftar di Merkle Tree'
+                  : 'Belum Ada Klaim Terverifikasi'}
               </strong>
 
               <div style={{ marginTop: '12px' }}>
@@ -1093,7 +1117,7 @@ export default function KolHubPage() {
             <div style={{ marginTop: '20px' }}>
               <button
                 onClick={handleClaimOnChain}
-                disabled={isClaimingOnChain || !merkleProofData?.isEligible}
+                disabled={isClaimingOnChain || !merkleProofData?.isEligible || merkleProofData?.isClaimed}
                 className="btn-primary"
                 style={{ width: '100%', justifyContent: 'center' }}
               >
@@ -1101,8 +1125,12 @@ export default function KolHubPage() {
                 <span>
                   {isClaimingOnChain
                     ? 'Memproses On-Chain...'
+                    : merkleProofData?.isClaimed
+                    ? '✅ Reward Sudah Diklaim'
                     : isGaslessClaim
                     ? '⚡ Klaim 1,000 Token (Gasless)'
+                    : (merkleProofData?.chain?.toLowerCase().includes('robinhood') || campTitle.includes('noir'))
+                    ? 'Klaim 1,000 Token Reward (Robinhood L2)'
                     : claimDestination === 'BASE'
                     ? 'Klaim 1,000 Token Reward (Base)'
                     : `Klaim ke ${claimDestination} (via LayerZero)`}

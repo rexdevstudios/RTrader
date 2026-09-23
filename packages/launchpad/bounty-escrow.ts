@@ -11,6 +11,8 @@ import { ethers } from 'ethers';
 export interface BountyClaimItem {
   walletAddress: string;
   tokenAmount: bigint;
+  claimId?: string;
+  isClaimed?: boolean;
 }
 
 export interface BountyDbAdapter {
@@ -23,7 +25,8 @@ export interface BountyDbAdapter {
   incrementCampaignParticipant(campaignId: string): Promise<void>;
   createAuditLog(actorId: string, action: string, entityId?: string, reason?: string): Promise<void>;
   getVerifiedClaims?(campaignId?: string): Promise<BountyClaimItem[]>;
-  recordBountyAllocation?(userId: string, claimId: string, amount: string, currency: string): Promise<void>;
+  recordBountyAllocation?(userId: string, claimId: string, amount: string, currency: string, creatorId?: string): Promise<void>;
+  settleClaimOnChain?(claimId: string, txHash: string, blockNumber?: number): Promise<void>;
 }
 
 export interface ClaimVerificationOptions {
@@ -234,7 +237,7 @@ export class BountyEscrowService {
       if (isNewParticipant) {
         await this.db.incrementCampaignParticipant(campaignId);
       }
-      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS');
+      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS', campaign.creatorId);
       await this.db.createAuditLog(kol.userId, 'HODL_CLAIM_VERIFIED', claim.id, `Balance: ${balanceFormatted}`);
       return { success: true, claim, reason: 'HODL_BALANCE_VERIFIED', onChainBalance: balanceFormatted };
     }
@@ -245,7 +248,7 @@ export class BountyEscrowService {
       if (isNewParticipant) {
         await this.db.incrementCampaignParticipant(campaignId);
       }
-      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS');
+      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS', campaign.creatorId);
       await this.db.createAuditLog(kol.userId, 'LIQUID_STAKE_VERIFIED', claim.id, `Proof: ${proofUrl}`);
       return { success: true, claim, reason: 'LIQUID_STAKING_VERIFIED' };
     }
@@ -274,7 +277,7 @@ export class BountyEscrowService {
       if (isNewParticipant) {
         await this.db.incrementCampaignParticipant(campaignId);
       }
-      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS');
+      await this.db.recordBountyAllocation?.(kol.userId, claim.id, rewardFormatted, 'TOKENS', campaign.creatorId);
       await this.db.createAuditLog(kol.userId, 'BOUNTY_CLAIM_VERIFIED', claim.id, proofUrl);
       return { success: true, claim, qualityAudit: audit };
     } else {

@@ -67,6 +67,8 @@ export async function GET(req: NextRequest) {
     tokenAmount: string;
     chain: string;
     isEligible: boolean;
+    isClaimed: boolean;
+    claimId?: string;
     merkleRoot: string;
     merkleProof: string[];
   }> = {
@@ -76,7 +78,9 @@ export async function GET(req: NextRequest) {
       walletAddress,
       tokenAmount,
       chain: resolvedChain,
-      isEligible: !!targetItem,
+      isEligible: !!targetItem && !targetItem.isClaimed,
+      isClaimed: !!targetItem?.isClaimed,
+      claimId: targetItem?.claimId || undefined,
       merkleRoot: tree.root,
       merkleProof: proof,
     },

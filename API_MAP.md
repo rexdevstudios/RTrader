@@ -131,6 +131,7 @@ Responsibilities:
 - `POST /api/launchpad/bounty/claim` — Submit or verify social bounty claim
 - `POST /api/launchpad/bounty/verify-hodl` — Live on-chain HODL balance verification
 - `POST /api/launchpad/seed-whitelist` — Verify angel/seed whitelist Merkle proofs
+- `POST /api/launchpad/bounty/settle` — Settle verified claim on-chain with txHash confirmation
 - `POST /api/launchpad/webhook` — Process external telemetry and indexing webhooks
 
 ## Security Layer (Edge Middleware)
