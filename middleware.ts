@@ -27,6 +27,7 @@ const PUBLIC_API_PATHS = new Set([
   '/api/market/macro',    // DefiLlama macro TVL signal is public read-only
   '/api/launchpad/tokens', // Public active token list from Neon SSOT
   '/api/launchpad/publish', // Public token launch publish (verified via on-chain contract state)
+  '/api/launchpad/graduate', // Public graduation trigger & DEX pair query
   '/api/launchpad/bounty', // Public bounty campaigns list from Neon SSOT
   '/api/launchpad/bounty/claim', // Public bounty claim & Merkle proof evaluation
   '/api/launchpad/bounty/settle', // Public on-chain claim settlement (verified via RPC tx receipt)

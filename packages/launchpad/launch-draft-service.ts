@@ -22,6 +22,18 @@ export interface LaunchDraftDbAdapter {
     graduationThreshold?: number;
     riskScore?: number;
   }): Promise<{ launchId: string; contractAddress: string }>;
+  graduateTokenLaunch?(params: {
+    launchId?: string;
+    contractAddress?: string;
+    dexPairAddress?: string;
+    raisedAmount?: number;
+  }): Promise<{
+    launchId: string;
+    contractAddress: string;
+    dexPairAddress: string;
+    isGraduated: boolean;
+    graduatedAt: Date;
+  }>;
 }
 
 export class LaunchDraftService {

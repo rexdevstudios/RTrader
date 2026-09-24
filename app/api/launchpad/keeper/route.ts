@@ -101,11 +101,20 @@ export async function GET(req: NextRequest) {
         currentTimestamp
       );
 
+      const raised = Number(launch.raisedAmount || 0);
+      const threshold = Number(launch.graduationThreshold || 69000);
+      const isGraduated = Boolean(launch.isGraduated);
+      const graduationNeeded = !isGraduated && raised >= threshold;
+
       evaluatedTokens.push({
         tokenAddress: addr,
         ticker: launch.ticker || 'TOKEN',
         chain: launch.chain || 'base-mainnet',
         upkeepNeeded: upkeepStatus.upkeepNeeded,
+        graduationNeeded,
+        isGraduated,
+        raisedAmount: raised,
+        graduationThreshold: threshold,
         pendingYieldWei: upkeepStatus.pendingYieldWei.toString(),
         lastHarvestTimestamp: upkeepStatus.lastHarvestTimestamp,
         nextHarvestTimestamp: upkeepStatus.nextHarvestTimestamp,
@@ -113,6 +122,7 @@ export async function GET(req: NextRequest) {
     }
 
     const upkeepNeededCount = evaluatedTokens.filter((t) => t.upkeepNeeded).length;
+    const graduationNeededCount = evaluatedTokens.filter((t) => t.graduationNeeded).length;
     const elapsedMs = Math.round(performance.now() - startTime);
 
     // Record audit entry in Neon PostgreSQL (non-blocking)
@@ -120,7 +130,7 @@ export async function GET(req: NextRequest) {
       SYSTEM_ACTOR_ID,
       'KEEPER_UPKEEP_EVALUATION',
       undefined,
-      `Evaluated ${evaluatedTokens.length} tokens; ${upkeepNeededCount} flagged for upkeep in ${elapsedMs}ms`
+      `Evaluated ${evaluatedTokens.length} tokens; ${upkeepNeededCount} upkeep, ${graduationNeededCount} graduation needed in ${elapsedMs}ms`
     ).catch(() => {});
 
     return NextResponse.json({
@@ -129,6 +139,7 @@ export async function GET(req: NextRequest) {
         timestamp: currentTimestamp,
         evaluatedCount: evaluatedTokens.length,
         upkeepNeededCount,
+        graduationNeededCount,
         tokens: evaluatedTokens,
         elapsedMs,
       },
@@ -204,6 +215,7 @@ export async function POST(req: NextRequest) {
     // Case 2: Batch execution across all due tokens
     const activeLaunches = await defaultDraftDbAdapter.getActiveTokenLaunches();
     const executedTokens: string[] = [];
+    const graduatedTokens: string[] = [];
     const currentTimestamp = Math.floor(Date.now() / 1000);
 
     for (const launch of activeLaunches) {
@@ -227,6 +239,16 @@ export async function POST(req: NextRequest) {
       if (status.upkeepNeeded) {
         executedTokens.push(addr);
       }
+
+      const raised = Number(launch.raisedAmount || 0);
+      const threshold = Number(launch.graduationThreshold || 69000);
+      if (!launch.isGraduated && raised >= threshold && defaultDraftDbAdapter.graduateTokenLaunch) {
+        await defaultDraftDbAdapter.graduateTokenLaunch({
+          contractAddress: addr,
+          raisedAmount: raised,
+        }).catch(() => {});
+        graduatedTokens.push(addr);
+      }
     }
 
     const elapsedMs = Math.round(performance.now() - startTime);
@@ -235,15 +257,17 @@ export async function POST(req: NextRequest) {
       SYSTEM_ACTOR_ID,
       'KEEPER_BATCH_EXECUTION',
       undefined,
-      `Batch keeper harvest processed ${executedTokens.length} tokens in ${elapsedMs}ms`
+      `Batch keeper processed ${executedTokens.length} harvests, ${graduatedTokens.length} graduations in ${elapsedMs}ms`
     ).catch(() => {});
 
     return NextResponse.json({
       success: true,
       data: {
-        action: 'BATCH_HARVEST_AND_COMPOUND',
+        action: 'BATCH_HARVEST_AND_GRADUATION',
         executedCount: executedTokens.length,
         executedTokens,
+        graduatedCount: graduatedTokens.length,
+        graduatedTokens,
         timestamp: currentTimestamp,
         elapsedMs,
       },

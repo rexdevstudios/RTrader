@@ -127,6 +127,8 @@ Responsibilities:
 - `GET /api/launchpad/draft` — Fetch launch drafts and configurations
 - `POST /api/launchpad/draft` — Create new multi-chain launch draft
 - `POST /api/launchpad/publish` — Finalize on-chain deployment record into token_launches SSOT & mark draft PUBLISHED
+- `GET /api/launchpad/graduate` — Query token graduation progress and derived DEX Pair details
+- `POST /api/launchpad/graduate` — Trigger bonding curve graduation and lock liquidity into DEX Pair pool
 - `GET /api/launchpad/tokens` — List active token launches from PostgreSQL SSOT
 - `GET /api/launchpad/bounty/claim` — Fetch Merkle proof and claim eligibility (Base / Robinhood)
 - `POST /api/launchpad/bounty/claim` — Submit or verify social bounty claim

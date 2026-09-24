@@ -119,6 +119,8 @@ export default async function TokenPortalPage({ params }: PageProps) {
   const raisedAmount = dbLaunch?.raisedAmount ?? 12500;
   const graduationThreshold = dbLaunch?.graduationThreshold ?? 69000;
   const graduationProgress = Math.min(100, Math.round((raisedAmount / graduationThreshold) * 100));
+  const isGraduated = Boolean(dbLaunch?.isGraduated) || graduationProgress >= 100;
+  const dexPairAddress = dbLaunch?.dexPairAddress;
 
   // Explorer link by chain
   const getExplorerUrl = () => {
@@ -266,24 +268,28 @@ export default async function TokenPortalPage({ params }: PageProps) {
             {tokenDescription}
           </p>
 
-          {/* Bonding Curve Progress Bar */}
+          {/* Bonding Curve Graduation Progress & DEX Pair */}
           <div
             style={{
-              backgroundColor: '#020617',
-              border: '1px solid #334155',
+              backgroundColor: isGraduated ? 'rgba(34, 197, 94, 0.08)' : '#020617',
+              border: `1px solid ${isGraduated ? 'rgba(34, 197, 94, 0.4)' : '#334155'}`,
               borderRadius: '10px',
               padding: '16px',
               marginBottom: '20px',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px' }}>
-              <span style={{ color: '#94A3B8' }}>Bonding Curve Graduation</span>
-              <span style={{ color: '#22C55E', fontWeight: 700 }}>{graduationProgress}%</span>
+              <span style={{ color: isGraduated ? '#4ADE80' : '#94A3B8', fontWeight: isGraduated ? 700 : 400, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {isGraduated ? '🎓 Graduated to DEX (Liquidity Locked)' : 'Bonding Curve Graduation'}
+              </span>
+              <span style={{ color: '#22C55E', fontWeight: 700 }}>
+                {isGraduated ? '100% (COMPLETED)' : `${graduationProgress}%`}
+              </span>
             </div>
             <div style={{ width: '100%', height: '8px', backgroundColor: '#1E293B', borderRadius: '4px', overflow: 'hidden' }}>
               <div
                 style={{
-                  width: `${graduationProgress}%`,
+                  width: `${isGraduated ? 100 : graduationProgress}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #22C55E 0%, #38BDF8 100%)',
                   borderRadius: '4px',
@@ -294,6 +300,19 @@ export default async function TokenPortalPage({ params }: PageProps) {
               <span>${raisedAmount.toLocaleString()} Raised</span>
               <span>Goal: ${graduationThreshold.toLocaleString()}</span>
             </div>
+            {isGraduated && dexPairAddress && (
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed rgba(34, 197, 94, 0.25)', fontSize: '11px', color: '#94A3B8' }}>
+                <span style={{ color: '#86EFAC', fontWeight: 600 }}>DEX Pair Pool:</span>{' '}
+                <a
+                  href={`https://dexscreener.com/${norm.chain}/${lookupAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#38BDF8', fontFamily: 'monospace', textDecoration: 'underline' }}
+                >
+                  {dexPairAddress}
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Terminal Quick Sniper Routing */}
@@ -362,7 +381,8 @@ export default async function TokenPortalPage({ params }: PageProps) {
             tokenName={tokenName}
             tokenSymbol={tokenTicker}
             isSolana={isSol}
-            dexPairAddress={dbLaunch?.dexPairAddress}
+            dexPairAddress={dexPairAddress}
+            isGraduated={isGraduated}
           />
         </div>
       </div>

@@ -10,6 +10,7 @@ interface TokenActionsClientProps {
   tokenSymbol: string;
   isSolana: boolean;
   dexPairAddress?: string | null;
+  isGraduated?: boolean;
 }
 
 export default function TokenActionsClient({
@@ -19,6 +20,7 @@ export default function TokenActionsClient({
   tokenSymbol,
   isSolana,
   dexPairAddress,
+  isGraduated,
 }: TokenActionsClientProps) {
   const [copied, setCopied] = useState(false);
   const [walletNotice, setWalletNotice] = useState<string | null>(null);
@@ -209,9 +211,9 @@ export default function TokenActionsClient({
           <span
             className="badge"
             style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-              color: '#22C55E',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
+              backgroundColor: isGraduated ? 'rgba(56, 189, 248, 0.15)' : 'rgba(34, 197, 94, 0.1)',
+              color: isGraduated ? '#38BDF8' : '#22C55E',
+              border: `1px solid ${isGraduated ? 'rgba(56, 189, 248, 0.35)' : 'rgba(34, 197, 94, 0.3)'}`,
               fontSize: '11px',
               display: 'inline-flex',
               alignItems: 'center',
@@ -219,7 +221,7 @@ export default function TokenActionsClient({
             }}
           >
             <Zap size={12} />
-            {isSolana ? 'SOLANA ENGINE' : 'DOPPLER SETTLER'}
+            {isGraduated ? '🎓 GRADUATED TO DEX' : isSolana ? 'SOLANA ENGINE' : 'DOPPLER SETTLER'}
           </span>
         </div>
 

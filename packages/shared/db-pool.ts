@@ -10,6 +10,7 @@ import { KolDbAdapter } from '../social/kol-service';
 import { BountyDbAdapter, BountyClaimItem } from '../launchpad/bounty-escrow';
 import { KolProfile, BountyCampaign, BountyClaim } from './types/domain';
 import { normalizeTokenIdentifier } from './token-identifier';
+import { DexPairFactoryService } from '../launchpad/dex-pair-factory';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -569,6 +570,115 @@ export class PostgresDraftDbAdapter implements LaunchDraftDbAdapter {
       memDraft.chain = params.chain;
     }
     return { launchId: params.draftId, contractAddress: cleanAddress };
+  }
+
+  async graduateTokenLaunch(params: {
+    launchId?: string;
+    contractAddress?: string;
+    dexPairAddress?: string;
+    raisedAmount?: number;
+  }): Promise<{
+    launchId: string;
+    contractAddress: string;
+    dexPairAddress: string;
+    isGraduated: boolean;
+    graduatedAt: Date;
+  }> {
+    const pool = getDbPool();
+    const cleanAddress = params.contractAddress && ethers.isAddress(params.contractAddress)
+      ? ethers.getAddress(params.contractAddress)
+      : params.contractAddress;
+
+    if (pool && (params.launchId || cleanAddress)) {
+      try {
+        // 1. Locate token launch row
+        const queryText = params.launchId
+          ? `SELECT tl.id, tl.contract_address, tl.chain, tl.raised_amount, tl.graduation_threshold, tl.is_graduated, tl.dex_pair_address, ld.creator_id, ld.ticker
+             FROM token_launches tl
+             JOIN launch_drafts ld ON ld.id = tl.draft_id
+             WHERE tl.id = $1 LIMIT 1`
+          : `SELECT tl.id, tl.contract_address, tl.chain, tl.raised_amount, tl.graduation_threshold, tl.is_graduated, tl.dex_pair_address, ld.creator_id, ld.ticker
+             FROM token_launches tl
+             JOIN launch_drafts ld ON ld.id = tl.draft_id
+             WHERE LOWER(tl.contract_address) = LOWER($1) LIMIT 1`;
+
+        const queryArg = params.launchId || cleanAddress;
+        const res = await pool.query(queryText, [queryArg]);
+
+        if (res.rows.length === 0) {
+          throw new Error(`TOKEN_LAUNCH_NOT_FOUND: Token launch not found for ${queryArg}`);
+        }
+
+        const launch = res.rows[0];
+        const launchId = launch.id;
+        const contractAddr = launch.contract_address;
+        const chain = launch.chain;
+        const creatorId = launch.creator_id;
+        const ticker = launch.ticker;
+
+        // 2. Resolve DEX Pair Address (either provided or derived via DexPairFactoryService)
+        const finalPairAddress = params.dexPairAddress && ethers.isAddress(params.dexPairAddress)
+          ? ethers.getAddress(params.dexPairAddress)
+          : (launch.dex_pair_address && ethers.isAddress(launch.dex_pair_address)
+              ? ethers.getAddress(launch.dex_pair_address)
+              : DexPairFactoryService.deriveDexPairAddress(chain, contractAddr));
+
+        const finalRaisedAmount = params.raisedAmount ?? Number(launch.raised_amount || launch.graduation_threshold || 69000);
+        const graduatedAt = new Date();
+
+        // 3. Update token_launches state in PostgreSQL SSOT
+        await pool.query(
+          `UPDATE token_launches
+           SET is_graduated = TRUE,
+               graduated_at = COALESCE(graduated_at, NOW()),
+               dex_pair_address = $1,
+               raised_amount = GREATEST(raised_amount, $2)
+           WHERE id = $3`,
+          [finalPairAddress, finalRaisedAmount, launchId]
+        );
+
+        // 4. Record audit log
+        if (creatorId) {
+          await pool.query(
+            `INSERT INTO audit_logs (actor_id, action, entity_id, reason, created_at)
+             VALUES ($1, 'TOKEN_GRADUATED_TO_DEX', $2, $3, NOW())`,
+            [
+              creatorId,
+              launchId,
+              `Token $${ticker} (${contractAddr}) graduated to DEX. Pair: ${finalPairAddress}, Raised: $${finalRaisedAmount}`,
+            ]
+          );
+        }
+
+        return {
+          launchId,
+          contractAddress: contractAddr,
+          dexPairAddress: finalPairAddress,
+          isGraduated: true,
+          graduatedAt,
+        };
+      } catch (err: any) {
+        console.error('[PostgresDraftDbAdapter] graduateTokenLaunch error:', err?.message || err);
+        throw err;
+      }
+    }
+
+    // In-memory fallback
+    const memDraft = inMemoryDrafts.find(
+      (d) => (params.launchId && d.id === params.launchId) || (cleanAddress && d.contractAddress?.toLowerCase() === cleanAddress.toLowerCase())
+    );
+    const pair = params.dexPairAddress || '0x6ad81aa97f7ea92310225fe11a6af51339180460';
+    if (memDraft) {
+      memDraft.isGraduated = true;
+      memDraft.dexPairAddress = pair;
+    }
+    return {
+      launchId: params.launchId || (memDraft ? memDraft.id : 'launch-fallback'),
+      contractAddress: cleanAddress || '0x0000000000000000000000000000000000000000',
+      dexPairAddress: pair,
+      isGraduated: true,
+      graduatedAt: new Date(),
+    };
   }
 }
 
